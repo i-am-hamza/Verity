@@ -26,7 +26,14 @@ export type TaxonomyVersionView = components["schemas"]["TaxonomyVersionView"];
 export type PrecisionCell = components["schemas"]["PrecisionCell"];
 export type ReviewSubmit = components["schemas"]["ReviewSubmit"];
 
-const BASE = "/api";
+// Base URL for every backend request. Local dev leaves VITE_API_URL
+// unset and the Vite proxy rewrites "/api/*" to http://localhost:8000
+// (see vite.config.ts). Production (Vercel) sets VITE_API_URL to the
+// deployed Render URL at build time; Vite inlines the value, so this
+// read is static per bundle. Trailing slashes are trimmed so callers
+// can concatenate "/dashboard/leaderboard" without doubling the slash.
+const RAW_BASE = (import.meta.env.VITE_API_URL ?? "/api") as string;
+const BASE = RAW_BASE.replace(/\/$/, "");
 
 export class ApiError extends Error {
   status: number;

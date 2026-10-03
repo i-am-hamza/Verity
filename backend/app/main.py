@@ -20,7 +20,10 @@ app = FastAPI(title=settings.app_name, lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],  # Vite dev server
+    # Session 10: driven by ALLOWED_ORIGINS env var (comma-separated) so
+    # the Render deployment can point at the Vercel URL without a code
+    # change. Falls back to the Vite dev server for local development.
+    allow_origins=settings.allowed_origin_list(),
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

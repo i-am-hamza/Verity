@@ -43,7 +43,23 @@ class Settings(BaseSettings):
     taxonomy_version: str = "0.1.0"
     pipeline_version: str = "0.1.0"
 
+    # Comma-separated list of origins allowed to call this API via CORS.
+    # Session 10 deployment switch: on Render we set this to the Vercel
+    # URL(s). Empty / unset means "no production origins configured" —
+    # the dev-server fallback is applied in app.main so local tooling
+    # (frontend Vite dev server on :5173) just works out of the box.
+    allowed_origins: str = ""
+
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
+
+    def allowed_origin_list(self) -> list[str]:
+        """Parse ALLOWED_ORIGINS into a stripped, non-empty list; fall
+        back to the Vite dev-server origin when nothing is configured so
+        a local `uvicorn app.main:app` keeps working without extra env
+        setup."""
+        parts = [o.strip() for o in self.allowed_origins.split(",")]
+        parts = [o for o in parts if o]
+        return parts or ["http://localhost:5173"]
 
 
 settings = Settings()

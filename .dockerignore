@@ -1,0 +1,52 @@
+# Build context root-level ignore. Mirrors backend/.dockerignore but
+# applies to the whole repo when the context is `.` (which is how
+# render.yaml invokes the backend/Dockerfile — see "Build context
+# expected to be the REPO ROOT" in that file).
+
+# Secrets
+.env
+backend/.env
+frontend/.env
+frontend/.env.local
+
+# Local virtualenv + caches
+backend/.venv
+backend/__pycache__
+backend/**/__pycache__
+backend/.pytest_cache
+backend/.ruff_cache
+backend/.mypy_cache
+backend/.coverage
+
+# Local SQLite DB (production uses Supabase Postgres)
+backend/disclosure_scorer.db
+backend/*.db-journal
+
+# Downloaded PDF corpus (production reads from Cloudflare R2)
+storage
+backend/storage
+backend/tessdata
+
+# Frontend doesn't belong in the backend image at all
+frontend
+node_modules
+backend/node_modules
+
+# One-off scripts, tests, docs — not needed at runtime
+backend/scripts
+backend/seed
+backend/tests
+docs
+exports
+*.md
+
+# IDE / editor junk
+.idea
+.vscode
+*.swp
+.DS_Store
+
+# Git
+.git
+.gitignore
+.github

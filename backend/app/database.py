@@ -17,9 +17,48 @@ def _normalise_url(url: str) -> str:
 
 
 DB_URL = _normalise_url(settings.database_url)
-connect_args = {"check_same_thread": False} if DB_URL.startswith("sqlite") else {}
 
-engine = create_engine(DB_URL, connect_args=connect_args)
+
+def _engine_kwargs(url: str) -> dict:
+    """Build create_engine kwargs that are safe for the DSN we were handed.
+
+    SQLite in this project is always file-backed and single-process, so
+    we only need `check_same_thread=False`.
+
+    For Postgres we assume Supabase's **transaction** pooler (port 6543),
+    which is what the production DATABASE_URL points at. Transaction
+    pooling means a given server-side connection is handed to a request
+    at BEGIN and released at COMMIT, so prepared statements and
+    session-scoped state do NOT survive across transactions. Two
+    engine-level consequences:
+
+    1. `prepare_threshold=None` on the psycopg3 connect args disables
+       automatic prepared statements. Without this, psycopg3 attempts
+       to re-use statement names (`_pg3_0`, …) across pooled connections
+       and the pooler returns `DuplicatePreparedStatement` once a
+       prepared statement from a previous session is already registered
+       on the physical connection you were handed.
+
+    2. `pool_pre_ping=True` + a short `pool_recycle` so SQLAlchemy's own
+       pool quietly drops any connection the pooler has rotated out from
+       under us. 1800 s = 30 min, well below Supabase's idle timeout
+       and the pooler's connection-reuse window.
+
+    These are belt-and-braces for pooler mode specifically; session-mode
+    DSNs (port 5432) would be fine without either, but then the free
+    plan's lower connection ceiling bites.
+    """
+    if url.startswith("sqlite"):
+        return {"connect_args": {"check_same_thread": False}}
+    # Postgres (assumed pooler-mode in prod).
+    return {
+        "connect_args": {"prepare_threshold": None},
+        "pool_pre_ping": True,
+        "pool_recycle": 1800,
+    }
+
+
+engine = create_engine(DB_URL, **_engine_kwargs(DB_URL))
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 

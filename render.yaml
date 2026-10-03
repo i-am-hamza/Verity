@@ -1,0 +1,73 @@
+# Render blueprint for the Verity backend.
+#
+# One web service, Docker runtime, FREE plan. The backend is now
+# fully stateless (Supabase Postgres + Cloudflare R2), so there is
+# no persistent disk and the free plan's cold-sleep behaviour is
+# acceptable for an academic dashboard. All environment-specific
+# values below are flagged `sync: false` so Render prompts for them
+# on first deploy and never leaks a secret into the blueprint.
+#
+# Deploy flow:
+#   1. In the Render dashboard: New -> Blueprint, point at this repo.
+#   2. Render reads this file, creates the service, and asks for the
+#      sync:false env vars.
+#   3. Supply those values (see "Environment variables" in README).
+#   4. Trigger the build. Render builds the Docker image from the
+#      repo-root context (so backend/Dockerfile can also COPY
+#      ./config and ./data) and starts the container; the
+#      Dockerfile's HEALTHCHECK hits /health until it returns 200.
+
+services:
+  - type: web
+    name: verity-api
+    runtime: docker
+    plan: free
+    region: oregon
+    dockerContext: .
+    dockerfilePath: ./backend/Dockerfile
+    # Render listens on the PORT it injects; the Dockerfile's
+    # `CMD uvicorn ... --port ${PORT}` picks that up at container start.
+    healthCheckPath: /health
+    autoDeploy: true
+
+    envVars:
+      # Supabase Postgres (Transaction pooler DSN, port 6543).
+      # app/database.py applies pooler-safe settings
+      # (prepare_threshold=None + pool_pre_ping) based on prefix.
+      - key: DATABASE_URL
+        sync: false
+
+      # Cloudflare R2 (S3-compatible) for the PDF corpus.
+      - key: R2_ACCOUNT_ID
+        sync: false
+      - key: R2_ACCESS_KEY_ID
+        sync: false
+      - key: R2_SECRET_ACCESS_KEY
+        sync: false
+      - key: R2_BUCKET_NAME
+        sync: false
+
+      # CORS allow-list, comma-separated. Set to the Vercel URL after
+      # the frontend deploys (and any preview-deploy pattern you want
+      # to permit). Code falls back to localhost:5173 only when this is
+      # unset — explicitly setting it is the production path.
+      - key: ALLOWED_ORIGINS
+        sync: false
+
+      # Published to sites the crawler hits (CLAUDE.md rule 5). The
+      # crawler is not invoked by the web process in production, but
+      # the Settings model refuses to load without this if any crawler
+      # module gets imported — safer to set it than discover a 500 at
+      # import time.
+      - key: VERITY_CONTACT_EMAIL
+        sync: false
+
+      # Keep OCR defaults explicit so a future config drift is visible.
+      - key: OCR_LANGS
+        value: eng+ara
+      - key: MATCHING_MODE
+        value: longest
+      - key: SPACY_MODEL
+        value: en_core_web_sm
+      - key: PYTHON_VERSION
+        value: 3.12.3

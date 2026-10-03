@@ -17,7 +17,7 @@ import {
   ResponsiveContainer,
 } from "recharts";
 
-import { getInstitution, type InstitutionDetail } from "../lib/api/client";
+import { getInstitution, pdfUrl, type InstitutionDetail } from "../lib/api/client";
 import { EmptyState, ErrorState, Loading } from "../components/StateViews";
 import { exportElementAsPng, exportRowsAsCsv } from "../lib/export";
 
@@ -389,7 +389,7 @@ function ReportList({ inst }: { inst: InstitutionDetail }) {
               </td>
               <td className="px-2 py-1 text-right">
                 <a
-                  href={`/api/dashboard/pdf/${r.report_id}#page=1`}
+                  href={pdfUrl(r.report_id, 1)}
                   target="_blank"
                   rel="noreferrer"
                   className="text-accent underline-offset-2 hover:underline"

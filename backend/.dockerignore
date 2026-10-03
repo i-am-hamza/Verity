@@ -1,0 +1,36 @@
+# Keep the build context small — anything the Dockerfile does not
+# explicitly COPY in should not be shipped to the Docker daemon at all.
+.venv
+__pycache__
+**/__pycache__
+.pytest_cache
+.ruff_cache
+.mypy_cache
+.coverage
+*.egg-info
+
+# Secrets never belong in an image.
+.env
+
+# Local dev DB; production uses Supabase Postgres.
+disclosure_scorer.db
+*.db-journal
+
+# Reports and the audit manifest live in R2 / on your local machine —
+# shipping the 2 GB corpus into the image is pointless and slow.
+storage
+tessdata
+
+# Scripts are one-off tools (migrations, audits). Not needed at runtime.
+scripts
+seed
+tests
+docs
+exports
+*.md
+
+# IDE / editor junk.
+.idea
+.vscode
+*.swp
+.DS_Store
