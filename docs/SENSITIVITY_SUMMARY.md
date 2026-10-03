@@ -1,6 +1,6 @@
 # Sensitivity analysis
 
-_Verity sensitivity analysis  |  taxonomy=4948c00426fa70118328478fe6e1d782c981cb65024378fe11af6a561faef340  |  generated=2026-10-02T20:07:38+00:00  |  n_institutions=42 (43 scored - rabigh-refining-petrochemical-co artifact)  |  within-sector only_
+_Verity sensitivity analysis  |  taxonomy=4948c00426fa70118328478fe6e1d782c981cb65024378fe11af6a561faef340  |  generated=2026-10-03T10:51:42+00:00  |  n_institutions=42 (43 scored - rabigh-refining-petrochemical-co artifact)  |  within-sector only_
 
 Three tests, all within-sector (financial vs non-financial), 42 institutions (43 scored minus `rabigh-refining-petrochemical-co`, artifact-flagged).
 

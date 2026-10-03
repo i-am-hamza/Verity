@@ -1,4 +1,4 @@
-# Verity sensitivity analysis  |  taxonomy=4948c00426fa70118328478fe6e1d782c981cb65024378fe11af6a561faef340  |  generated=2026-10-02T20:07:38+00:00  |  n_institutions=42 (43 scored - rabigh-refining-petrochemical-co artifact)  |  within-sector only
+# Verity sensitivity analysis  |  taxonomy=4948c00426fa70118328478fe6e1d782c981cb65024378fe11af6a561faef340  |  generated=2026-10-03T10:51:42+00:00  |  n_institutions=42 (43 scored - rabigh-refining-petrochemical-co artifact)  |  within-sector only
 slug,sector,years_covered,baseline_rank,jitter_median_rank,jitter_p5_rank,jitter_p95_rank,jitter_interval_width,equal_weights_rank,toc_off_rank,repeat_off_rank,all_mode_rank,flag_single_year_high_volatility
 abdullah-al-othaim-markets,non-financial,2,7,7,6,8,2,7,7,7,6,
 abu-dhabi-commercial-bank,financial,3,5,5,4,5,1,5,5,6,5,
