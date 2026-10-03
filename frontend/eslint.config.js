@@ -25,6 +25,7 @@ export default [
         AbortSignal: "readonly",
         HTMLElement: "readonly",
         HTMLDivElement: "readonly",
+        HTMLDetailsElement: "readonly",
         RequestInit: "readonly",
         getComputedStyle: "readonly",
         console: "readonly",

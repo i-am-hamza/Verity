@@ -12,9 +12,12 @@ Tests how stable the within-sector rankings are under three perturbations:
    and compare rankings. Does NOT touch stored Report / CategoryScore /
    MatchEvidence rows.
 
-Scope: 42 cleanly-scored institutions (the 43 scored minus
-rabigh-refining-petrochemical-co, whose score is a known extraction
-artifact — testing its 'sensitivity' would just measure the bug).
+Scope: every cleanly-scored institution under the latest taxonomy MINUS
+the slugs in EXCLUDED_SLUGS (rabigh-refining-petrochemical-co today —
+known extraction artifact, so testing its 'sensitivity' would just
+measure the bug). The analyzed count is reported in the generated
+summary header, not hard-coded here — the scored set grows over the
+project's life.
 """
 from __future__ import annotations
 
@@ -39,6 +42,7 @@ register_all_mappers()
 from app.database import engine  # noqa: E402
 from app.services.matcher import TaxonomyMatcher  # noqa: E402
 from app.services.pdf_extraction import count_words, extract_pdf_pages  # noqa: E402
+from app.services.storage import read_pdf_bytes  # noqa: E402
 from app.services.text_processing import segment_sentences  # noqa: E402
 from app.services.text_quality import apply_text_quality  # noqa: E402
 from app.services.verity_config import VerityConfig  # noqa: E402
@@ -79,18 +83,25 @@ def _load_baseline():
                 "category_id": t[4], "pillar": t[5], "cat_weight": float(t[6]),
             } for t in terms
         }
-        # Reports under latest taxonomy for 42 institutions
+        # Reports under latest taxonomy for the included institutions.
+        # Previous version used `GROUP BY r.id` to dedupe the fan-out
+        # from the category_scores join. SQLite accepted that; Postgres
+        # requires every non-aggregated SELECT column in GROUP BY.
+        # Rewrite with EXISTS so there's no fan-out to dedupe in the
+        # first place — same result on both engines, no GROUP BY needed.
         rpts = list(c.execute(sql_text(f"""
             SELECT r.id, r.institution_id, i.slug, i.name, i.is_financial,
                    r.fiscal_year, r.latin_word_count, r.file_path,
                    r.composite_score
             FROM reports r
             JOIN institutions i ON i.id = r.institution_id
-            JOIN category_scores cs ON cs.report_id = r.id
-            JOIN taxonomy_versions tv ON tv.id = cs.taxonomy_version_id
-            WHERE tv.hash = '{latest}' AND i.active = 1
+            WHERE i.active
               AND i.slug NOT IN ({",".join("'" + s + "'" for s in EXCLUDED_SLUGS)})
-            GROUP BY r.id
+              AND EXISTS (
+                SELECT 1 FROM category_scores cs
+                JOIN taxonomy_versions tv ON tv.id = cs.taxonomy_version_id
+                WHERE cs.report_id = r.id AND tv.hash = '{latest}'
+              )
             ORDER BY i.slug, r.fiscal_year
         """)))
         reports = {}
@@ -342,7 +353,10 @@ def run_switch_tests(term_meta, reports, baseline_fin_rank, baseline_non_fin_ran
     t0 = time.monotonic()
     for idx, (rid, meta) in enumerate(report_items, start=1):
         try:
-            pages = extract_pdf_pages(meta["file_path"])
+            # Session 9: PDFs live in R2 keyed by the stored file_path.
+            # read_pdf_bytes handles both R2 and the local-disk dev
+            # fallback transparently; extract_pdf_pages accepts bytes.
+            pages = extract_pdf_pages(read_pdf_bytes(meta["file_path"]))
         except Exception as exc:
             print(f"  [{idx}/{len(report_items)}] {meta['slug']} FY{meta['fiscal_year']}:"
                   f" extraction failed: {exc}")
@@ -441,10 +455,27 @@ def main():
     # ---- CSV + MD outputs ----------------------------------------------
     EXPORTS.mkdir(parents=True, exist_ok=True)
     DOCS.mkdir(parents=True, exist_ok=True)
+    # Count-strings must track the actual data: the live scored set grows
+    # over the project's life, and hard-coded "42 of 43" went stale as
+    # soon as Session 9 reprocessed. Compute from inst_meta (what we
+    # analysed) + the DB count of scored institutions under the latest
+    # taxonomy (what we started from).
+    n_analysed = len(inst_meta)
+    with engine.connect() as _c:
+        n_scored_total = _c.execute(sql_text("""
+            SELECT COUNT(DISTINCT i.id)
+            FROM institutions i
+            JOIN reports r ON r.institution_id = i.id
+            JOIN category_scores cs ON cs.report_id = r.id
+            JOIN taxonomy_versions tv ON tv.id = cs.taxonomy_version_id
+            WHERE tv.hash = :h AND i.active
+        """), {"h": tv_hash}).scalar() or n_analysed
+    excluded_slugs_str = ", ".join(sorted(EXCLUDED_SLUGS))
     header = (
         f"# Verity sensitivity analysis  |  taxonomy={tv_hash}  |  "
         f"generated={datetime.now(UTC).isoformat(timespec='seconds')}  |  "
-        f"n_institutions=42 (43 scored - rabigh-refining-petrochemical-co artifact)  |  "
+        f"n_institutions={n_analysed} ({n_scored_total} scored"
+        f" - {excluded_slugs_str} artifact)  |  "
         f"within-sector only"
     )
     csv_path = EXPORTS / "sensitivity_summary.csv"
@@ -495,8 +526,10 @@ def main():
     lines.append("")
     lines.append(f"_{header[2:]}_")
     lines.append("")
-    lines.append("Three tests, all within-sector (financial vs non-financial), 42 institutions "
-                 f"(43 scored minus `rabigh-refining-petrochemical-co`, artifact-flagged).")
+    lines.append(
+        f"Three tests, all within-sector (financial vs non-financial), {n_analysed} institutions "
+        f"({n_scored_total} scored minus `{excluded_slugs_str}`, artifact-flagged)."
+    )
     lines.append("")
     lines.append("## 1. Weight jitter — U(0.8, 1.2), 1000 draws")
     lines.append(f"- Seed: `{JITTER_SEED}` (reproducible).")
