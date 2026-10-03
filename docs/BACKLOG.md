@@ -32,6 +32,21 @@ is a bug — if something is broken we fix it. These are intentional
   Recharts off into a lazy route-level chunk brings initial payload
   below 500 kB. Not a correctness issue; worth it before deploy.
 
+## Flagged in Session 8 (UI bug sweep)
+
+- **Garbled / reversed Arabic text in Evidence page sentences** (visible on
+  e.g. `abdullah-al-othaim-markets` rows). Root cause is PyMuPDF's text
+  extraction returning Arabic characters in visual order, not logical order,
+  so the string that lands in `MatchEvidence.sentence_text` is already
+  reversed before the UI ever sees it. The fix is in the extraction layer
+  (apply Unicode bidi algorithm after `page.get_text()` for Arabic
+  spans, or switch to `get_text("dict")` which preserves run direction),
+  not in the dashboard. Any UI-side CSS `direction: rtl` on a per-sentence
+  basis would be papering over the real problem. Scoped for a text-
+  extraction session; the matching counts are not affected because the
+  taxonomy is English, but the surfaced evidence sentence is misleading
+  for the human reviewer.
+
 ## Deferred in Session 7 (hardening pass)
 
 - **`CrawlLog` extension: distinguish pre-blocked skips from real

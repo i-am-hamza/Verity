@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useState, useMemo } from "react";
 import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import {
   ScatterChart,
   Scatter,
@@ -16,6 +17,20 @@ import {
 import { getSensitivity } from "../lib/api/client";
 import { EmptyState, ErrorState, Loading } from "../components/StateViews";
 import { exportRowsAsCsv } from "../lib/export";
+
+/**
+ * Rank ticks for the sensitivity scatter: 1, 5, 10, 15, …, n. Ranks start
+ * at 1 (not 0), so letting Recharts auto-generate "nice" ticks produces a
+ * meaningless 0 label. An explicit tick list anchors the axis at 1 and
+ * steps in 5s up to the cohort size.
+ */
+function rankTicks(n: number): number[] {
+  if (n <= 0) return [1];
+  const ticks: number[] = [1];
+  for (let v = 5; v < n; v += 5) ticks.push(v);
+  if (ticks[ticks.length - 1] !== n) ticks.push(n);
+  return ticks;
+}
 
 export function SensitivityPage() {
   const q = useQuery({
@@ -113,19 +128,36 @@ export function SensitivityPage() {
           <ResponsiveContainer>
             <ScatterChart margin={{ top: 10, right: 24, bottom: 24, left: 24 }}>
               <CartesianGrid strokeDasharray="3 3" />
+              {/* Both axes ascending from 1 (ranks don't start at 0) to the
+                  cohort size. Reversed used to make numerically-higher ranks
+                  (= worse) appear further out, but it flipped the diagonal
+                  interpretation and introduced a bogus 0 tick. Ascending
+                  domain [1, n] keeps "jitter median > baseline" above the
+                  diagonal (= rank worsened) and vice versa, consistent on
+                  both axes. */}
               <XAxis
                 type="number"
                 dataKey="baseline"
                 name="baseline rank"
+                domain={[1, rows.length]}
+                ticks={rankTicks(rows.length)}
+                interval={0}
+                allowDecimals={false}
+                allowDataOverflow={false}
+                tickFormatter={(v: number) => (v < 1 ? "" : String(v))}
                 label={{ value: "baseline rank (1 = best)", position: "insideBottom", offset: -10 }}
-                reversed
               />
               <YAxis
                 type="number"
                 dataKey="median"
                 name="jitter median"
+                domain={[1, rows.length]}
+                ticks={rankTicks(rows.length)}
+                interval={0}
+                allowDecimals={false}
+                allowDataOverflow={false}
+                tickFormatter={(v: number) => (v < 1 ? "" : String(v))}
                 label={{ value: "jitter median (1 = best)", angle: -90, position: "insideLeft" }}
-                reversed
               />
               <ReferenceLine
                 segment={[
@@ -134,6 +166,7 @@ export function SensitivityPage() {
                 ]}
                 stroke="rgb(var(--border))"
                 strokeDasharray="4 2"
+                label={{ value: "no rank change", position: "insideTopRight", fill: "rgb(var(--text-faint))", fontSize: 10 }}
               />
               <Tooltip
                 content={({ active, payload }) => {
@@ -210,7 +243,9 @@ export function SensitivityPage() {
 
       <section className="prose prose-sm max-w-none rounded-md border border-border bg-surface p-4 prose-invert dark:prose-invert">
         <h2 className="font-heading text-lg font-semibold not-prose">Plain-English summary</h2>
-        <ReactMarkdown>{data.summary_markdown || "_No summary available._"}</ReactMarkdown>
+        <ReactMarkdown remarkPlugins={[remarkGfm]}>
+          {data.summary_markdown || "_No summary available._"}
+        </ReactMarkdown>
       </section>
     </section>
   );

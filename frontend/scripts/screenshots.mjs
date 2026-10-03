@@ -32,6 +32,16 @@ const VIEWPORTS = [
   { label: "desktop-1440", width: 1440, height: 900 },
 ];
 
+// Session 8 added mid-widths specifically for Evidence filter-wrap verification.
+// Only Evidence is captured at these breakpoints — full-matrix across every
+// page would just double disk use for pages that aren't layout-sensitive at
+// these widths.
+const EVIDENCE_MID_VIEWPORTS = [
+  { label: "mid-768", width: 768, height: 900 },
+  { label: "mid-1024", width: 1024, height: 900 },
+  { label: "mid-1280", width: 1280, height: 900 },
+];
+
 const THEMES = ["dark", "light"];
 
 async function ensureDir(p) {
@@ -76,6 +86,34 @@ async function run() {
           captured.push(file);
           process.stdout.write(`.`);
         }
+        await context.close();
+      }
+
+      // Evidence-specific mid-width captures (filter-wrap verification).
+      for (const vp of EVIDENCE_MID_VIEWPORTS) {
+        const context = await browser.newContext({
+          viewport: { width: vp.width, height: vp.height },
+          deviceScaleFactor: 2,
+        });
+        await context.addInitScript((t) => {
+          try { window.localStorage.setItem("verity.theme", t); } catch (_) {}
+        }, theme);
+        const page = await context.newPage();
+        const dir = join(OUT, theme, vp.label);
+        await ensureDir(dir);
+        const url = `${BASE}/evidence`;
+        try {
+          await page.goto(url, { waitUntil: "networkidle", timeout: 30000 });
+        } catch (_err) {
+          await page.goto(url, { waitUntil: "load", timeout: 30000 });
+        }
+        await page.waitForTimeout(600);
+        const file = join(dir, "evidence.png");
+        // Clip to just the viewport — we only need to confirm the filter
+        // bar doesn't overlap, not the whole scroll of 50 cards.
+        await page.screenshot({ path: file, fullPage: false });
+        captured.push(file);
+        process.stdout.write(`.`);
         await context.close();
       }
     }

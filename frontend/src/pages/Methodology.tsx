@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 import { getMethodology } from "../lib/api/client";
 import { EmptyState, ErrorState, Loading } from "../components/StateViews";
@@ -17,7 +18,7 @@ export function MethodologyPage() {
   return (
     <section className="rounded-md border border-border bg-surface p-6">
       <article className="prose prose-sm max-w-none text-text prose-headings:text-text prose-strong:text-text prose-a:text-accent dark:prose-invert">
-        <ReactMarkdown>{q.data}</ReactMarkdown>
+        <ReactMarkdown remarkPlugins={[remarkGfm]}>{q.data}</ReactMarkdown>
       </article>
     </section>
   );

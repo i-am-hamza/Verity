@@ -95,11 +95,16 @@ export function EvidencePage() {
             {filtersOpen ? "hide" : "show"}
           </span>
         </button>
+        {/* flex-wrap, not grid-cols-N: `md:grid-cols-5` + `md:block` override
+            was overriding itself at open-on-desktop; and five fixed columns
+            crammed at 768/1024/1280 causes the overlap reported. flex-wrap
+            with per-item `flex-1 min-w-[180px]` grows items equally while
+            keeping a safe minimum before they wrap to the next line. */}
         <div
           id="evidence-filters"
           className={[
-            "grid gap-3 border-border p-3 md:grid-cols-5 md:border-0 md:p-3",
-            filtersOpen ? "grid border-t md:block" : "hidden md:grid",
+            "flex flex-wrap items-stretch gap-3 border-border p-3",
+            filtersOpen ? "border-t md:border-0" : "hidden md:flex",
           ].join(" ")}
         >
           <input
@@ -110,7 +115,7 @@ export function EvidencePage() {
               setSlug(e.target.value);
               setPage(1);
             }}
-            className="min-h-[44px] rounded-md border border-border bg-surface-2 px-3 text-sm md:min-h-0 md:py-1"
+            className="min-h-[44px] flex-1 basis-[200px] rounded-md border border-border bg-surface-2 px-3 text-sm"
             aria-label="Filter by institution slug"
           />
           <select
@@ -119,7 +124,7 @@ export function EvidencePage() {
               setFy(e.target.value ? Number(e.target.value) : null);
               setPage(1);
             }}
-            className="min-h-[44px] rounded-md border border-border bg-surface-2 px-3 text-sm md:min-h-0 md:py-1"
+            className="min-h-[44px] flex-1 basis-[140px] rounded-md border border-border bg-surface-2 px-3 text-sm"
             aria-label="Filter by fiscal year"
           >
             <option value="">All FYs</option>
@@ -135,7 +140,7 @@ export function EvidencePage() {
               setPillar(e.target.value);
               setPage(1);
             }}
-            className="min-h-[44px] rounded-md border border-border bg-surface-2 px-3 text-sm md:min-h-0 md:py-1"
+            className="min-h-[44px] flex-1 basis-[160px] rounded-md border border-border bg-surface-2 px-3 text-sm"
             aria-label="Filter by pillar"
           >
             <option value="">All pillars</option>
@@ -151,7 +156,7 @@ export function EvidencePage() {
               setTerm(e.target.value);
               setPage(1);
             }}
-            className="min-h-[44px] rounded-md border border-border bg-surface-2 px-3 text-sm md:min-h-0 md:py-1"
+            className="min-h-[44px] flex-1 basis-[160px] rounded-md border border-border bg-surface-2 px-3 text-sm"
             aria-label="Filter by term"
           />
           <button
@@ -174,7 +179,7 @@ export function EvidencePage() {
                 "verity-evidence-reviewed.csv",
               )
             }
-            className="min-h-[44px] rounded-md border border-border bg-surface px-3 text-xs text-text-muted hover:text-text md:min-h-0 md:py-1"
+            className="inline-flex min-h-[44px] flex-1 basis-[180px] items-center justify-center whitespace-nowrap rounded-md border border-border bg-surface px-4 text-xs text-text-muted hover:text-text"
           >
             Export reviewed CSV
           </button>

@@ -68,74 +68,90 @@ export function CoveragePage() {
         </button>
       </header>
 
-      <div className="flex flex-wrap gap-4 text-xs text-text-muted">
+      <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-text-muted">
         <Legend swatch="scored" label="scored" />
         <Legend swatch="needs_review" label="needs_review" />
         <Legend swatch="gap" label="gap (reason)" />
         <Legend swatch="not_attempted" label="not attempted" />
-        <span className="ml-auto text-text-faint">
+        <span className="w-full text-xs text-text-faint sm:ml-auto sm:w-auto">
           not covered: {data.unscored_reasons.A_no_file} no file ·{" "}
           {data.unscored_reasons.B_wayback_only_blocked} wayback-only blocked ·{" "}
           {data.unscored_reasons.D_page_threshold} below page threshold
         </span>
       </div>
 
-      {/* 60 × 6 matrix: horizontal scroll on narrow viewports, with the
-          institution-name column stuck to the left edge so the row context
-          follows the swipe. */}
-      <div className="overflow-x-auto rounded-md border border-border">
-        <table className="min-w-max text-sm">
-          <thead className="bg-surface-2">
-            <tr>
-              <th
-                scope="col"
-                className="sticky left-0 z-10 min-w-[200px] bg-surface-2 px-3 py-2 text-left text-xs uppercase tracking-wide text-text-muted"
-              >
-                Institution
-              </th>
-              {data.fiscal_years.map((fy) => (
+      {/* 60 × 6 matrix. Horizontal scroll on narrow viewports with the
+          institution-name column stuck to the left edge so row context
+          follows the swipe. A gradient fade on the right edge is the
+          scroll affordance — tells the user there's more off-screen,
+          since mobile browsers don't paint a persistent scrollbar. */}
+      <div className="relative rounded-md border border-border">
+        <div className="overflow-x-auto">
+          <table className="min-w-max text-sm">
+            <thead className="bg-surface-2">
+              <tr>
                 <th
-                  key={fy}
                   scope="col"
-                  className="min-w-[72px] px-3 py-2 text-center text-xs uppercase tracking-wide text-text-muted"
+                  className="sticky left-0 z-10 w-[160px] min-w-[160px] max-w-[160px] bg-surface-2 px-3 py-3 text-left text-xs uppercase tracking-wide text-text-muted shadow-[2px_0_0_rgb(var(--border))] sm:w-[220px] sm:min-w-[220px] sm:max-w-[220px] sm:px-4"
                 >
-                  FY{fy}
+                  Institution
                 </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {data.rows.map((row) => (
-              <tr key={row.slug} className="border-t border-border">
-                <td className="sticky left-0 z-10 bg-surface px-3 py-2 text-left">
-                  <Link to={`/institution/${row.slug}`} className="hover:text-accent">
-                    {row.name}
-                  </Link>
-                  <div className="text-[11px] text-text-faint">
-                    {row.sector}
-                  </div>
-                </td>
-                {data.fiscal_years.map((fy) => {
-                  const cell = row.cells[fy];
-                  if (!cell) return <td key={fy} />;
-                  const cls = CELL_STYLE[cell.status] ?? "";
-                  return (
-                    <td key={fy} className="px-1 py-1 text-center">
-                      <button
-                        type="button"
-                        onClick={() => setSelected({ slug: row.slug, fy, cell })}
-                        className={`inline-flex w-full items-center justify-center rounded-md border px-2 py-1 text-[11px] font-medium uppercase ${cls}`}
-                        title={cell.reason}
-                      >
-                        {cell.status === "scored" ? "✓" : cell.status === "needs_review" ? "!" : cell.status === "gap" ? "–" : "·"}
-                      </button>
-                    </td>
-                  );
-                })}
+                {data.fiscal_years.map((fy) => (
+                  <th
+                    key={fy}
+                    scope="col"
+                    className="min-w-[64px] px-2 py-3 text-center text-xs uppercase tracking-wide text-text-muted sm:min-w-[88px] sm:px-4"
+                  >
+                    FY{fy}
+                  </th>
+                ))}
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {data.rows.map((row) => (
+                <tr key={row.slug} className="border-t border-border">
+                  <td className="sticky left-0 z-10 w-[160px] min-w-[160px] max-w-[160px] bg-surface px-3 py-2.5 text-left shadow-[2px_0_0_rgb(var(--border))] sm:w-[220px] sm:min-w-[220px] sm:max-w-[220px] sm:px-4 sm:py-3">
+                    <Link
+                      to={`/institution/${row.slug}`}
+                      className="block truncate text-sm hover:text-accent"
+                      title={row.name}
+                    >
+                      {row.name}
+                    </Link>
+                    <div className="truncate text-[11px] text-text-faint">
+                      {row.sector}
+                    </div>
+                  </td>
+                  {data.fiscal_years.map((fy) => {
+                    const cell = row.cells[fy];
+                    if (!cell) return <td key={fy} />;
+                    const cls = CELL_STYLE[cell.status] ?? "";
+                    return (
+                      <td key={fy} className="px-2 py-2 text-center sm:px-3 sm:py-2.5">
+                        <button
+                          type="button"
+                          onClick={() => setSelected({ slug: row.slug, fy, cell })}
+                          className={`inline-flex min-h-[32px] w-full items-center justify-center rounded-md border px-2 py-1.5 text-xs font-semibold uppercase sm:min-h-[36px] ${cls}`}
+                          title={cell.reason}
+                          aria-label={`${row.name} FY${fy}: ${cell.status}. ${cell.reason}`}
+                        >
+                          {cell.status === "scored" ? "✓" : cell.status === "needs_review" ? "!" : cell.status === "gap" ? "–" : "·"}
+                        </button>
+                      </td>
+                    );
+                  })}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        {/* Right-edge scroll affordance: gradient fade shows that there's
+            more table off-screen. Pointer-events none so it never blocks
+            a tap on a cell underneath. */}
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-y-0 right-0 w-8 bg-gradient-to-l from-bg to-transparent sm:w-10"
+        />
       </div>
 
       {selected ? (
@@ -185,8 +201,11 @@ function Legend({ swatch, label }: { swatch: keyof typeof CELL_STYLE | string; l
   const cls = CELL_STYLE[swatch] ?? "";
   return (
     <span className="inline-flex items-center gap-2">
-      <span className={`inline-block h-3 w-3 rounded-sm border ${cls}`} />
-      {label}
+      {/* Legend swatch sized to match the actual cell border/fill style
+          at a readable size (4x4 = 16px). Previously 3x3 (12px) which
+          was easy to miss. */}
+      <span className={`inline-block h-4 w-4 rounded-sm border-2 ${cls}`} />
+      <span className="text-sm">{label}</span>
     </span>
   );
 }
