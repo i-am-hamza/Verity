@@ -4,7 +4,7 @@ import enum
 from datetime import date
 from typing import TYPE_CHECKING
 
-from sqlalchemy import Date, Enum, String
+from sqlalchemy import BigInteger, Date, Enum, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base
@@ -42,7 +42,10 @@ class Institution(Base):
     # Fields sourced from data/List of Companies.xlsx.
     rank: Mapped[int | None] = mapped_column(nullable=True, unique=True)
     ticker: Mapped[str | None] = mapped_column(String, nullable=True, index=True)
-    market_cap_usd: Mapped[int | None] = mapped_column(nullable=True)
+    # BIGINT because Saudi Aramco's market cap (≈ 1.9T USD) overflows int32
+    # on Postgres. SQLite's INTEGER is variable-width so this was invisible
+    # until Session 9's Postgres migration.
+    market_cap_usd: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
     market_cap_date: Mapped[date | None] = mapped_column(Date, nullable=True)
     industry: Mapped[str | None] = mapped_column(String, nullable=True, index=True)
     # slug is populated by seed/load_institutions.py from the company name;

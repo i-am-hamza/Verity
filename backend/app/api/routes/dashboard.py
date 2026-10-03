@@ -10,13 +10,12 @@ from __future__ import annotations
 
 import csv
 import io
-import os
 from collections import defaultdict
 from datetime import UTC, datetime
 from pathlib import Path
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Response
-from fastapi.responses import FileResponse
+from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 
 from app.database import get_db
@@ -592,9 +591,15 @@ def get_pdf(report_id: int, db: Session = Depends(get_db)):
     rpt = db.get(Report, report_id)
     if rpt is None:
         raise HTTPException(status_code=404, detail="Report not found")
-    if not rpt.file_path or not os.path.exists(rpt.file_path):
+    if not rpt.file_path:
         raise HTTPException(status_code=404, detail="PDF file missing on disk")
-    return FileResponse(rpt.file_path, media_type="application/pdf")
+    from app.services.storage import open_pdf_stream, pdf_exists
+    if not pdf_exists(rpt.file_path):
+        raise HTTPException(status_code=404, detail="PDF file missing on disk")
+    # Session 9: `file_path` is an R2 object key; stream it through
+    # FastAPI's StreamingResponse rather than FileResponse-on-disk.
+    return StreamingResponse(open_pdf_stream(rpt.file_path),
+                             media_type="application/pdf")
 
 
 # ---------------------------- sensitivity ----------------------------------

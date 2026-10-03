@@ -1,10 +1,8 @@
-import shutil
 import uuid
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 from sqlalchemy.orm import Session
 
-from app.config import settings
 from app.database import get_db
 from app.models.institution import Institution
 from app.models.report import Report
@@ -12,6 +10,7 @@ from app.models.score import MatchEvidence
 from app.models.taxonomy import Term
 from app.schemas.score import MatchEvidenceOut, ReportOut
 from app.services.pipeline import process_report
+from app.services.storage import write_pdf
 
 router = APIRouter(prefix="/reports", tags=["reports"])
 
@@ -31,16 +30,18 @@ def upload_report(
     if not (file.filename or "").lower().endswith(".pdf"):
         raise HTTPException(status_code=400, detail="Only PDF files are supported")
 
-    dest_name = f"{institution_id}_{fiscal_year}_{uuid.uuid4().hex[:8]}.pdf"
-    dest_path = settings.storage_dir / dest_name
-    with dest_path.open("wb") as buf:
-        shutil.copyfileobj(file.file, buf)
+    # Session 9: manual uploads go to R2 under an "uploads/" prefix so
+    # they don't collide with crawler-sourced keys (which are grouped
+    # by slug). Stored key is what Report.file_path holds.
+    body = file.file.read()
+    key = f"uploads/{institution_id}_{fiscal_year}_{uuid.uuid4().hex[:8]}.pdf"
+    write_pdf(key, body)
 
     report = Report(
         institution_id=institution_id,
         fiscal_year=fiscal_year,
         language=language,
-        file_path=str(dest_path),
+        file_path=key,
     )
     db.add(report)
     db.commit()

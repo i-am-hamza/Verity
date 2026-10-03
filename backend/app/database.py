@@ -3,9 +3,23 @@ from sqlalchemy.orm import DeclarativeBase, sessionmaker
 
 from app.config import settings
 
-connect_args = {"check_same_thread": False} if settings.database_url.startswith("sqlite") else {}
 
-engine = create_engine(settings.database_url, connect_args=connect_args)
+def _normalise_url(url: str) -> str:
+    """Keep SQLite URLs untouched; rewrite bare `postgresql://` to the
+    `postgresql+psycopg://` form so SQLAlchemy picks the psycopg 3 driver
+    we actually install (not the legacy psycopg2 which is unmaintained
+    and we deliberately don't ship). Session 9: lets production DATABASE_URL
+    stay in the standard Postgres format Supabase hands out of the dashboard
+    without the user needing to remember a driver prefix."""
+    if url.startswith("postgresql://"):
+        return "postgresql+psycopg://" + url[len("postgresql://"):]
+    return url
+
+
+DB_URL = _normalise_url(settings.database_url)
+connect_args = {"check_same_thread": False} if DB_URL.startswith("sqlite") else {}
+
+engine = create_engine(DB_URL, connect_args=connect_args)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 

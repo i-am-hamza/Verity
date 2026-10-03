@@ -95,6 +95,16 @@ def upgrade() -> None:
         batch_op.create_index('ix_category_scores_versioning', ['report_id', 'taxonomy_version_id', 'pipeline_version'], unique=False)
         batch_op.create_foreign_key('fk_category_scores_taxonomy_version_id', 'taxonomy_versions', ['taxonomy_version_id'], ['id'])
 
+    # Pre-create the enum types that get used in ADD COLUMN below. SQLite
+    # ignores named enums (stores strings), so `.create(..., checkfirst=True)`
+    # is a no-op there; on Postgres we need `CREATE TYPE … AS ENUM (…)` to
+    # exist before any column references it. Session 9: Postgres migration.
+    wave_enum = sa.Enum('financial', 'other', name='wave')
+    inst_type_enum = sa.Enum('bank', 'insurer', 'investment_holding',
+                             'leasing', 'other', name='institutiontype')
+    wave_enum.create(op.get_bind(), checkfirst=True)
+    inst_type_enum.create(op.get_bind(), checkfirst=True)
+
     with op.batch_alter_table('institutions', schema=None) as batch_op:
         batch_op.add_column(sa.Column('rank', sa.Integer(), nullable=True))
         batch_op.add_column(sa.Column('ticker', sa.String(), nullable=True))
@@ -104,9 +114,11 @@ def upgrade() -> None:
         batch_op.add_column(sa.Column('slug', sa.String(), nullable=True))
         # server_default so ADD COLUMN NOT NULL succeeds for any pre-existing
         # rows; loader overwrites with the real value.
-        batch_op.add_column(sa.Column('is_financial', sa.Boolean(), nullable=False, server_default=sa.text('0')))
-        batch_op.add_column(sa.Column('wave', sa.Enum('financial', 'other', name='wave'), nullable=False, server_default='other'))
-        batch_op.add_column(sa.Column('institution_type', sa.Enum('bank', 'insurer', 'investment_holding', 'leasing', 'other', name='institutiontype'), nullable=True))
+        # Portable boolean default — `sa.false()` emits `FALSE` on Postgres
+        # and `0` on SQLite, so this migration runs on both backends.
+        batch_op.add_column(sa.Column('is_financial', sa.Boolean(), nullable=False, server_default=sa.false()))
+        batch_op.add_column(sa.Column('wave', sa.Enum('financial', 'other', name='wave', create_type=False), nullable=False, server_default='other'))
+        batch_op.add_column(sa.Column('institution_type', sa.Enum('bank', 'insurer', 'investment_holding', 'leasing', 'other', name='institutiontype', create_type=False), nullable=True))
         batch_op.create_index(batch_op.f('ix_institutions_industry'), ['industry'], unique=False)
         batch_op.create_index(batch_op.f('ix_institutions_slug'), ['slug'], unique=True)
         batch_op.create_index(batch_op.f('ix_institutions_ticker'), ['ticker'], unique=False)

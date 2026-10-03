@@ -113,6 +113,11 @@ def test_reprocessing_under_a_new_version_appends_rows(isolated_db, monkeypatch)
         # ("unused.pdf") doesn't need to exist on disk.
         monkeypatch.setattr(pipeline_mod, "estimate_ocr_fraction",
                             lambda _p, _t: (0.0, 1))
+        # Session 9 moved PDF bytes behind read_pdf_bytes (R2 in prod,
+        # local disk in dev). The reprocessing invariant doesn't care
+        # about actual bytes — the fake extractor ignores its argument —
+        # so return a dummy buffer for the fake file path.
+        monkeypatch.setattr(pipeline_mod, "read_pdf_bytes", lambda _p: b"")
         # Also stub text-quality so we don't try to detect FS boundary / ToC
         # in text that was invented for a database-behaviour test.
         from app.services import text_quality as tq_mod

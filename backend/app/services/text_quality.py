@@ -298,15 +298,20 @@ def apply_text_quality(pages: list[PageText], cfg) -> CleanedPages:
 # --------------------------------------------------------------------------- #
 
 
-def estimate_ocr_fraction(file_path: str, char_threshold: int) -> tuple[float, int]:
+def estimate_ocr_fraction(source: str | bytes, char_threshold: int) -> tuple[float, int]:
     """Open the PDF with pymupdf and return (ocr_fraction, total_pages).
 
     ocr_fraction = share of pages whose native text yield is below the
     char threshold (same test extract_pdf_pages uses to trigger OCR).
     Does NOT render or OCR anything.
+
+    Accepts a path (legacy / dev) or bytes (Session 9 R2 path).
     """
     import pymupdf
-    doc = pymupdf.open(file_path)
+    if isinstance(source, (bytes, bytearray)):
+        doc = pymupdf.open(stream=bytes(source), filetype="pdf")
+    else:
+        doc = pymupdf.open(source)
     try:
         total = doc.page_count
         if total == 0:

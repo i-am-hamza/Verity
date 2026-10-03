@@ -26,6 +26,7 @@ from app.models.taxonomy import Category, TaxonomyVersion, Term
 from app.services.matcher import TaxonomyMatcher
 from app.services.pdf_extraction import count_words, extract_pdf_pages
 from app.services.scoring import composite_score, score_report_categories
+from app.services.storage import read_pdf_bytes
 from app.services.taxonomy_hash import compute_taxonomy_hash
 from app.services.text_processing import segment_sentences
 from app.services.text_quality import apply_text_quality, estimate_ocr_fraction
@@ -122,13 +123,26 @@ def _run_pipeline_cpu(
     result = WorkerResult(source_document_id=source_document_id, file_path=file_path,
                           status="scored")
 
+    # Session 9: PDFs live in R2. Fetch bytes once and hand the same buffer
+    # to both the OCR pre-check and the full extraction so a report is one
+    # network round trip, not two. `file_path` is now the R2 object key
+    # (e.g. "al-rajhi-bank/2025_integrated_e66e4adf.pdf"); local-disk paths
+    # also work for dev / tests via the storage module's filesystem fallback.
+    try:
+        pdf_bytes = read_pdf_bytes(file_path)
+    except Exception as exc:
+        result.status = "error"
+        result.error_message = f"fetch pdf bytes failed: {exc}"
+        result.total_seconds = time.monotonic() - t_total
+        return result
+
     # OCR pre-check: cheap scan of native-text yield per page. If too much
     # of the report would need OCR, skip the slow pass and flag the file
     # as heavily scanned rather than spending hours on it.
     from app.config import settings
     try:
         ocr_fraction, total_pages = estimate_ocr_fraction(
-            file_path, settings.ocr_trigger_char_threshold
+            pdf_bytes, settings.ocr_trigger_char_threshold
         )
     except Exception as exc:
         result.status = "error"
@@ -152,7 +166,7 @@ def _run_pipeline_cpu(
     # Extract
     t = time.monotonic()
     try:
-        pages = extract_pdf_pages(file_path)
+        pages = extract_pdf_pages(pdf_bytes)
     except Exception as exc:
         result.status = "error"
         result.error_message = f"extract_pdf_pages failed: {exc}"

@@ -64,10 +64,20 @@ class WordCounts:
         return self.latin + self.arabic
 
 
-def extract_pdf_pages(file_path: str | Path) -> list[PageText]:
+def extract_pdf_pages(source: str | Path | bytes) -> list[PageText]:
+    """Open a PDF and return per-page text.
+
+    `source` can be a local path (legacy / dev) or raw bytes (the Session
+    9 production path, where PDFs live in R2 and the pipeline hands
+    bytes straight from `read_pdf_bytes` to pymupdf). pymupdf.open takes
+    `stream=` for in-memory bytes which avoids a tempfile round-trip.
+    """
     _configure_ocr()
 
-    doc = pymupdf.open(str(file_path))
+    if isinstance(source, (bytes, bytearray)):
+        doc = pymupdf.open(stream=bytes(source), filetype="pdf")
+    else:
+        doc = pymupdf.open(str(source))
     pages: list[PageText] = []
 
     for i, page in enumerate(doc, start=1):
