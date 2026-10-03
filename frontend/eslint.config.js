@@ -28,6 +28,9 @@ export default [
         RequestInit: "readonly",
         getComputedStyle: "readonly",
         console: "readonly",
+        KeyboardEvent: "readonly",
+        MediaQueryList: "readonly",
+        MediaQueryListEvent: "readonly",
       },
     },
     plugins: {

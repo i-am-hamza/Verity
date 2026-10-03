@@ -36,6 +36,13 @@ Thumbs.db
 frontend/node_modules/
 frontend/dist/
 
+# Playwright verification screenshots — large binary artefacts, regenerated
+# by `node frontend/scripts/screenshots.mjs` whenever needed. The script
+# itself is committed; the output is not.
+frontend/screenshots/
+frontend/playwright-report/
+frontend/test-results/
+
 # Session artefacts / temp outputs
 backend/_*.log
 backend/_*.json

@@ -159,13 +159,15 @@ export function OverviewPage() {
         </div>
       ) : null}
 
-      <div className="flex flex-wrap gap-3 rounded-md border border-border bg-surface p-3">
-        <label className="flex items-center gap-2 text-xs text-text-muted">
+      {/* Filters: stacked vertically on mobile so each select has room to
+          breathe; row of three on `sm:` and up. */}
+      <div className="flex flex-col gap-3 rounded-md border border-border bg-surface p-3 sm:flex-row sm:flex-wrap">
+        <label className="flex flex-col gap-1 text-xs text-text-muted sm:flex-row sm:items-center sm:gap-2">
           Cohort
           <select
             value={cohort}
             onChange={(e) => setCohort(e.target.value)}
-            className="rounded-md border border-border bg-surface-2 px-2 py-1 text-sm text-text"
+            className="min-h-[44px] rounded-md border border-border bg-surface-2 px-3 text-sm text-text sm:min-h-0 sm:py-1"
           >
             {COHORT_OPTIONS.map((c) => (
               <option key={c} value={c}>
@@ -174,12 +176,12 @@ export function OverviewPage() {
             ))}
           </select>
         </label>
-        <label className="flex items-center gap-2 text-xs text-text-muted">
+        <label className="flex flex-col gap-1 text-xs text-text-muted sm:flex-row sm:items-center sm:gap-2">
           Country
           <select
             value={country}
             onChange={(e) => setCountry(e.target.value)}
-            className="rounded-md border border-border bg-surface-2 px-2 py-1 text-sm text-text"
+            className="min-h-[44px] rounded-md border border-border bg-surface-2 px-3 text-sm text-text sm:min-h-0 sm:py-1"
           >
             <option value="">All</option>
             {countries.map((c) => (
@@ -189,12 +191,12 @@ export function OverviewPage() {
             ))}
           </select>
         </label>
-        <label className="flex items-center gap-2 text-xs text-text-muted">
+        <label className="flex flex-col gap-1 text-xs text-text-muted sm:flex-row sm:items-center sm:gap-2">
           Fiscal year
           <select
             value={fy === null ? "" : String(fy)}
             onChange={(e) => setFy(e.target.value === "" ? null : Number(e.target.value))}
-            className="rounded-md border border-border bg-surface-2 px-2 py-1 text-sm text-text"
+            className="min-h-[44px] rounded-md border border-border bg-surface-2 px-3 text-sm text-text sm:min-h-0 sm:py-1"
           >
             {FY_OPTIONS.map((opt) => (
               <option key={opt ?? "mean"} value={opt === null ? "" : String(opt)}>
@@ -235,7 +237,86 @@ function LeaderboardTable({
   totalFromMeta: number;
 }) {
   return (
-    <div className="overflow-x-auto rounded-md border border-border">
+    <>
+      {/* Mobile: stacked cards. Each row self-contained; institution name
+          + composite are the always-visible primary; sector/country/E/S/G
+          are secondary and sit below. */}
+      <ul
+        className="flex flex-col gap-2 md:hidden"
+        aria-label={`${totalFromMeta} institutions ranked by composite ESG disclosure density`}
+      >
+        {rows.map((r) => (
+          <li
+            key={r.slug}
+            className="rounded-md border border-border bg-surface p-3"
+          >
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0 flex-1">
+                <div className="flex items-baseline gap-2">
+                  <span className="tabular font-semibold">#{r.rank_within_sector}</span>
+                  <span className="truncate text-[11px] uppercase tracking-wide text-text-faint">
+                    {r.sector === "financial" ? "Financial" : "Non-financial"}
+                  </span>
+                </div>
+                <Link
+                  to={`/institution/${r.slug}`}
+                  className="mt-0.5 block truncate text-base font-medium hover:text-accent"
+                >
+                  {r.name}
+                </Link>
+                <div className="truncate text-xs text-text-muted">
+                  {r.country}
+                  {r.industry ? ` · ${r.industry}` : ""} ·{" "}
+                  {r.years_covered.length} / 6 years
+                </div>
+                {r.data_quality_flag ? (
+                  <span className="mt-1 inline-block rounded-full border border-warn/40 bg-warn/10 px-1.5 py-0.5 text-[10px] font-semibold uppercase text-warn">
+                    * flag — {r.data_quality_reason.slice(0, 60)}
+                  </span>
+                ) : null}
+              </div>
+              <div className="shrink-0 text-right">
+                <div className="tabular text-xl font-semibold">
+                  {r.mean_composite.toFixed(3)}
+                </div>
+                <div className="text-[10px] uppercase tracking-wide text-text-faint">
+                  composite
+                </div>
+              </div>
+            </div>
+            <dl className="mt-3 grid grid-cols-3 gap-2 text-xs">
+              {([
+                ["E", r.env, "env"],
+                ["S", r.soc, "soc"],
+                ["G", r.gov, "gov"],
+              ] as const).map(([label, value, pillar]) => (
+                <div
+                  key={label}
+                  className="rounded-md bg-surface-2 px-2 py-1.5"
+                >
+                  <dt className="text-text-faint">{label}</dt>
+                  <dd className="tabular mt-0.5 flex items-center gap-1.5">
+                    <span
+                      className={`inline-block h-1 flex-1 overflow-hidden rounded-full bg-surface`}
+                    >
+                      <span
+                        className={`block h-full bg-${pillar}`}
+                        style={{ width: `${Math.min(100, (value / 10) * 100)}%` }}
+                      />
+                    </span>
+                    <span className="w-10 text-right text-text">
+                      {value.toFixed(2)}
+                    </span>
+                  </dd>
+                </div>
+              ))}
+            </dl>
+          </li>
+        ))}
+      </ul>
+
+      {/* Desktop / tablet: full table. */}
+      <div className="hidden overflow-x-auto rounded-md border border-border md:block">
       <table className="min-w-full border-collapse text-sm">
         <caption className="sr-only">
           Leaderboard of {totalFromMeta} institutions ranked by composite ESG disclosure
@@ -316,7 +397,8 @@ function LeaderboardTable({
           ))}
         </tbody>
       </table>
-    </div>
+      </div>
+    </>
   );
 }
 

@@ -89,6 +89,7 @@ export function InstitutionPage() {
         </div>
       ) : null}
 
+      {/* Charts stack on mobile; two-up from lg (1024px). */}
       <div className="grid gap-4 lg:grid-cols-2">
         <PillarRadar inst={inst} />
         <PillarTrend inst={inst} />
@@ -272,7 +273,7 @@ function CategoryBreakdown({ inst }: { inst: InstitutionDetail }) {
     <div className="rounded-md border border-border bg-surface p-4">
       <h2 className="font-heading text-lg font-semibold">Category densities</h2>
       <div className="mt-3 overflow-x-auto">
-        <table className="min-w-full text-sm tabular">
+        <table className="min-w-full text-sm tabular [&_th:first-child]:sticky [&_th:first-child]:left-0 [&_th:first-child]:bg-surface [&_td:first-child]:sticky [&_td:first-child]:left-0 [&_td:first-child]:bg-surface">
           <thead>
             <tr className="text-xs uppercase tracking-wide text-text-muted">
               <th className="px-2 py-1 text-left">Category</th>
@@ -336,7 +337,10 @@ function ReportList({ inst }: { inst: InstitutionDetail }) {
           Export CSV
         </button>
       </div>
-      <table className="mt-3 min-w-full text-sm tabular">
+      {/* Report list: horizontal scroll with the FY column sticky so the
+          user never loses which row they're on when swiping sideways. */}
+      <div className="mt-3 -mx-4 overflow-x-auto px-4 sm:mx-0 sm:px-0">
+      <table className="min-w-[640px] text-sm tabular [&_th:first-child]:sticky [&_th:first-child]:left-0 [&_th:first-child]:bg-surface [&_td:first-child]:sticky [&_td:first-child]:left-0 [&_td:first-child]:bg-surface">
         <thead>
           <tr className="text-xs uppercase tracking-wide text-text-muted">
             <th className="px-2 py-1 text-left">FY</th>
@@ -397,6 +401,7 @@ function ReportList({ inst }: { inst: InstitutionDetail }) {
           ))}
         </tbody>
       </table>
+      </div>
     </div>
   );
 }

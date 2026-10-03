@@ -180,7 +180,8 @@ export function SensitivityPage() {
 
       <section className="rounded-md border border-border bg-surface p-4">
         <h2 className="font-heading text-lg font-semibold">Switch tests</h2>
-        <table className="mt-3 w-full text-sm tabular">
+        <div className="mt-3 overflow-x-auto">
+        <table className="min-w-[560px] text-sm tabular [&_th:first-child]:sticky [&_th:first-child]:left-0 [&_th:first-child]:bg-surface [&_td:first-child]:sticky [&_td:first-child]:left-0 [&_td:first-child]:bg-surface">
           <thead>
             <tr className="text-xs uppercase tracking-wide text-text-muted">
               <th className="px-2 py-1 text-left">slug</th>
@@ -204,6 +205,7 @@ export function SensitivityPage() {
             ))}
           </tbody>
         </table>
+        </div>
       </section>
 
       <section className="prose prose-sm max-w-none rounded-md border border-border bg-surface p-4 prose-invert dark:prose-invert">

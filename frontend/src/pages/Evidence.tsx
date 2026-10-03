@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import {
   getEvidence,
@@ -21,7 +21,22 @@ export function EvidencePage() {
     typeof window !== "undefined" ? window.localStorage.getItem("verity.reviewer") ?? "reviewer" : "reviewer",
   );
   const [page, setPage] = useState(1);
+  const [filtersOpen, setFiltersOpen] = useState(false);
   const qc = useQueryClient();
+
+  // Open the panel by default from `md:` upward (desktop) so it isn't
+  // hidden behind an unnecessary tap on larger screens.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const mq = window.matchMedia("(min-width: 768px)");
+    const sync = (e: MediaQueryList | MediaQueryListEvent) =>
+      setFiltersOpen(e.matches);
+    sync(mq);
+    mq.addEventListener("change", sync);
+    return () => mq.removeEventListener("change", sync);
+  }, []);
+  const activeFilters =
+    [slug, pillar, term, fy ? String(fy) : ""].filter(Boolean).length;
 
   const query = useQuery({
     queryKey: ["evidence", slug, fy, pillar, term, page],
@@ -63,60 +78,82 @@ export function EvidencePage() {
         </p>
       </header>
 
-      <div className="flex flex-wrap gap-3 rounded-md border border-border bg-surface p-3">
-        <input
-          type="text"
-          placeholder="Institution slug"
-          value={slug}
-          onChange={(e) => {
-            setSlug(e.target.value);
-            setPage(1);
-          }}
-          className="rounded-md border border-border bg-surface-2 px-2 py-1 text-sm"
-          aria-label="Filter by institution slug"
-        />
-        <select
-          value={fy ?? ""}
-          onChange={(e) => {
-            setFy(e.target.value ? Number(e.target.value) : null);
-            setPage(1);
-          }}
-          className="rounded-md border border-border bg-surface-2 px-2 py-1 text-sm"
-          aria-label="Filter by fiscal year"
+      {/* Filter panel: compact, tap-to-expand summary on mobile; always-
+          open panel on desktop. The disclosure button lives inside the
+          card so a tap target meets 44px without pushing layout. */}
+      <div className="rounded-md border border-border bg-surface">
+        <button
+          type="button"
+          onClick={() => setFiltersOpen((o) => !o)}
+          aria-expanded={filtersOpen}
+          aria-controls="evidence-filters"
+          className="flex min-h-[44px] w-full items-center justify-between gap-2 px-3 text-left text-sm md:hidden"
         >
-          <option value="">All FYs</option>
-          {[2020, 2021, 2022, 2023, 2024, 2025].map((y) => (
-            <option key={y} value={y}>
-              {y}
-            </option>
-          ))}
-        </select>
-        <select
-          value={pillar}
-          onChange={(e) => {
-            setPillar(e.target.value);
-            setPage(1);
-          }}
-          className="rounded-md border border-border bg-surface-2 px-2 py-1 text-sm"
-          aria-label="Filter by pillar"
+          <span className="font-medium">Filters</span>
+          <span className="text-xs text-text-muted">
+            {activeFilters > 0 ? `${activeFilters} active` : "all"} ·{" "}
+            {filtersOpen ? "hide" : "show"}
+          </span>
+        </button>
+        <div
+          id="evidence-filters"
+          className={[
+            "grid gap-3 border-border p-3 md:grid-cols-5 md:border-0 md:p-3",
+            filtersOpen ? "grid border-t md:block" : "hidden md:grid",
+          ].join(" ")}
         >
-          <option value="">All pillars</option>
-          <option value="Environmental">Environmental</option>
-          <option value="Social">Social</option>
-          <option value="Governance">Governance</option>
-        </select>
-        <input
-          type="text"
-          placeholder="Term"
-          value={term}
-          onChange={(e) => {
-            setTerm(e.target.value);
-            setPage(1);
-          }}
-          className="rounded-md border border-border bg-surface-2 px-2 py-1 text-sm"
-          aria-label="Filter by term"
-        />
-        <div className="ml-auto flex items-center gap-2">
+          <input
+            type="text"
+            placeholder="Institution slug"
+            value={slug}
+            onChange={(e) => {
+              setSlug(e.target.value);
+              setPage(1);
+            }}
+            className="min-h-[44px] rounded-md border border-border bg-surface-2 px-3 text-sm md:min-h-0 md:py-1"
+            aria-label="Filter by institution slug"
+          />
+          <select
+            value={fy ?? ""}
+            onChange={(e) => {
+              setFy(e.target.value ? Number(e.target.value) : null);
+              setPage(1);
+            }}
+            className="min-h-[44px] rounded-md border border-border bg-surface-2 px-3 text-sm md:min-h-0 md:py-1"
+            aria-label="Filter by fiscal year"
+          >
+            <option value="">All FYs</option>
+            {[2020, 2021, 2022, 2023, 2024, 2025].map((y) => (
+              <option key={y} value={y}>
+                {y}
+              </option>
+            ))}
+          </select>
+          <select
+            value={pillar}
+            onChange={(e) => {
+              setPillar(e.target.value);
+              setPage(1);
+            }}
+            className="min-h-[44px] rounded-md border border-border bg-surface-2 px-3 text-sm md:min-h-0 md:py-1"
+            aria-label="Filter by pillar"
+          >
+            <option value="">All pillars</option>
+            <option value="Environmental">Environmental</option>
+            <option value="Social">Social</option>
+            <option value="Governance">Governance</option>
+          </select>
+          <input
+            type="text"
+            placeholder="Term"
+            value={term}
+            onChange={(e) => {
+              setTerm(e.target.value);
+              setPage(1);
+            }}
+            className="min-h-[44px] rounded-md border border-border bg-surface-2 px-3 text-sm md:min-h-0 md:py-1"
+            aria-label="Filter by term"
+          />
           <button
             type="button"
             onClick={() =>
@@ -137,7 +174,7 @@ export function EvidencePage() {
                 "verity-evidence-reviewed.csv",
               )
             }
-            className="rounded-md border border-border bg-surface px-3 py-1 text-xs text-text-muted hover:text-text"
+            className="min-h-[44px] rounded-md border border-border bg-surface px-3 text-xs text-text-muted hover:text-text md:min-h-0 md:py-1"
           >
             Export reviewed CSV
           </button>
@@ -243,12 +280,14 @@ function EvidenceCard({
           </span>{" "}
           · term <code className="text-text">{row.term_phrase}</code> · page {row.page_number}
         </div>
-        <div className="flex items-center gap-1">
+        {/* Buttons stack full-width on mobile and sit inline on sm+.
+            Each one meets the 44px minimum touch target. */}
+        <div className="flex w-full flex-wrap items-center gap-1 sm:w-auto">
           <a
             href={pdfUrl(row.report_id, row.page_number)}
             target="_blank"
             rel="noreferrer"
-            className="rounded-md border border-border bg-surface px-2 py-0.5 text-xs hover:text-text"
+            className="inline-flex min-h-[44px] items-center rounded-md border border-border bg-surface px-3 text-xs hover:text-text"
           >
             Open PDF p.{row.page_number}
           </a>
@@ -258,7 +297,7 @@ function EvidenceCard({
               type="button"
               onClick={() => onVerdict(v)}
               className={[
-                "rounded-md border px-2 py-0.5 text-xs",
+                "inline-flex min-h-[44px] items-center rounded-md border px-3 text-xs",
                 row.reviewer_verdict === v
                   ? "border-accent bg-accent/10 text-accent"
                   : "border-border bg-surface text-text-muted hover:text-text",

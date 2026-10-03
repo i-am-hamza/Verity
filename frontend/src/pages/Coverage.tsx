@@ -80,15 +80,25 @@ export function CoveragePage() {
         </span>
       </div>
 
+      {/* 60 × 6 matrix: horizontal scroll on narrow viewports, with the
+          institution-name column stuck to the left edge so the row context
+          follows the swipe. */}
       <div className="overflow-x-auto rounded-md border border-border">
-        <table className="min-w-full text-sm">
+        <table className="min-w-max text-sm">
           <thead className="bg-surface-2">
             <tr>
-              <th scope="col" className="px-3 py-2 text-left text-xs uppercase tracking-wide text-text-muted">
+              <th
+                scope="col"
+                className="sticky left-0 z-10 min-w-[200px] bg-surface-2 px-3 py-2 text-left text-xs uppercase tracking-wide text-text-muted"
+              >
                 Institution
               </th>
               {data.fiscal_years.map((fy) => (
-                <th key={fy} scope="col" className="px-3 py-2 text-center text-xs uppercase tracking-wide text-text-muted">
+                <th
+                  key={fy}
+                  scope="col"
+                  className="min-w-[72px] px-3 py-2 text-center text-xs uppercase tracking-wide text-text-muted"
+                >
                   FY{fy}
                 </th>
               ))}
@@ -97,7 +107,7 @@ export function CoveragePage() {
           <tbody>
             {data.rows.map((row) => (
               <tr key={row.slug} className="border-t border-border">
-                <td className="px-3 py-2 text-left">
+                <td className="sticky left-0 z-10 bg-surface px-3 py-2 text-left">
                   <Link to={`/institution/${row.slug}`} className="hover:text-accent">
                     {row.name}
                   </Link>
