@@ -1,0 +1,103 @@
+/*
+ * Design tokens — the ONLY place colours, radii, shadows and motion are
+ * defined. Every component colour is `bg-surface` / `text-text` etc.
+ * No hardcoded hex, no inline rgb, no raw Tailwind palette colours.
+ *
+ * Themes attach to <html class="theme-dark"> / <html class="theme-light">.
+ * The initial class is set by the pre-boot script in index.html so there's
+ * no dark-flash on a light-themed system (or vice versa) before React
+ * mounts and the ThemedBoot effect fires.
+ *
+ * E/S/G chart series each have a distinct hue AND will carry a text
+ * label plus a marker shape in the components themselves — colour never
+ * carries meaning alone.
+ */
+
+html.theme-dark {
+  color-scheme: dark;
+
+  /* Surfaces */
+  --bg: 10 12 18;
+  --surface: 18 21 30;
+  --surface-2: 25 29 41;
+  --border: 42 49 68;
+
+  /* Text */
+  --text: 232 234 240;
+  --text-muted: 160 168 184;
+  --text-faint: 108 118 136;
+
+  /* Accents (passes 4.5:1 against surface) */
+  --accent: 143 115 255;
+  --accent-contrast: 10 12 18;
+  --secondary: 74 166 255;
+  --warn: 255 158 95;
+
+  /* ESG series — each paired with a shape marker in components */
+  --env: 86 196 143;
+  --soc: 234 174 97;
+  --gov: 139 128 255;
+
+  /* Shape tokens */
+  --radius-xs: 2px;
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+
+  --shadow-soft: 0 1px 0 rgb(0 0 0 / 0.25), 0 2px 8px rgb(0 0 0 / 0.18);
+  --shadow-pop: 0 12px 28px rgb(0 0 0 / 0.4);
+
+  --motion-fast: 120ms cubic-bezier(0.22, 0.61, 0.36, 1);
+  --motion-base: 240ms cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+html.theme-light {
+  color-scheme: light;
+
+  --bg: 247 247 251;
+  --surface: 255 255 255;
+  --surface-2: 240 241 247;
+  --border: 219 221 231;
+
+  --text: 24 25 35;
+  --text-muted: 92 97 117;
+  --text-faint: 143 148 170;
+
+  /* Accents re-contrasted for light. The violet darkens so text on it
+     stays accessible when used as a button fill. */
+  --accent: 102 78 230;
+  --accent-contrast: 255 255 255;
+  --secondary: 36 120 215;
+  --warn: 198 95 25;
+
+  --env: 36 148 100;
+  --soc: 194 131 36;
+  --gov: 93 76 227;
+
+  /* Shape tokens are theme-independent but re-declared so a `html` reset
+     elsewhere can't drop them. */
+  --radius-xs: 2px;
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+
+  --shadow-soft: 0 1px 0 rgb(0 0 0 / 0.03), 0 2px 8px rgb(0 0 0 / 0.08);
+  --shadow-pop: 0 12px 28px rgb(0 0 0 / 0.16);
+
+  --motion-fast: 120ms cubic-bezier(0.22, 0.61, 0.36, 1);
+  --motion-base: 240ms cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+/* Tabular figures everywhere a number appears. Headings use Manrope's
+   proportional figures by design. */
+.tabular {
+  font-feature-settings: "tnum", "lnum";
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html.theme-dark,
+  html.theme-light {
+    --motion-fast: 0ms;
+    --motion-base: 0ms;
+  }
+}

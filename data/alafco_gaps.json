@@ -1,0 +1,42 @@
+[
+  {
+    "institution_slug": "alafco-aviation-lease-and-finance-company",
+    "fiscal_year": 2021,
+    "reason": "unreachable",
+    "tier_tried": "live",
+    "next_action": "Tier 3 Wayback Machine",
+    "detail": "Live alafco.com returns Cloudflare 523 (origin unreachable); Wayback has 36 captures of alafco.com/en/investors between 2021-03-05 and 2025-05-23. FY2021 (ending Sep 2021) report was published pre-delisting."
+  },
+  {
+    "institution_slug": "alafco-aviation-lease-and-finance-company",
+    "fiscal_year": 2022,
+    "reason": "unreachable",
+    "tier_tried": "live",
+    "next_action": "Tier 3 Wayback Machine",
+    "detail": "Live alafco.com unreachable (CF 523); Wayback captures available. FY2022 report published pre-delisting."
+  },
+  {
+    "institution_slug": "alafco-aviation-lease-and-finance-company",
+    "fiscal_year": 2023,
+    "reason": "unreachable",
+    "tier_tried": "live",
+    "next_action": "Tier 3 Wayback Machine",
+    "detail": "Live alafco.com unreachable (CF 523); Wayback captures available. FY2023 report published pre-delisting."
+  },
+  {
+    "institution_slug": "alafco-aviation-lease-and-finance-company",
+    "fiscal_year": 2024,
+    "reason": "unreachable",
+    "tier_tried": "live",
+    "next_action": "Tier 3 Wayback Machine",
+    "detail": "Live alafco.com unreachable (CF 523); Wayback captures available. FY2024 was the last fiscal year closed before delisting; the annual report is expected to exist in the Wayback archive."
+  },
+  {
+    "institution_slug": "alafco-aviation-lease-and-finance-company",
+    "fiscal_year": 2025,
+    "reason": "unreachable",
+    "tier_tried": "live",
+    "next_action": "Confirmed non-existent — delisted 2025-03-05, before FY2025 (ending Sep 2025) closed. Do not search further; this is data non-existence, not a crawler failure.",
+    "detail": "ALAFCO delisted from Boursa Kuwait on 2025-03-05, before its FY2025 fiscal year (ending Sep 2025) closed. No FY2025 annual report was published or expected."
+  }
+]

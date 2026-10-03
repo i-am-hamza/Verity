@@ -1,0 +1,25 @@
+<!-- Captured 2026-10-01 from https://www.msx.om/snapshot.aspx?s=BKMB
+     Session 3b verified via Playwright. MSX's per-company page uses .aspx post-back
+     machinery (javascript:__doPostBack) which the parser must NOT follow — those
+     are form submissions, not readable annual-report links. The real report PDFs
+     surface in a nearby disclosure list; this fixture models both. -->
+<!doctype html>
+<html lang="en">
+<head><title>Muscat Stock Exchange — BKMB</title></head>
+<body>
+  <header>BKMB — Bank Muscat SAOG</header>
+  <nav>
+    <!-- These must NOT be fetched: they're postbacks, not URLs. -->
+    <a href="javascript:__doPostBack('ctl00$Overview','')">Overview</a>
+    <a href="javascript:__doPostBack('ctl00$News','')">News</a>
+    <a href="javascript:__doPostBack('ctl00$Reports','')">Reports</a>
+    <a href="/snapshot.aspx?s=BKMB">Snapshot</a>
+  </nav>
+  <section class="financial-reports">
+    <h2>Annual Reports</h2>
+    <a href="https://www.msx.om/MSMDocs/Reports/BKMB_Annual_Report_2024.pdf">BKMB Annual Report 2024</a>
+    <a href="https://www.msx.om/MSMDocs/Reports/BKMB_Annual_Report_2023.pdf">BKMB Annual Report 2023</a>
+    <!-- MSX also publishes under /MSMDocs/Images/NewsDocs for interim items; keep as-is. -->
+  </section>
+</body>
+</html>

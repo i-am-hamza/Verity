@@ -1,0 +1,79 @@
+[
+  {
+    "country": "Saudi Arabia",
+    "exchange_name": "Saudi Exchange (Tadawul)",
+    "url": "https://www.saudiexchange.sa/",
+    "fetched_at": "2026-09-30",
+    "http_status": 403,
+    "loads_without_login": null,
+    "requires_account": false,
+    "js_required": true,
+    "note": "WebFetch returned 403 (likely UA-based block via WAF). Portal is public per general knowledge; company-profile URLs are portlet-based (long random strings, e.g. .../saudiexchange/hidden/company-profile-main/!ut/p/z1/...?companySymbol=NNNN). Session 4 must retry with Playwright + descriptive UA."
+  },
+  {
+    "country": "United Arab Emirates",
+    "exchange_name": "Abu Dhabi Securities Exchange (ADX)",
+    "url": "https://www.adx.ae/issuers/issuers-information/listed-companies-disclosures",
+    "fetched_at": "2026-09-30",
+    "http_status": 403,
+    "loads_without_login": null,
+    "requires_account": false,
+    "js_required": true,
+    "note": "WebFetch returned 403. Public per general knowledge; retry with Playwright."
+  },
+  {
+    "country": "United Arab Emirates",
+    "exchange_name": "Dubai Financial Market (DFM)",
+    "url": "https://www.dfm.ae/the-exchange/news-disclosures/disclosures",
+    "fetched_at": "2026-09-30",
+    "http_status": 200,
+    "loads_without_login": true,
+    "requires_account": false,
+    "js_required": true,
+    "note": "Sign-in optional. Disclosure list needs JS (\"Fetching Data...\"). Per-company profile URL: /the-exchange/market-information/company/<TICKER>/profile — pattern confirmed for EMIRATESNBD, DIB and DIC via search-surfaced hits."
+  },
+  {
+    "country": "Qatar",
+    "exchange_name": "Qatar Stock Exchange (QSE)",
+    "url": "https://www.qe.com.qa/financial-disclosures",
+    "fetched_at": "2026-09-30",
+    "http_status": 200,
+    "loads_without_login": true,
+    "requires_account": false,
+    "js_required": false,
+    "note": "Lists annual/interim disclosure dates for all listed companies. Bilingual EN/AR. Per-company profile URL: /company-profile?CompanyCode=<TICKER> — shell page loads but data is JS-populated."
+  },
+  {
+    "country": "Kuwait",
+    "exchange_name": "Boursa Kuwait",
+    "url": "https://www.boursakuwait.com.kw/en/financial-reports/",
+    "fetched_at": "2026-09-30",
+    "http_status": 200,
+    "loads_without_login": true,
+    "requires_account": false,
+    "js_required": true,
+    "note": "Sign-in optional. Per-company profile URLs use numeric internal IDs (e.g. /stock/109/profile = Boubyan). Ticker->id mapping needs to be discovered via the exchange's own search; do not guess."
+  },
+  {
+    "country": "Oman",
+    "exchange_name": "Muscat Stock Exchange (MSX)",
+    "url": "https://www.msx.om/",
+    "fetched_at": "2026-09-30",
+    "http_status": 200,
+    "loads_without_login": true,
+    "requires_account": false,
+    "js_required": true,
+    "note": "Real-time data requires login; static per-company snapshots at /snapshot.aspx?s=<TICKER> are public and searchable. Ticker in query string."
+  },
+  {
+    "country": "Bahrain",
+    "exchange_name": "Bahrain Bourse",
+    "url": "https://bahrainbourse.com/en/News%20and%20Events/CompanyAnnouncements",
+    "fetched_at": "2026-09-30",
+    "http_status": 200,
+    "loads_without_login": true,
+    "requires_account": false,
+    "js_required": true,
+    "note": "Public disclosure list. Per-company profile URL: /en/companyprofile?CompanyNameSymbol=<TICKER>."
+  }
+]

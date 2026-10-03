@@ -1,0 +1,66 @@
+slug,name,country,industry,is_financial,proposed_type,confirmed
+saudi-aramco,Saudi Aramco,Saudi Arabia,Energy,false,other,other
+al-rajhi-bank,Al Rajhi Bank,Saudi Arabia,Financial Services,true,bank,bank
+the-saudi-national-bank,The Saudi National Bank,Saudi Arabia,Financial Services,true,bank,bank
+sabic,SABIC,Saudi Arabia,Industrial,false,other,other
+saudi-telecom-company,Saudi Telecom Company,Saudi Arabia,Communication Services,false,other,other
+maaden,Maaden,Saudi Arabia,Industrial,false,other,other
+riyad-bank,Riyad Bank,Saudi Arabia,Financial Services,true,bank,bank
+alinma-bank,Alinma Bank,Saudi Arabia,Financial Services,true,bank,bank
+saudi-electricity,Saudi Electricity,Saudi Arabia,Utilities,false,other,other
+yanbu-cement-company,Yanbu Cement Company,Saudi Arabia,Industrial,false,other,other
+saudi-arabian-fertilizer-company,Saudi Arabian Fertilizer Company,Saudi Arabia,Industrial,false,other,other
+almarai,Almarai,Saudi Arabia,Consumer Defensive,false,other,other
+bank-albilad,Bank Albilad,Saudi Arabia,Financial Services,true,bank,bank
+etihad-etisalat-mobily,Etihad Etisalat (Mobily),Saudi Arabia,Communication Services,false,other,other
+bupa-arabia-for-cooperative-insurance-company,Bupa Arabia for Cooperative Insurance Company,Saudi Arabia,Financial Services,true,insurer,insurer
+savola-group,Savola Group,Saudi Arabia,Consumer Defensive,false,other,other
+yanbu-national-petrochemical,Yanbu National Petrochemical,Saudi Arabia,Industrial,false,other,other
+dar-al-arkan-real-estate-development-company,Dar Al Arkan Real Estate Development Company,Saudi Arabia,Real Estate,false,other,other
+emaar-the-economic-city,Emaar The Economic City,Saudi Arabia,Real Estate,false,other,other
+advanced-petrochemical,Advanced Petrochemical,Saudi Arabia,Industrial,false,other,other
+saudi-kayan-petrochemical-company,Saudi Kayan Petrochemical Company,Saudi Arabia,Industrial,false,other,other
+mouwasat-medical-services-company,Mouwasat Medical Services Company,Saudi Arabia,Healthcare,false,other,other
+saudi-airlines-catering-company-catrion,Saudi Airlines Catering Company CATRION,Saudi Arabia,Consumer Cyclical,false,other,other
+national-industrialization-co,National Industrialization Co,Saudi Arabia,Industrial,false,other,other
+rabigh-refining-petrochemical-co,Rabigh Refining & Petrochemical Co.,Saudi Arabia,Industrial,false,other,other
+sahara-international-petrochemical-co,Sahara International Petrochemical Co.,Saudi Arabia,Industrial,false,other,other
+mobile-telecommunications-co-saudi-arabia-zain,Mobile Telecommunications Co. Saudi Arabia (Zain),Saudi Arabia,Communication Services,false,other,other
+jarir-marketing-co,Jarir Marketing Co,Saudi Arabia,Consumer Discretionary,false,other,other
+saudi-cement,Saudi Cement,Saudi Arabia,Industrial,false,other,other
+abdullah-al-othaim-markets,Abdullah Al Othaim Markets,Saudi Arabia,Consumer Defensive,false,other,other
+saudi-industrial-investment-group,Saudi Industrial Investment Group,Saudi Arabia,Financial Services,true,investment_holding,investment_holding
+abu-dhabi-national-oil-company-for-distribution,Abu Dhabi National Oil Company For Distribution,United Arab Emirates,Energy,false,other,other
+emirates-telecom-etisalat-group,Emirates Telecom (Etisalat Group),United Arab Emirates,Communication Services,false,other,other
+first-abu-dhabi-bank,First Abu Dhabi Bank,United Arab Emirates,Financial Services,true,bank,bank
+abu-dhabi-national-energy-company,Abu Dhabi National Energy Company,United Arab Emirates,Energy,false,other,other
+abu-dhabi-commercial-bank,Abu Dhabi Commercial Bank,United Arab Emirates,Financial Services,true,bank,bank
+aldar-properties-pjsc,Aldar Properties PJSC,United Arab Emirates,Real Estate,false,other,other
+the-national-bank-of-ras-al-khaimah,The National Bank of Ras Al Khaimah,United Arab Emirates,Financial Services,true,bank,bank
+emaar-properties,Emaar Properties,United Arab Emirates,Real Estate,false,other,other
+dubai-islamic-bank,Dubai Islamic Bank,United Arab Emirates,Financial Services,true,bank,bank
+dubai-investment,Dubai Investment,United Arab Emirates,Financial Services,true,investment_holding,investment_holding
+air-arabia-pjsc,Air Arabia PJSC,United Arab Emirates,Consumer Discretionary,false,other,other
+emirates-nbd-pjsc,Emirates NBD PJSC,United Arab Emirates,Financial Services,true,bank,bank
+qnb-qatar-national-bank,QNB (Qatar National Bank),Qatar,Financial Services,true,bank,bank
+industries-qatar,Industries Qatar,Qatar,Industrial,false,other,other
+ooredoo-q-p-s-c,Ooredoo Q.P.S.C.,Qatar,Communication Services,false,other,other
+qatar-fuel-company-woqod,Qatar Fuel Company (WOQOD),Qatar,Energy,false,other,other
+baladna,Baladna,Qatar,Consumer Defensive,false,other,other
+gulf-international-services,Gulf International Services,Qatar,Energy,false,other,other
+qatar-gas-transport-co-nakilat,Qatar Gas Transport Co (Nakilat),Qatar,Energy,false,other,other
+kuwait-finance-house,Kuwait Finance House,Kuwait,Financial Services,true,bank,bank
+national-bank-of-kuwait,National Bank of Kuwait,Kuwait,Financial Services,true,bank,bank
+boubyan-bank,Boubyan Bank,Kuwait,Financial Services,true,bank,bank
+zain-mobile-telecommunications-company,Zain (Mobile Telecommunications Company),Kuwait,Communication Services,false,other,other
+kuwait-telecommunications-company,Kuwait Telecommunications Company,Kuwait,Communication Services,false,other,other
+tamdeen-real-estate-company,Tamdeen Real Estate Company,Kuwait,Real Estate,false,other,other
+alafco-aviation-lease-and-finance-company,ALAFCO Aviation Lease and Finance Company,Kuwait,Financial Services,true,leasing,leasing
+bank-muscat-bkmb,Bank Muscat BKMB,Oman,Financial Services,true,bank,bank
+oman-telecommunications-company-otel,Oman Telecommunications Company OTEL,Oman,Communication Services,false,other,other
+oman-international-development-and-investment-company,Oman International Development and Investment Company,Oman,Financial Services,true,investment_holding,investment_holding
+sohar-international-bank,Sohar International Bank,Oman,Financial Services,true,bank,bank
+bank-dhofar,Bank Dhofar,Oman,Financial Services,true,bank,bank
+national-bank-of-bahrain,National Bank of Bahrain,Bahrain,Financial Services,true,bank,bank
+bahrain-telecommunications-beyon,Bahrain Telecommunications BEYON,Bahrain,Communication Services,false,other,other
+aluminium-bahrain-alba,Aluminium Bahrain (Alba),Bahrain,Industrial,false,other,other

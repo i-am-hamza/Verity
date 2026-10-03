@@ -1,0 +1,45 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Environment / secrets
+.env
+
+# SQLite
+*.db
+*.db-journal
+
+# Storage: uploaded PDFs and any derived artefacts stay out of git.
+backend/storage/
+backend/tessdata/*.traineddata
+
+# Real fixtures (downloaded PDFs — content, not the manifest).
+backend/tests/fixtures/real/*.pdf
+backend/tests/fixtures/real/*.PDF
+
+# OS / IDE
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Claude Code session artefacts (per-user, not source)
+.claude/
+
+# Frontend build
+frontend/node_modules/
+frontend/dist/
+
+# Session artefacts / temp outputs
+backend/_*.log
+backend/_*.json
+backend/_openapi.json
+frontend/_openapi.json
+coverage/
+*.coverage

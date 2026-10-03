@@ -1,0 +1,61 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* tokens.css is imported from main.tsx so Vite always injects it as a
+   separate style module in the right cascade order; keeping an @import
+   here as well would be ignored by CSS spec because @import must
+   precede other rules. */
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  background-color: rgb(var(--bg));
+  color: rgb(var(--text));
+  font-family: "Inter", system-ui, sans-serif;
+  font-feature-settings: "cv11", "ss01";
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: "Manrope", system-ui, sans-serif;
+  letter-spacing: -0.01em;
+}
+
+:focus-visible {
+  outline: 2px solid rgb(var(--accent));
+  outline-offset: 2px;
+}
+
+::selection {
+  background-color: rgb(var(--accent) / 0.35);
+}
+
+/* Chart text uses tokens, not Recharts defaults */
+.recharts-text,
+.recharts-cartesian-axis-tick-value {
+  fill: rgb(var(--text-muted)) !important;
+  font-family: "Inter", system-ui, sans-serif;
+}
+.recharts-cartesian-grid-horizontal line,
+.recharts-cartesian-grid-vertical line,
+.recharts-polar-grid-angle line,
+.recharts-polar-grid-concentric circle,
+.recharts-polar-grid-concentric polygon {
+  stroke: rgb(var(--border)) !important;
+}
+.recharts-legend-item-text {
+  color: rgb(var(--text)) !important;
+}
+.recharts-tooltip-wrapper {
+  background: rgb(var(--surface)) !important;
+  border: 1px solid rgb(var(--border)) !important;
+}

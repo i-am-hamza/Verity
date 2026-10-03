@@ -1,0 +1,159 @@
+[
+  {
+    "name": "Al Rajhi Bank",
+    "slug": "al-rajhi-bank",
+    "country": "Saudi Arabia",
+    "ticker": "1120.SR",
+    "market_cap_usd": 86529738260,
+    "ir_url": "https://www.alrajhibank.com.sa/en/about-alrajhi-bank/investor-relations",
+    "verified_url": true
+  },
+  {
+    "name": "Saudi National Bank",
+    "slug": "saudi-national-bank",
+    "country": "Saudi Arabia",
+    "ticker": "1180.SR",
+    "market_cap_usd": 61120929357,
+    "ir_url": "https://www.snb.com",
+    "verified_url": false,
+    "notes": "Domain confirmed, exact IR/annual-reports path not yet verified"
+  },
+  {
+    "name": "Riyad Bank",
+    "slug": "riyad-bank",
+    "country": "Saudi Arabia",
+    "ticker": "1010.SR",
+    "market_cap_usd": 22768072143,
+    "ir_url": "https://riyadbank.com/web/annual-reports-2023",
+    "verified_url": true,
+    "notes": "URL pattern is /web/annual-reports-<year> -- confirm the pattern holds for other years"
+  },
+  {
+    "name": "Alinma Bank",
+    "slug": "alinma-bank",
+    "country": "Saudi Arabia",
+    "ticker": "1150.SR",
+    "market_cap_usd": 22422270976,
+    "ir_url": "https://www.alinma.com",
+    "verified_url": false,
+    "notes": "Domain only -- not yet verified this session"
+  },
+  {
+    "name": "Bank Albilad",
+    "slug": "bank-albilad",
+    "country": "Saudi Arabia",
+    "ticker": "1140.SR",
+    "market_cap_usd": 12283275779,
+    "ir_url": "https://www.bankalbilad.com",
+    "verified_url": false,
+    "notes": "Domain only -- not yet verified this session"
+  },
+  {
+    "name": "Bupa Arabia",
+    "slug": "bupa-arabia",
+    "country": "Saudi Arabia",
+    "ticker": "8210.SR",
+    "market_cap_usd": 9594558242,
+    "ir_url": "https://www.bupa.com.sa",
+    "verified_url": false,
+    "notes": "Domain only -- not yet verified this session"
+  },
+  {
+    "name": "First Abu Dhabi Bank",
+    "slug": "first-abu-dhabi-bank",
+    "country": "United Arab Emirates",
+    "ticker": "FAB.AE",
+    "market_cap_usd": 39227989721,
+    "ir_url": "https://www.bankfab.com/en-ae/about-fab/investor-relations",
+    "verified_url": false,
+    "notes": "ir_url path was constructed, not observed -- only the bankfab.com domain was confirmed. Treat as unverified."
+  },
+  {
+    "name": "Emirates NBD",
+    "slug": "emirates-nbd",
+    "country": "United Arab Emirates",
+    "ticker": "NBD",
+    "market_cap_usd": 29240331711,
+    "ir_url": "https://www.emiratesnbd.com/en/investor-relations/",
+    "verified_url": true,
+    "notes": "Direct PDF pattern observed: emiratesnbd.com/-/media/enbd/files/investor-relations/financial-information/annual-reports/emiratesnbd_annualreport_<year>.pdf"
+  },
+  {
+    "name": "Abu Dhabi Commercial Bank",
+    "slug": "abu-dhabi-commercial-bank",
+    "country": "United Arab Emirates",
+    "ticker": "ADCB",
+    "market_cap_usd": 16683355973,
+    "ir_url": "https://www.adcb.com",
+    "verified_url": false,
+    "notes": "Domain only -- not yet verified this session"
+  },
+  {
+    "name": "Dubai Islamic Bank",
+    "slug": "dubai-islamic-bank",
+    "country": "United Arab Emirates",
+    "ticker": "DIB",
+    "market_cap_usd": 11158292996,
+    "ir_url": "https://www.dib.ae",
+    "verified_url": false,
+    "notes": "Domain only -- not yet verified this session"
+  },
+  {
+    "name": "QNB",
+    "slug": "qnb",
+    "country": "Qatar",
+    "ticker": "QNBK.QA",
+    "market_cap_usd": 35778478980,
+    "ir_url": "https://www.qnb.com/sites/qnb/qnbqatar/page/en/enirfaqs.html",
+    "verified_url": true
+  },
+  {
+    "name": "Kuwait Finance House",
+    "slug": "kuwait-finance-house",
+    "country": "Kuwait",
+    "ticker": "KFH.KW",
+    "market_cap_usd": 38594899337,
+    "ir_url": "https://kfh.com/en/home/Investor-Relations/Annual-Reports.html",
+    "verified_url": true
+  },
+  {
+    "name": "National Bank of Kuwait",
+    "slug": "national-bank-of-kuwait",
+    "country": "Kuwait",
+    "ticker": "NBK.KW",
+    "market_cap_usd": 23237204834,
+    "ir_url": "https://www.nbk.com",
+    "verified_url": false,
+    "notes": "Domain only -- not yet verified this session"
+  },
+  {
+    "name": "Boubyan Bank",
+    "slug": "boubyan-bank",
+    "country": "Kuwait",
+    "ticker": "BOUBYAN.KW",
+    "market_cap_usd": 7904342664,
+    "ir_url": "https://www.boubyan.com.kw",
+    "verified_url": false,
+    "notes": "Domain only -- not yet verified this session"
+  },
+  {
+    "name": "Bank Muscat",
+    "slug": "bank-muscat",
+    "country": "Oman",
+    "ticker": "BKMB",
+    "market_cap_usd": 5166740835,
+    "ir_url": "https://www.bankmuscat.com",
+    "verified_url": false,
+    "notes": "Domain only -- not yet verified this session"
+  },
+  {
+    "name": "National Bank of Bahrain",
+    "slug": "national-bank-of-bahrain",
+    "country": "Bahrain",
+    "ticker": "NBB.BH",
+    "market_cap_usd": 3396107186,
+    "ir_url": "https://www.nbbonline.com",
+    "verified_url": false,
+    "notes": "Domain only -- not yet verified this session"
+  }
+]

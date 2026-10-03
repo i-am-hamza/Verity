@@ -1,0 +1,82 @@
+[schedule]
+years = [2020, 2021, 2022, 2023, 2024, 2025]
+
+[pipeline]
+matching_mode = "longest"    # "longest" | "all"
+exclude_toc_pages = true
+exclude_repeated_lines = true
+# Declared in Patch A, implemented in Session 5. Skipping the financial
+# statements + notes (independent auditor's report onward) keeps the
+# denominator and matches on narrative disclosure only, per CLAUDE.md
+# Method and Ferjancic et al. (2024).
+exclude_financial_statement_pages = true
+
+# A line that repeats (digits normalised) on at least this fraction of
+# the report's pages is treated as a running header/footer and dropped
+# before matching.
+header_footer_repeat_ratio = 0.30
+# A page where more than this fraction of tokens are Arabic is logged
+# in Report.pages_mostly_arabic; it still contributes to Latin-word
+# count but tells us how bilingual the report is.
+arabic_page_token_ratio = 0.50
+# OCR cap: if more than this share of pages lack native text and would
+# need OCR, mark the report as needs_review ("heavily scanned") and
+# skip the slow OCR pass — a scanned-image report scores worse than it
+# should on a density denominator anyway.
+ocr_max_page_ratio = 0.40
+# When true, run the shadow all-mode matcher after longest-mode and
+# log how many extra matches "all" would have added. Purely diagnostic
+# (longest is what's scored); keeps us honest about overlap density.
+log_all_mode_diff = true
+
+# Phrases that mark the start of the financial statements section. The
+# first page whose text contains any of these (English or Arabic) is
+# treated as the boundary — everything from that page onward is excluded
+# from matching. Markers are matched case-insensitively on normalised
+# text.
+financial_statement_boundary_markers = [
+  "independent auditor's report",
+  "independent auditors' report",
+  "report of the independent auditor",
+  "consolidated statement of financial position",
+  "consolidated statement of comprehensive income",
+  "consolidated statement of cash flows",
+  "consolidated statement of changes in equity",
+  "statement of financial position",
+  "notes to the consolidated financial statements",
+  "notes to the financial statements",
+  # Arabic markers — same intent, same section.
+  "تقرير مدقق الحسابات المستقل",
+  "تقرير المدقق المستقل",
+  "القوائم المالية الموحدة",
+  "البيانات المالية الموحدة",
+  "ايضاحات حول القوائم المالية",
+]
+
+[processing]
+# Null here means auto-select (CPU count minus 1).
+worker_count = 0
+# IQR outlier detection: a composite score more than this many IQR away
+# from its cohort median is flagged.
+iqr_multiplier = 3.0
+# Below this many reports in a cohort, IQR is unstable — flag computed
+# but labelled low-confidence in PROCESSING_QA.md.
+iqr_min_cohort = 5
+# Threshold flags that are IQR-independent. A report with any of these
+# conditions is set to processing_review_status = needs_review.
+# Rationale: an "annual report" with 500 Latin words doesn't fail the
+# OCR cap but almost certainly isn't an English-narrative document the
+# scoring pipeline was designed for — flagging keeps it out of the
+# cross-institution comparison.
+low_latin_word_count_threshold = 5000
+high_ocr_ratio_threshold = 0.30
+high_arabic_ratio_threshold = 0.50
+# Evidence sample export: how many random matches per pillar, seeded.
+evidence_sample_per_pillar = 50
+evidence_sample_seed = 42
+
+[reports]
+report_types_scored = ["annual", "integrated"]
+
+[waves]
+order = ["financial", "other"]

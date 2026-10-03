@@ -1,0 +1,15 @@
+{
+  "files": [
+    {
+      "source_url": "https://kfh.com/en/reports/kuwait/Annual-Reports/Annual-Report-2023/document_en/KFH%20Annual%20Report%20En%202023.pdf.pdf",
+      "final_url": "https://www.kfh.com/en/reports/kuwait/Annual-Reports/Annual-Report-2023/document_en/KFH%20Annual%20Report%20En%202023.pdf.pdf",
+      "http_status": 200,
+      "retrieved_at": "2026-09-28T11:36:41.848243+00:00",
+      "sha256": "3e07061259715d2856d844ff385321a65c5a05dc67dd5460488cd1ab1818fb76",
+      "bytes": 7182431,
+      "content_type": "application/pdf;charset=UTF-8",
+      "starts_with_PDF": true,
+      "download_seconds": 7.74
+    }
+  ]
+}

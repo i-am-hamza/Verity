@@ -1,0 +1,33 @@
+<!-- Captured 2026-10-01 from https://www.dfm.ae/the-exchange/market-information/company/DIB/profile
+     Session 3b verified via Playwright (HTTP 200, final URL preserved). DFM company
+     profile pages are SPA shells — a plain HTML fetch sees the shared ticker
+     scroll at the top but the per-company disclosure list is populated by XHR
+     and uses data-href / onclick anchors. This fixture models the DOM shape of
+     the disclosure panel that the SPA actually renders. -->
+<!doctype html>
+<html lang="en">
+<head><title>DFM - DIB - Dubai Financial Market</title></head>
+<body>
+  <header class="market-ticker">DIB ADCB FAB EMIRATESNBD AIRARABIA</header>
+  <main>
+    <h1>Dubai Islamic Bank PJSC</h1>
+    <nav>
+      <a href="/the-exchange/market-information/company/DIB/profile">Profile</a>
+      <a href="/the-exchange/market-information/company/DIB/corporate-actions">Corporate Actions</a>
+      <a href="/the-exchange/market-information/company/DIB/trading">Trading</a>
+    </nav>
+    <section class="disclosures">
+      <h2>Latest Disclosures</h2>
+      <!-- DFM typically wires each row via onclick="window.open('<URL>')" -->
+      <div class="row" onclick="window.open('https://feeds.dfm.ae/documents/2024/Feb/08/signed/DIB_2023_Annual_Report_EN.pdf', '_blank')">
+        <span>Annual Report 2023</span>
+      </div>
+      <div class="row" onclick="window.open('https://feeds.dfm.ae/documents/2023/Feb/10/signed/DIB_2022_Annual_Report_EN.pdf')">
+        <span>Annual Report 2022</span>
+      </div>
+      <!-- Some newer entries also use data-href -->
+      <a class="row" data-href="https://feeds.dfm.ae/documents/2025/Feb/09/signed/DIB_2024_Annual_Report_EN.pdf">Annual Report 2024</a>
+    </section>
+  </main>
+</body>
+</html>

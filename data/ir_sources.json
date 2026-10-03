@@ -1,0 +1,1485 @@
+[
+  {
+    "slug": "al-rajhi-bank",
+    "ir_url": "https://www.alrajhibank.com.sa/en/about-alrajhi-bank/investor-relations",
+    "ir_status": "verified",
+    "exchange_company_url": null,
+    "exchange_status": "unreachable",
+    "allowed_hosts": [
+      "objectstorage.me-jeddah-1.oraclecloud.com"
+    ],
+    "evidence": {
+      "ir": {
+        "fetched_at": "2026-09-30",
+        "sample_report_links": [
+          "https://objectstorage.me-jeddah-1.oraclecloud.com/n/ax0k7s74wvl7/b/Marketing_Email_Images/o/ARBIAR25%20integrated%20annual%20report%20full%20proof%20English.pdf",
+          "https://objectstorage.me-jeddah-1.oraclecloud.com/n/ax0k7s74wvl7/b/Marketing_Email_Images/o/ARBAR24-English.pdf",
+          "https://www.alrajhibank.com.sa/-/media/Project/AlRajhi/ARBRevamp/Investor-Relation/Annual-Reports/Annual-Report-EN-2023.pdf"
+        ],
+        "note": ""
+      },
+      "exchange": {
+        "fetched_at": "2026-10-01",
+        "note": "Tadawul (saudiexchange.sa) returned HTTP 403 to Playwright with Chromium + the VerityResearchBot UA — Akamai bot detection, UA-based. CLAUDE.md rule 3 says 'if a site blocks you, stop for that domain, log it, move on' — Session 4 will not auto-crawl Tadawul. KSA exchange evidence must come from company IR pages or Tier 3/4 paths."
+      }
+    },
+    "notes": "Bilingual EN/AR; direct PDF anchors, no JS required to reach report URLs."
+  },
+  {
+    "slug": "the-saudi-national-bank",
+    "ir_url": "https://www.alahli.com/en/pages/about-us/investor-relations",
+    "ir_status": "verified",
+    "exchange_company_url": null,
+    "exchange_status": "unreachable",
+    "allowed_hosts": [],
+    "evidence": {
+      "ir": {
+        "fetched_at": "2026-10-01",
+        "sample_report_links": [
+          "https://www.alahli.com/-/media/project/snb/snb-web/about-us/02-1-investor-relations/financial-information/financial-statements/english/SNB-English-YE-2024-Financials-Final.pdf",
+          "https://www.alahli.com/-/media/project/snb/snb-web/about-us/02-1-investor-relations/financial-information/investor-presentations/documents/english/SNB-4Q-2024-Investor-Presentation.pdf"
+        ],
+        "note": "Playwright verified: HTTP 200, title: Investor Relations | Saudi National Bank. "
+      },
+      "exchange": {
+        "fetched_at": "2026-10-01",
+        "note": "Tadawul (saudiexchange.sa) returned HTTP 403 to Playwright with Chromium + the VerityResearchBot UA — Akamai bot detection, UA-based. CLAUDE.md rule 3 says 'if a site blocks you, stop for that domain, log it, move on' — Session 4 will not auto-crawl Tadawul. KSA exchange evidence must come from company IR pages or Tier 3/4 paths."
+      }
+    },
+    "notes": "SNB rebranded from NCB; the legacy alahli.com domain is live. Session-1 hint snb.com resolves to Webster Bank USA — bad hint."
+  },
+  {
+    "slug": "riyad-bank",
+    "ir_url": "https://www.riyadbank.com/investor-relations/annual-reports",
+    "ir_status": "verified",
+    "exchange_company_url": null,
+    "exchange_status": "unreachable",
+    "allowed_hosts": [],
+    "evidence": {
+      "ir": {
+        "fetched_at": "2026-09-30",
+        "sample_report_links": [
+          "https://www.riyadbank.com/documents/20121/0/Riyad+Bank+Annual+Report+2024+with+FS+-+English.pdf",
+          "https://www.riyadbank.com/documents/20121/0/Riyad+Bank+Annual+Report+2023+-+English.pdf",
+          "https://www.riyadbank.com/documents/20121/0/Annual+Report+2022+%E2%80%93+English.pdf"
+        ],
+        "note": ""
+      },
+      "exchange": {
+        "fetched_at": "2026-10-01",
+        "note": "Tadawul (saudiexchange.sa) returned HTTP 403 to Playwright with Chromium + the VerityResearchBot UA — Akamai bot detection, UA-based. CLAUDE.md rule 3 says 'if a site blocks you, stop for that domain, log it, move on' — Session 4 will not auto-crawl Tadawul. KSA exchange evidence must come from company IR pages or Tier 3/4 paths."
+      }
+    },
+    "notes": "Year-tab UI is JS-enhanced but PDF anchors are direct."
+  },
+  {
+    "slug": "alinma-bank",
+    "ir_url": "https://ir.alinma.com/",
+    "ir_status": "verified",
+    "exchange_company_url": null,
+    "exchange_status": "unreachable",
+    "allowed_hosts": [],
+    "evidence": {
+      "ir": {
+        "fetched_at": "2026-09-30",
+        "sample_report_links": [
+          "https://ir.alinma.com/en/investor-relations/financial-information/?query=annual-reports#annual-reports"
+        ],
+        "note": "Session-2 hint alinma.com/en/investor-relations 404s; real portal is the ir.alinma.com sub-domain."
+      },
+      "exchange": {
+        "fetched_at": "2026-10-01",
+        "note": "Tadawul (saudiexchange.sa) returned HTTP 403 to Playwright with Chromium + the VerityResearchBot UA — Akamai bot detection, UA-based. CLAUDE.md rule 3 says 'if a site blocks you, stop for that domain, log it, move on' — Session 4 will not auto-crawl Tadawul. KSA exchange evidence must come from company IR pages or Tier 3/4 paths."
+      }
+    },
+    "notes": ""
+  },
+  {
+    "slug": "bank-albilad",
+    "ir_url": "https://www.bankalbilad.com.sa/en/about/investor-relations/Pages/annual-reports.aspx",
+    "ir_status": "verified",
+    "exchange_company_url": null,
+    "exchange_status": "unreachable",
+    "allowed_hosts": [],
+    "evidence": {
+      "ir": {
+        "fetched_at": "2026-09-30",
+        "sample_report_links": [
+          "https://www.bankalbilad.com.sa/Documents/boardscv2019/Albilad%20Annual%20Report%202018_English%20draft%201.pdf",
+          "https://www.bankalbilad.com.sa/sites/en/Documents/bab-annual-report-%20compressed.pdf",
+          "https://www.bankalbilad.com.sa/downloads/about/financial-results/Annual%20Report%202025%20Bank%20Albilad.pdf"
+        ],
+        "note": "Session-2 hint bankalbilad.com redirects to bankalbilad.com.sa."
+      },
+      "exchange": {
+        "fetched_at": "2026-10-01",
+        "note": "Tadawul (saudiexchange.sa) returned HTTP 403 to Playwright with Chromium + the VerityResearchBot UA — Akamai bot detection, UA-based. CLAUDE.md rule 3 says 'if a site blocks you, stop for that domain, log it, move on' — Session 4 will not auto-crawl Tadawul. KSA exchange evidence must come from company IR pages or Tier 3/4 paths."
+      }
+    },
+    "notes": "2005-2009 reports are Arabic-only per the page's own footnote."
+  },
+  {
+    "slug": "bupa-arabia-for-cooperative-insurance-company",
+    "ir_url": "https://www.bupa.com.sa/en/investor-relations",
+    "ir_status": "unreachable",
+    "exchange_company_url": null,
+    "exchange_status": "unreachable",
+    "allowed_hosts": [],
+    "evidence": {
+      "ir": {
+        "fetched_at": "2026-09-30",
+        "sample_report_links": [],
+        "note": "F5-style WAF returns 'The requested URL was rejected' regardless of URL casing. Search evidence confirms the URL is the intended IR page."
+      },
+      "exchange": {
+        "fetched_at": "2026-10-01",
+        "note": "Tadawul (saudiexchange.sa) returned HTTP 403 to Playwright with Chromium + the VerityResearchBot UA — Akamai bot detection, UA-based. CLAUDE.md rule 3 says 'if a site blocks you, stop for that domain, log it, move on' — Session 4 will not auto-crawl Tadawul. KSA exchange evidence must come from company IR pages or Tier 3/4 paths."
+      }
+    },
+    "notes": "WAF rejects WebFetch UA; Session 4 crawler with descriptive UA may or may not clear it."
+  },
+  {
+    "slug": "saudi-industrial-investment-group",
+    "ir_url": "https://siig.com.sa/investors-presentation/",
+    "ir_status": "verified",
+    "exchange_company_url": null,
+    "exchange_status": "unreachable",
+    "allowed_hosts": [],
+    "evidence": {
+      "ir": {
+        "fetched_at": "2026-09-30",
+        "sample_report_links": [
+          "https://siig.com.sa/investors-presentation/",
+          "https://siig.com.sa/board-reports/",
+          "https://siig.com.sa/financial-year/"
+        ],
+        "note": "Homepage confirmed with IR-nav links; not directly fetched at the annual-report-list level."
+      },
+      "exchange": {
+        "fetched_at": "2026-10-01",
+        "note": "Tadawul (saudiexchange.sa) returned HTTP 403 to Playwright with Chromium + the VerityResearchBot UA — Akamai bot detection, UA-based. CLAUDE.md rule 3 says 'if a site blocks you, stop for that domain, log it, move on' — Session 4 will not auto-crawl Tadawul. KSA exchange evidence must come from company IR pages or Tier 3/4 paths."
+      }
+    },
+    "notes": "Verified at IR-nav level, not at annual-report-list level."
+  },
+  {
+    "slug": "first-abu-dhabi-bank",
+    "ir_url": "https://www.bankfab.com/en-ae/about-fab/investor-relations",
+    "ir_status": "verified",
+    "exchange_company_url": "https://www.adx.ae/en/main-market/company-profile/overview?symbols=FAB&secCode=FAB",
+    "exchange_status": "verified",
+    "allowed_hosts": [],
+    "evidence": {
+      "ir": {
+        "fetched_at": "2026-09-30",
+        "sample_report_links": [
+          "https://www.bankfab.com/-/media/fab-uds/about-fab/investor-relations/reports-and-presentations/quarterly-and-annual-reports/2025/fab-annual-report-2025-en.pdf",
+          "https://www.bankfab.com/en-ae/about-fab/investor-relations/reports-and-presentations",
+          "https://www.bankfab.com/-/media/fab-uds/about-fab/investor-relations/fab-investment-case/pdfs/fab-at-a-glance-q2-2026.pdf"
+        ],
+        "note": "Session 2 flagged this hint as 'verified' without evidence — it actually is the real IR page."
+      },
+      "exchange": {
+        "fetched_at": "2026-10-01",
+        "note": "Verified via Playwright (Chromium) with the VerityResearchBot UA from CLAUDE.md on 2026-10-01: HTTP 200 and final URL preserved (no redirect to homepage). Company-specific data on these pages is loaded via XHR by the SPA, so the shared ticker-scroll dominates a plain inner-text grab — the URL being honoured by the server is what proves the per-company page exists."
+      }
+    },
+    "notes": "Lists on ADX (ticker FAB)."
+  },
+  {
+    "slug": "abu-dhabi-commercial-bank",
+    "ir_url": "https://www.adcb.com/en/about-us/investor-relations/",
+    "ir_status": "unreachable",
+    "exchange_company_url": "https://www.adx.ae/en/main-market/company-profile/overview?symbols=ADCB&secCode=ADCB",
+    "exchange_status": "verified",
+    "allowed_hosts": [
+      "portalvhds1fxb0jchzgjph.blob.core.windows.net"
+    ],
+    "evidence": {
+      "ir": {
+        "fetched_at": "2026-09-30",
+        "sample_report_links": [
+          "https://www.adcb.com/en/about-us/investor-relations/annual-report/2024",
+          "https://www.adcb.com/en/about-us/investor-relations/annual-report/2023",
+          "https://portalvhds1fxb0jchzgjph.blob.core.windows.net/press-releases-attachments/3530141/en_20250215000000_43.pdf"
+        ],
+        "note": "adcb.com returns 403; search surfaced canonical annual-report URLs."
+      },
+      "exchange": {
+        "fetched_at": "2026-10-01",
+        "note": "Verified via Playwright (Chromium) with the VerityResearchBot UA from CLAUDE.md on 2026-10-01: HTTP 200 and final URL preserved (no redirect to homepage). Company-specific data on these pages is loaded via XHR by the SPA, so the shared ticker-scroll dominates a plain inner-text grab — the URL being honoured by the server is what proves the per-company page exists."
+      }
+    },
+    "notes": "ADX ticker ADCB."
+  },
+  {
+    "slug": "the-national-bank-of-ras-al-khaimah",
+    "ir_url": "https://www.rakbank.ae/en/about-us/investor-relations/financials/reports",
+    "ir_status": "verified",
+    "exchange_company_url": "https://www.adx.ae/en/main-market/company-profile/overview?symbols=RAKBANK&secCode=RAKBANK",
+    "exchange_status": "verified",
+    "allowed_hosts": [
+      "agm.rakbank.ae"
+    ],
+    "evidence": {
+      "ir": {
+        "fetched_at": "2026-09-30",
+        "sample_report_links": [
+          "https://agm.rakbank.ae/2025/"
+        ],
+        "note": "PDF links behind a JS-populated year selector; only the 2025 interactive report URL was directly visible in Claude's WebFetch view."
+      },
+      "exchange": {
+        "fetched_at": "2026-10-01",
+        "note": "Verified via Playwright (Chromium) with the VerityResearchBot UA from CLAUDE.md on 2026-10-01: HTTP 200 and final URL preserved (no redirect to homepage). Company-specific data on these pages is loaded via XHR by the SPA, so the shared ticker-scroll dominates a plain inner-text grab — the URL being honoured by the server is what proves the per-company page exists."
+      }
+    },
+    "notes": "JS-heavy; ADX ticker RAKBANK."
+  },
+  {
+    "slug": "dubai-islamic-bank",
+    "ir_url": "https://www.dib.ae/about-us/investor-relations/financial-information",
+    "ir_status": "verified",
+    "exchange_company_url": "https://www.dfm.ae/the-exchange/market-information/company/DIB/profile",
+    "exchange_status": "verified",
+    "allowed_hosts": [],
+    "evidence": {
+      "ir": {
+        "fetched_at": "2026-09-30",
+        "sample_report_links": [
+          "https://www.dib.ae/docs/default-source/financial-reports/dib-fs-ye-2025-en.pdf?sfvrsn=a683b014_2",
+          "https://www.dib.ae/docs/default-source/financial-reports/dib-fs-dec-2024-en.pdf?sfvrsn=546dcf94_6",
+          "https://www.dib.ae/docs/default-source/financial-reports/dib-fs-2023-fy-english.pdf?sfvrsn=4cda11a_4"
+        ],
+        "note": ""
+      },
+      "exchange": {
+        "fetched_at": "2026-10-01",
+        "note": "Verified via Playwright (Chromium) with the VerityResearchBot UA from CLAUDE.md on 2026-10-01: HTTP 200 and final URL preserved (no redirect to homepage). Company-specific data on these pages is loaded via XHR by the SPA, so the shared ticker-scroll dominates a plain inner-text grab — the URL being honoured by the server is what proves the per-company page exists."
+      }
+    },
+    "notes": "Session-2 hint dib.ae/investor-relations 404s; real path is /about-us/investor-relations/financial-information."
+  },
+  {
+    "slug": "dubai-investment",
+    "ir_url": "https://dubaiinvestments.com/investor-relations",
+    "ir_status": "verified",
+    "exchange_company_url": "https://www.dfm.ae/the-exchange/market-information/company/DIC/profile",
+    "exchange_status": "verified",
+    "allowed_hosts": [
+      "diweb.blob.core.windows.net"
+    ],
+    "evidence": {
+      "ir": {
+        "fetched_at": "2026-09-30",
+        "sample_report_links": [
+          "https://diweb.blob.core.windows.net/dubaiinvestmentcontainer/dip-images/public/1134/DI_INTEGRATED_REPORT-EN-2025.pdf",
+          "https://diweb.blob.core.windows.net/dubaiinvestmentcontainer/dip-images/public/352/DIC-Integrated-Report-English-2024-website_compressed.pdf",
+          "https://diweb.blob.core.windows.net/dubaiinvestmentcontainer/dip-images/public/1086/DIC_FS_2025_E_24_03_2026.pdf"
+        ],
+        "note": ""
+      },
+      "exchange": {
+        "fetched_at": "2026-10-01",
+        "note": "Verified via Playwright (Chromium) with the VerityResearchBot UA from CLAUDE.md on 2026-10-01: HTTP 200 and final URL preserved (no redirect to homepage). Company-specific data on these pages is loaded via XHR by the SPA, so the shared ticker-scroll dominates a plain inner-text grab — the URL being honoured by the server is what proves the per-company page exists."
+      }
+    },
+    "notes": "DFM ticker DIC."
+  },
+  {
+    "slug": "emirates-nbd-pjsc",
+    "ir_url": "https://www.emiratesnbd.com/en/investor-relations",
+    "ir_status": "verified",
+    "exchange_company_url": "https://www.dfm.ae/the-exchange/market-information/company/EMIRATESNBD/profile",
+    "exchange_status": "verified",
+    "allowed_hosts": [
+      "tools.eurolandir.com"
+    ],
+    "evidence": {
+      "ir": {
+        "fetched_at": "2026-09-30",
+        "sample_report_links": [
+          "https://www.emiratesnbd.com/en/investor-relations/financial-information/annual-reports",
+          "https://www.emiratesnbd.com/en/investor-relations/financial-information/quarterly-results"
+        ],
+        "note": "Annual-reports section reachable but actual PDF list is populated via JS/eurolandir. Session 4 needs Playwright to enumerate PDFs."
+      },
+      "exchange": {
+        "fetched_at": "2026-10-01",
+        "note": "Verified via Playwright (Chromium) with the VerityResearchBot UA from CLAUDE.md on 2026-10-01: HTTP 200 and final URL preserved (no redirect to homepage). Company-specific data on these pages is loaded via XHR by the SPA, so the shared ticker-scroll dominates a plain inner-text grab — the URL being honoured by the server is what proves the per-company page exists."
+      }
+    },
+    "notes": "Session-1 direct-PDF fetch got 403 on WebFetch UA (see docs/DATA_SOURCING_LOG.md)."
+  },
+  {
+    "slug": "qnb-qatar-national-bank",
+    "ir_url": "https://www.qnb.com/sites/qnb/qnbqatar/page/en/enirfaqs.html",
+    "ir_status": "verified",
+    "exchange_company_url": "https://www.qe.com.qa/company-profile?InformationCategory=Company&InformationType=News&CompanyCode=QNBK",
+    "exchange_status": "verified",
+    "allowed_hosts": [],
+    "evidence": {
+      "ir": {
+        "fetched_at": "2026-09-30",
+        "sample_report_links": [
+          "https://www.qnb.com/cs/Satellite/QNBQatar/en_QA/InvestorRelations/enAnnualReports",
+          "https://www.qnb.com/cs/Satellite/QNBQatar/en_QA/InvestorRelations/enFinancialStatement",
+          "https://www.qnb.com/cs/Satellite/QNBQatar/en_QA/enFinancialCalendar"
+        ],
+        "note": ""
+      },
+      "exchange": {
+        "fetched_at": "2026-10-01",
+        "note": "Verified via Playwright (Chromium) with the VerityResearchBot UA from CLAUDE.md on 2026-10-01: HTTP 200 and final URL preserved (no redirect to homepage). Company-specific data on these pages is loaded via XHR by the SPA, so the shared ticker-scroll dominates a plain inner-text grab — the URL being honoured by the server is what proves the per-company page exists."
+      }
+    },
+    "notes": "Session-2 hint was the FAQ URL; the real annual-reports index is en_QA/InvestorRelations/enAnnualReports."
+  },
+  {
+    "slug": "kuwait-finance-house",
+    "ir_url": "https://kfh.com/en/home/Investor-Relations/Annual-Reports.html",
+    "ir_status": "verified",
+    "exchange_company_url": "https://www.boursakuwait.com.kw/stock/108/profile",
+    "exchange_status": "unreachable",
+    "allowed_hosts": [],
+    "evidence": {
+      "ir": {
+        "fetched_at": "2026-09-30",
+        "sample_report_links": [
+          "https://kfh.com/en/reports/kuwait/Annual-Reports/Annual-Report-2025/document_en/KFH%20Annual%20Report%20En%202025%20(Draft-17)%20Web.pdf.pdf",
+          "https://kfh.com/en/reports/kuwait/Annual-Reports/Annual-Report-2024/document_en/KFH%20Annual%20Report%20En%202024%20(Draft-16).pdf.pdf",
+          "https://kfh.com/en/reports/kuwait/Annual-Reports/Annual-Report-2023/document_en/KFH%20Annual%20Report%20En%202023.pdf.pdf"
+        ],
+        "note": "Same page Session 1 used for the smoke test — reliable and stable."
+      },
+      "exchange": {
+        "fetched_at": "2026-10-01",
+        "note": "Boursa Kuwait /stock/<id>/profile returned HTTP 403 to Playwright + VerityResearchBot UA. The numeric ID is confirmed from search-surfaced docs.boursakuwait.com.kw NewsPDF URLs but the profile page itself is blocked to automated access. Session 4 to retry via Tier 3/4 or human browsing. (numeric id = 108)"
+      }
+    },
+    "notes": ""
+  },
+  {
+    "slug": "national-bank-of-kuwait",
+    "ir_url": "https://www.nbk.com/nbk-group/investor-relations/latest-annual-report",
+    "ir_status": "verified",
+    "exchange_company_url": "https://www.boursakuwait.com.kw/stock/101/profile",
+    "exchange_status": "unreachable",
+    "allowed_hosts": [],
+    "evidence": {
+      "ir": {
+        "fetched_at": "2026-09-30",
+        "sample_report_links": [
+          "https://www.nbk.com/dam/jcr:73b1509e-5280-4ef3-a29a-392c1b565299/nbk-annual-report-2025-e.pdf",
+          "https://www.nbk.com/dam/jcr:374076fd-2bb1-4b60-ad6a-df7fae2d25ae/nbk-annual-report-2024-e.pdf",
+          "https://www.nbk.com/dam/jcr:2db8abcf-42dc-4307-a9cf-791e0e22540a/Annual_Report_2023_EN.pdf"
+        ],
+        "note": ""
+      },
+      "exchange": {
+        "fetched_at": "2026-10-01",
+        "note": "Boursa Kuwait /stock/<id>/profile returned HTTP 403 to Playwright + VerityResearchBot UA. The numeric ID is confirmed from search-surfaced docs.boursakuwait.com.kw NewsPDF URLs but the profile page itself is blocked to automated access. Session 4 to retry via Tier 3/4 or human browsing. (numeric id = 101)"
+      }
+    },
+    "notes": ""
+  },
+  {
+    "slug": "boubyan-bank",
+    "ir_url": "https://www.bankboubyan.com/en/investor-relations/",
+    "ir_status": "verified",
+    "exchange_company_url": "https://www.boursakuwait.com.kw/stock/109/profile",
+    "exchange_status": "unreachable",
+    "allowed_hosts": [],
+    "evidence": {
+      "ir": {
+        "fetched_at": "2026-09-30",
+        "sample_report_links": [
+          "https://www.bankboubyan.com/en/investor-relations#annual-reports",
+          "https://www.bankboubyan.com/en/investor-relations/sustainability-report"
+        ],
+        "note": "Next.js SPA; PDFs behind JS. Session-2 hint boubyan.com.kw redirects to bankboubyan.com."
+      },
+      "exchange": {
+        "fetched_at": "2026-10-01",
+        "note": "Boursa Kuwait /stock/<id>/profile returned HTTP 403 to Playwright + VerityResearchBot UA. The numeric ID is confirmed from search-surfaced docs.boursakuwait.com.kw NewsPDF URLs but the profile page itself is blocked to automated access. Session 4 to retry via Tier 3/4 or human browsing. (numeric id = 109)"
+      }
+    },
+    "notes": ""
+  },
+  {
+    "slug": "alafco-aviation-lease-and-finance-company",
+    "ir_url": "https://www.alafco.com/en/investors/",
+    "ir_status": "unreachable",
+    "exchange_company_url": null,
+    "exchange_status": "unreachable",
+    "allowed_hosts": [],
+    "evidence": {
+      "ir": {
+        "fetched_at": "2026-10-01",
+        "sample_report_links": [
+          "https://web.archive.org/web/2*/alafco.com/en/investors"
+        ],
+        "note": "Delisted — see notes."
+      },
+      "exchange": {
+        "fetched_at": "2026-10-01",
+        "note": "Delisted from Boursa Kuwait 2025-03-05; profile page would also return 403."
+      }
+    },
+    "notes": "Delisted from Boursa Kuwait 2025-03-05. alafco.com returned Cloudflare 523 in Session 3 and remains unreachable. Boursa Kuwait /stock/<id>/profile would also return 403. Wayback Machine has 36 snapshots of alafco.com/en/investors between 2021-03-05 and 2025-05-23 (confirmed via web.archive.org/web/2*/alafco.com/en/investors). Fiscal years for which annual reports were published: FY2020 through FY2024 (fiscal year ends September 30; delisted before FY2025 close so FY2025 report was not expected / not published). Target years 2021-2024 (per config/verity.toml) should go to Tier 3 Wayback; 2025 is confirmed data non-existence. PILOT GATE: do NOT include ALAFCO in Session 4's 3-institution financial-wave pilot — this row is a Wayback-only path, not a live-crawl test; including it would conflate the two outcomes."
+  },
+  {
+    "slug": "bank-muscat-bkmb",
+    "ir_url": "https://www.bankmuscat.om/en/investorrelations/pages/reports.aspx",
+    "ir_status": "verified",
+    "exchange_company_url": "https://www.msx.om/snapshot.aspx?s=BKMB",
+    "exchange_status": "verified",
+    "allowed_hosts": [],
+    "evidence": {
+      "ir": {
+        "fetched_at": "2026-09-30",
+        "sample_report_links": [
+          "https://www.bankmuscat.om/en/investorrelations/AnnualReports/BM_AFS_2025_Audited_BM_Website_EN.pdf",
+          "https://www.bankmuscat.om/en/investorrelations/AnnualReports/Annual_Report_EN_2025.pdf",
+          "https://www.bankmuscat.om/en/investorrelations/AnnualReports/Annual_Results_2025_EN.pdf"
+        ],
+        "note": "Session-2 hint bankmuscat.com redirects to bankmuscat.om."
+      },
+      "exchange": {
+        "fetched_at": "2026-10-01",
+        "note": "Verified via Playwright (Chromium) with the VerityResearchBot UA from CLAUDE.md on 2026-10-01: HTTP 200 and final URL preserved (no redirect to homepage). Company-specific data on these pages is loaded via XHR by the SPA, so the shared ticker-scroll dominates a plain inner-text grab — the URL being honoured by the server is what proves the per-company page exists."
+      }
+    },
+    "notes": ""
+  },
+  {
+    "slug": "oman-international-development-and-investment-company",
+    "ir_url": null,
+    "ir_status": "needs_human",
+    "exchange_company_url": "https://www.msx.om/snapshot.aspx?s=OMVS",
+    "exchange_status": "verified",
+    "allowed_hosts": [],
+    "evidence": {
+      "ir": {
+        "fetched_at": "2026-09-30",
+        "sample_report_links": [],
+        "note": "ominvest.com returns 403 to WebFetch; no verified IR URL surfaced via search."
+      },
+      "exchange": {
+        "fetched_at": "2026-10-01",
+        "note": "Verified via Playwright (Chromium) with the VerityResearchBot UA from CLAUDE.md on 2026-10-01: HTTP 200 and final URL preserved (no redirect to homepage). Company-specific data on these pages is loaded via XHR by the SPA, so the shared ticker-scroll dominates a plain inner-text grab — the URL being honoured by the server is what proves the per-company page exists."
+      }
+    },
+    "notes": "Company also known as Ominvest. MSX profile confirmed; IR page needs human check."
+  },
+  {
+    "slug": "sohar-international-bank",
+    "ir_url": "https://www.sib.om/investor-relations",
+    "ir_status": "verified",
+    "exchange_company_url": "https://www.msx.om/snapshot.aspx?s=BKSB",
+    "exchange_status": "verified",
+    "allowed_hosts": [
+      "res.cloudinary.com"
+    ],
+    "evidence": {
+      "ir": {
+        "fetched_at": "2026-09-30",
+        "sample_report_links": [
+          "https://res.cloudinary.com/dtqjagydd/image/upload/v1775368385/Sohar_Int_Annual_Report2025_English_1_at0ign.pdf",
+          "https://res.cloudinary.com/dtqjagydd/image/upload/v1785663205/sohardevelopment/SIB_Financial_Statements_English_Jun_2026_3ced800a79.pdf"
+        ],
+        "note": "soharinternational.com now redirects to sib.om."
+      },
+      "exchange": {
+        "fetched_at": "2026-10-01",
+        "note": "Verified via Playwright (Chromium) with the VerityResearchBot UA from CLAUDE.md on 2026-10-01: HTTP 200 and final URL preserved (no redirect to homepage). Company-specific data on these pages is loaded via XHR by the SPA, so the shared ticker-scroll dominates a plain inner-text grab — the URL being honoured by the server is what proves the per-company page exists."
+      }
+    },
+    "notes": ""
+  },
+  {
+    "slug": "bank-dhofar",
+    "ir_url": "https://www.bankdhofar.com/investor-relations/financial-reports/",
+    "ir_status": "unreachable",
+    "exchange_company_url": "https://www.msx.om/snapshot.aspx?s=BKDB",
+    "exchange_status": "verified",
+    "allowed_hosts": [],
+    "evidence": {
+      "ir": {
+        "fetched_at": "2026-09-30",
+        "sample_report_links": [
+          "https://www.bankdhofar.com/media/4edbsroz/annual-report-2023-en.pdf",
+          "https://www.bankdhofar.com/media/xxvjzekb/ir-presentation-q2-2026-final.pdf"
+        ],
+        "note": "WebFetch got 404 on the financial-reports subpage. Search evidence has canonical PDFs on the same domain — Session 4 should retry."
+      },
+      "exchange": {
+        "fetched_at": "2026-10-01",
+        "note": "Verified via Playwright (Chromium) with the VerityResearchBot UA from CLAUDE.md on 2026-10-01: HTTP 200 and final URL preserved (no redirect to homepage). Company-specific data on these pages is loaded via XHR by the SPA, so the shared ticker-scroll dominates a plain inner-text grab — the URL being honoured by the server is what proves the per-company page exists."
+      }
+    },
+    "notes": ""
+  },
+  {
+    "slug": "national-bank-of-bahrain",
+    "ir_url": "https://www.nbbonline.com/en/investor-relations/financial/financial/annual-reports",
+    "ir_status": "unreachable",
+    "exchange_company_url": "https://bahrainbourse.com/en/companyprofile?CompanyNameSymbol=NBB",
+    "exchange_status": "verified",
+    "allowed_hosts": [],
+    "evidence": {
+      "ir": {
+        "fetched_at": "2026-09-30",
+        "sample_report_links": [
+          "https://nbbonline.com/wp-content/uploads/2026/03/Annual-Financial-and-Sustainability-Report-2025-3.pdf"
+        ],
+        "note": "nbbonline.com returns 403 to WebFetch. Search evidence confirms URL + surfaced the 2025 PDF."
+      },
+      "exchange": {
+        "fetched_at": "2026-10-01",
+        "note": "Verified via Playwright (Chromium) with the VerityResearchBot UA from CLAUDE.md on 2026-10-01: HTTP 200 and final URL preserved (no redirect to homepage). Company-specific data on these pages is loaded via XHR by the SPA, so the shared ticker-scroll dominates a plain inner-text grab — the URL being honoured by the server is what proves the per-company page exists."
+      }
+    },
+    "notes": ""
+  },
+  {
+    "slug": "saudi-aramco",
+    "ir_url": "https://www.aramco.com/en/investors/reports-and-presentations",
+    "ir_status": "verified",
+    "exchange_company_url": null,
+    "exchange_status": "unreachable",
+    "allowed_hosts": [],
+    "evidence": {
+      "ir": {
+        "fetched_at": "2026-09-30",
+        "sample_report_links": [
+          "https://www.aramco.com/-/media/publications/corporate-reports/reports-and-presentations/2025/fy/saudi-aramco-ara-2025-english.pdf",
+          "https://www.aramco.com/-/media/publications/corporate-reports/annual-reports/saudi-aramco-ara-2024-english.pdf",
+          "https://www.aramco.com/-/media/publications/corporate-reports/annual-reports/saudi-aramco-ara-2023-english.pdf"
+        ],
+        "note": ""
+      },
+      "exchange": {
+        "fetched_at": "2026-10-01",
+        "note": "Tadawul (saudiexchange.sa) returned HTTP 403 to Playwright with Chromium + the VerityResearchBot UA — Akamai bot detection, UA-based. CLAUDE.md rule 3 says 'if a site blocks you, stop for that domain, log it, move on' — Session 4 will not auto-crawl Tadawul. KSA exchange evidence must come from company IR pages or Tier 3/4 paths."
+      }
+    },
+    "notes": ""
+  },
+  {
+    "slug": "sabic",
+    "ir_url": "https://www.sabic.com/en/investors/performance-financial-highlights/annual-report",
+    "ir_status": "unreachable",
+    "exchange_company_url": null,
+    "exchange_status": "unreachable",
+    "allowed_hosts": [],
+    "evidence": {
+      "ir": {
+        "fetched_at": "2026-09-30",
+        "sample_report_links": [
+          "https://www.sabic.com/en/Images/SABIC-Integrated-Annual-Report-2025-EN_tcm1010-49452.pdf"
+        ],
+        "note": "WebFetch failed with 'too many redirects'. Search evidence has canonical PDFs."
+      },
+      "exchange": {
+        "fetched_at": "2026-10-01",
+        "note": "Tadawul (saudiexchange.sa) returned HTTP 403 to Playwright with Chromium + the VerityResearchBot UA — Akamai bot detection, UA-based. CLAUDE.md rule 3 says 'if a site blocks you, stop for that domain, log it, move on' — Session 4 will not auto-crawl Tadawul. KSA exchange evidence must come from company IR pages or Tier 3/4 paths."
+      }
+    },
+    "notes": ""
+  },
+  {
+    "slug": "saudi-telecom-company",
+    "ir_url": "https://www.stc.com/content/stcgroupwebsite/sa/en/investors.html",
+    "ir_status": "verified",
+    "exchange_company_url": null,
+    "exchange_status": "unreachable",
+    "allowed_hosts": [],
+    "evidence": {
+      "ir": {
+        "fetched_at": "2026-09-30",
+        "sample_report_links": [
+          "https://www.stc.com.sa/content/dam/stc/stc-annual-report-2023/",
+          "https://www.stc.com.sa/content/dam/corporatesite/en/generic/pdf/investor/AnnualReport2021-En.pdf"
+        ],
+        "note": "Annual reports served as an interactive microsite (JS-required). stc.com.sa redirects to stc.com."
+      },
+      "exchange": {
+        "fetched_at": "2026-10-01",
+        "note": "Tadawul (saudiexchange.sa) returned HTTP 403 to Playwright with Chromium + the VerityResearchBot UA — Akamai bot detection, UA-based. CLAUDE.md rule 3 says 'if a site blocks you, stop for that domain, log it, move on' — Session 4 will not auto-crawl Tadawul. KSA exchange evidence must come from company IR pages or Tier 3/4 paths."
+      }
+    },
+    "notes": ""
+  },
+  {
+    "slug": "maaden",
+    "ir_url": "https://www.maaden.com/investor-relations",
+    "ir_status": "verified",
+    "exchange_company_url": null,
+    "exchange_status": "unreachable",
+    "allowed_hosts": [],
+    "evidence": {
+      "ir": {
+        "fetched_at": "2026-10-01",
+        "sample_report_links": [],
+        "note": "Playwright verified: HTTP 200, title: Saudi Arabian Mining Company (Maaden) - Leading Mining & Metals Company. "
+      },
+      "exchange": {
+        "fetched_at": "2026-10-01",
+        "note": "Tadawul (saudiexchange.sa) returned HTTP 403 to Playwright with Chromium + the VerityResearchBot UA — Akamai bot detection, UA-based. CLAUDE.md rule 3 says 'if a site blocks you, stop for that domain, log it, move on' — Session 4 will not auto-crawl Tadawul. KSA exchange evidence must come from company IR pages or Tier 3/4 paths."
+      }
+    },
+    "notes": ""
+  },
+  {
+    "slug": "saudi-electricity",
+    "ir_url": "https://www.se.com.sa/en/Investors/Reports-and-Presentations/Annual-Reports/",
+    "ir_status": "unreachable",
+    "exchange_company_url": null,
+    "exchange_status": "unreachable",
+    "allowed_hosts": [],
+    "evidence": {
+      "ir": {
+        "fetched_at": "2026-09-30",
+        "sample_report_links": [
+          "https://www.se.com.sa/-/media/sec/Investors/Finance/SEC_Annual_Report_EN_23_V2.ashx",
+          "https://www.se.com.sa/-/media/sec/Investors/Financial-Results/sec-fy-2024-results-presentation-english.ashx"
+        ],
+        "note": "WebFetch ECONNREFUSED; search evidence has canonical .ashx PDF proxies."
+      },
+      "exchange": {
+        "fetched_at": "2026-10-01",
+        "note": "Tadawul (saudiexchange.sa) returned HTTP 403 to Playwright with Chromium + the VerityResearchBot UA — Akamai bot detection, UA-based. CLAUDE.md rule 3 says 'if a site blocks you, stop for that domain, log it, move on' — Session 4 will not auto-crawl Tadawul. KSA exchange evidence must come from company IR pages or Tier 3/4 paths."
+      }
+    },
+    "notes": "Rebranded to Saudi Energy Feb 2026 per press coverage."
+  },
+  {
+    "slug": "yanbu-cement-company",
+    "ir_url": "https://www.ycc.sa/en/financial-statements/",
+    "ir_status": "verified",
+    "exchange_company_url": null,
+    "exchange_status": "unreachable",
+    "allowed_hosts": [
+      "www.saudiexchange.sa"
+    ],
+    "evidence": {
+      "ir": {
+        "fetched_at": "2026-09-30",
+        "sample_report_links": [
+          "https://www.saudiexchange.sa/Resources/fsPdf/428_0_2024-03-20_11-26-43_En.pdf",
+          "https://www.saudiexchange.sa/Resources/fsPdf/428_0_2023-03-21_09-20-55_En.pdf",
+          "https://www.saudiexchange.sa/Resources/fsPdf/428_0_2022-03-13_07-47-28_En.pdf"
+        ],
+        "note": ""
+      },
+      "exchange": {
+        "fetched_at": "2026-10-01",
+        "note": "Tadawul (saudiexchange.sa) returned HTTP 403 to Playwright with Chromium + the VerityResearchBot UA — Akamai bot detection, UA-based. CLAUDE.md rule 3 says 'if a site blocks you, stop for that domain, log it, move on' — Session 4 will not auto-crawl Tadawul. KSA exchange evidence must come from company IR pages or Tier 3/4 paths."
+      }
+    },
+    "notes": "Yanbu Cement's own IR page links out to saudiexchange.sa-hosted PDFs — direct download URLs may work (Tadawul document store is separate from portlet portal)."
+  },
+  {
+    "slug": "saudi-arabian-fertilizer-company",
+    "ir_url": "https://www.safco.com.sa/en/investor-relations/reports",
+    "ir_status": "unreachable",
+    "exchange_company_url": null,
+    "exchange_status": "unreachable",
+    "allowed_hosts": [],
+    "evidence": {
+      "ir": {
+        "fetched_at": "2026-10-01",
+        "sample_report_links": [],
+        "note": "Playwright: HTTP 500. WAF 'URL blocked' response"
+      },
+      "exchange": {
+        "fetched_at": "2026-10-01",
+        "note": "Tadawul (saudiexchange.sa) returned HTTP 403 to Playwright with Chromium + the VerityResearchBot UA — Akamai bot detection, UA-based. CLAUDE.md rule 3 says 'if a site blocks you, stop for that domain, log it, move on' — Session 4 will not auto-crawl Tadawul. KSA exchange evidence must come from company IR pages or Tier 3/4 paths."
+      }
+    },
+    "notes": "Also known as SABIC Agri-Nutrients; may also be at sabic-agrinutrients.com."
+  },
+  {
+    "slug": "almarai",
+    "ir_url": "https://www.almarai.com/en/corporate/investors/annual-report-financial-statement/",
+    "ir_status": "unreachable",
+    "exchange_company_url": null,
+    "exchange_status": "unreachable",
+    "allowed_hosts": [
+      "annualreport.almarai.com"
+    ],
+    "evidence": {
+      "ir": {
+        "fetched_at": "2026-09-30",
+        "sample_report_links": [
+          "https://annualreport.almarai.com/assets/img/pdfs/Almarai%20AR%202024-English.pdf"
+        ],
+        "note": "WebFetch 406 on primary URL; search evidence has canonical 2024 PDF. annualreport.almarai.com host loads interactive report site (JS-heavy)."
+      },
+      "exchange": {
+        "fetched_at": "2026-10-01",
+        "note": "Tadawul (saudiexchange.sa) returned HTTP 403 to Playwright with Chromium + the VerityResearchBot UA — Akamai bot detection, UA-based. CLAUDE.md rule 3 says 'if a site blocks you, stop for that domain, log it, move on' — Session 4 will not auto-crawl Tadawul. KSA exchange evidence must come from company IR pages or Tier 3/4 paths."
+      }
+    },
+    "notes": ""
+  },
+  {
+    "slug": "etihad-etisalat-mobily",
+    "ir_url": "https://www.mobily.com.sa/wps/portal/web/personal/am-overview/ir-details/",
+    "ir_status": "verified",
+    "exchange_company_url": null,
+    "exchange_status": "unreachable",
+    "allowed_hosts": [],
+    "evidence": {
+      "ir": {
+        "fetched_at": "2026-09-30",
+        "sample_report_links": [
+          "https://www.mobily.com.sa/wps/wcm/connect/b619d237-477d-473f-b8aa-d2b59c662260/Earnings+Release+FY-24+EN.pdf?MOD=AJPERES",
+          "https://www.mobily.com.sa/wps/wcm/connect/11116a7c-3148-4149-9440-d392a8edf483/Earnings_Presentation_FY+2023.pdf?MOD=AJPERES"
+        ],
+        "note": "IR page loaded; several documents are Arabic-only. English earnings releases surfaced via search."
+      },
+      "exchange": {
+        "fetched_at": "2026-10-01",
+        "note": "Tadawul (saudiexchange.sa) returned HTTP 403 to Playwright with Chromium + the VerityResearchBot UA — Akamai bot detection, UA-based. CLAUDE.md rule 3 says 'if a site blocks you, stop for that domain, log it, move on' — Session 4 will not auto-crawl Tadawul. KSA exchange evidence must come from company IR pages or Tier 3/4 paths."
+      }
+    },
+    "notes": "IBM WebSphere Portal URLs (long portlet-based)."
+  },
+  {
+    "slug": "savola-group",
+    "ir_url": "https://www.savola.com/en/investors/annual-reports",
+    "ir_status": "verified",
+    "exchange_company_url": null,
+    "exchange_status": "unreachable",
+    "allowed_hosts": [
+      "savola.blob.core.windows.net"
+    ],
+    "evidence": {
+      "ir": {
+        "fetched_at": "2026-09-30",
+        "sample_report_links": [
+          "https://savola.blob.core.windows.net/website/docs/default-source/annual-reports/20260330-savola-ar25_en_front-gov-(1)a.pdf",
+          "https://savola.blob.core.windows.net/website/docs/default-source/annual-reports/savola-english-annual-report-2024.pdf",
+          "https://savola.blob.core.windows.net/website/docs/default-source/annual-reports/savola-annual-report-23-en-25-4-24.pdf"
+        ],
+        "note": ""
+      },
+      "exchange": {
+        "fetched_at": "2026-10-01",
+        "note": "Tadawul (saudiexchange.sa) returned HTTP 403 to Playwright with Chromium + the VerityResearchBot UA — Akamai bot detection, UA-based. CLAUDE.md rule 3 says 'if a site blocks you, stop for that domain, log it, move on' — Session 4 will not auto-crawl Tadawul. KSA exchange evidence must come from company IR pages or Tier 3/4 paths."
+      }
+    },
+    "notes": ""
+  },
+  {
+    "slug": "yanbu-national-petrochemical",
+    "ir_url": "https://www.yansab.com.sa/en/news",
+    "ir_status": "unreachable",
+    "exchange_company_url": null,
+    "exchange_status": "unreachable",
+    "allowed_hosts": [],
+    "evidence": {
+      "ir": {
+        "fetched_at": "2026-09-30",
+        "sample_report_links": [
+          "https://www.yansab.com.sa/en/Images/YANSAB%20Annual%20Report%202025%20EN_tcm1047-49427.pdf",
+          "https://www.yansab.com.sa/en/Images/Yansab%20Annual%20Report%202024%20-EN_tcm1047-46828.pdf",
+          "https://www.yansab.com.sa/en/Images/Yansab-Annual-Report-EN-2022_tcm1047-38873.pdf"
+        ],
+        "note": "News page loads but PDF list needs JS; search evidence surfaced canonical PDFs."
+      },
+      "exchange": {
+        "fetched_at": "2026-10-01",
+        "note": "Tadawul (saudiexchange.sa) returned HTTP 403 to Playwright with Chromium + the VerityResearchBot UA — Akamai bot detection, UA-based. CLAUDE.md rule 3 says 'if a site blocks you, stop for that domain, log it, move on' — Session 4 will not auto-crawl Tadawul. KSA exchange evidence must come from company IR pages or Tier 3/4 paths."
+      }
+    },
+    "notes": ""
+  },
+  {
+    "slug": "dar-al-arkan-real-estate-development-company",
+    "ir_url": "https://www.daralarkan.com/investor-relations/financial-information/annual-reports/",
+    "ir_status": "verified",
+    "exchange_company_url": null,
+    "exchange_status": "unreachable",
+    "allowed_hosts": [
+      "cdn.daralarkan.com"
+    ],
+    "evidence": {
+      "ir": {
+        "fetched_at": "2026-09-30",
+        "sample_report_links": [
+          "https://cdn.daralarkan.com/DAR_annual_report_2025_EN_d044f7afc3.pdf",
+          "https://cdn.daralarkan.com/DAR_annual_report_2024_EN_Mar24_f0e7d40ee9.pdf",
+          "https://cdn.daralarkan.com/Annual_Report_2023_EN_b88d2e3ee8.pdf"
+        ],
+        "note": ""
+      },
+      "exchange": {
+        "fetched_at": "2026-10-01",
+        "note": "Tadawul (saudiexchange.sa) returned HTTP 403 to Playwright with Chromium + the VerityResearchBot UA — Akamai bot detection, UA-based. CLAUDE.md rule 3 says 'if a site blocks you, stop for that domain, log it, move on' — Session 4 will not auto-crawl Tadawul. KSA exchange evidence must come from company IR pages or Tier 3/4 paths."
+      }
+    },
+    "notes": ""
+  },
+  {
+    "slug": "emaar-the-economic-city",
+    "ir_url": "https://www.kaec.net/investor-relations/",
+    "ir_status": "unreachable",
+    "exchange_company_url": null,
+    "exchange_status": "unreachable",
+    "allowed_hosts": [],
+    "evidence": {
+      "ir": {
+        "fetched_at": "2026-09-30",
+        "sample_report_links": [
+          "https://www.kaec.net/wp-content/uploads/2024/04/En-KAEC-Annual-Report-2023.pdf",
+          "https://www.kaec.net/wp-content/uploads/2024/04/BoD-Report-2022.pdf"
+        ],
+        "note": "WebFetch got 403; search evidence has canonical PDFs at wp-content/uploads."
+      },
+      "exchange": {
+        "fetched_at": "2026-10-01",
+        "note": "Tadawul (saudiexchange.sa) returned HTTP 403 to Playwright with Chromium + the VerityResearchBot UA — Akamai bot detection, UA-based. CLAUDE.md rule 3 says 'if a site blocks you, stop for that domain, log it, move on' — Session 4 will not auto-crawl Tadawul. KSA exchange evidence must come from company IR pages or Tier 3/4 paths."
+      }
+    },
+    "notes": "Registered on Tadawul as 'Emaar The Economic City' but branded as KAEC (King Abdullah Economic City)."
+  },
+  {
+    "slug": "advanced-petrochemical",
+    "ir_url": "https://ir.advancedpetrochem.com/",
+    "ir_status": "verified",
+    "exchange_company_url": null,
+    "exchange_status": "unreachable",
+    "allowed_hosts": [],
+    "evidence": {
+      "ir": {
+        "fetched_at": "2026-09-30",
+        "sample_report_links": [
+          "https://ir.advancedpetrochem.com/media/mbeiem5u/advanced_annual-report_2025_eng.pdf",
+          "https://ir.advancedpetrochem.com/media/3donny2s/annual-report-2024-en.pdf",
+          "https://ir.advancedpetrochem.com/media/aaofmcjt/2022-en-annual-report.pdf"
+        ],
+        "note": ""
+      },
+      "exchange": {
+        "fetched_at": "2026-10-01",
+        "note": "Tadawul (saudiexchange.sa) returned HTTP 403 to Playwright with Chromium + the VerityResearchBot UA — Akamai bot detection, UA-based. CLAUDE.md rule 3 says 'if a site blocks you, stop for that domain, log it, move on' — Session 4 will not auto-crawl Tadawul. KSA exchange evidence must come from company IR pages or Tier 3/4 paths."
+      }
+    },
+    "notes": "Dedicated IR sub-domain."
+  },
+  {
+    "slug": "saudi-kayan-petrochemical-company",
+    "ir_url": "https://www.saudikayan.com/en/investor-relations",
+    "ir_status": "unreachable",
+    "exchange_company_url": null,
+    "exchange_status": "unreachable",
+    "allowed_hosts": [],
+    "evidence": {
+      "ir": {
+        "fetched_at": "2026-09-30",
+        "sample_report_links": [
+          "https://www.saudikayan.com/en/Images/Annual%20Report%202024%20SK_tcm1043-46850.pdf",
+          "https://www.saudikayan.com/en/Images/Annual%20Report%202022%20En_tcm1043-42458.pdf",
+          "https://www.saudikayan.com/en/Images/Annual%20Report%202021%20En_tcm1043-34671.pdf"
+        ],
+        "note": "WebFetch ECONNREFUSED; search evidence has canonical PDFs."
+      },
+      "exchange": {
+        "fetched_at": "2026-10-01",
+        "note": "Tadawul (saudiexchange.sa) returned HTTP 403 to Playwright with Chromium + the VerityResearchBot UA — Akamai bot detection, UA-based. CLAUDE.md rule 3 says 'if a site blocks you, stop for that domain, log it, move on' — Session 4 will not auto-crawl Tadawul. KSA exchange evidence must come from company IR pages or Tier 3/4 paths."
+      }
+    },
+    "notes": ""
+  },
+  {
+    "slug": "mouwasat-medical-services-company",
+    "ir_url": "https://www.mouwasat.com/en/annual-reports",
+    "ir_status": "verified",
+    "exchange_company_url": null,
+    "exchange_status": "unreachable",
+    "allowed_hosts": [],
+    "evidence": {
+      "ir": {
+        "fetched_at": "2026-09-30",
+        "sample_report_links": [
+          "https://www.mouwasat.com/en/annual-reports"
+        ],
+        "note": "Page uses signed-URL PDFs with expiration tokens rather than static PDF URLs."
+      },
+      "exchange": {
+        "fetched_at": "2026-10-01",
+        "note": "Tadawul (saudiexchange.sa) returned HTTP 403 to Playwright with Chromium + the VerityResearchBot UA — Akamai bot detection, UA-based. CLAUDE.md rule 3 says 'if a site blocks you, stop for that domain, log it, move on' — Session 4 will not auto-crawl Tadawul. KSA exchange evidence must come from company IR pages or Tier 3/4 paths."
+      }
+    },
+    "notes": ""
+  },
+  {
+    "slug": "saudi-airlines-catering-company-catrion",
+    "ir_url": "https://www.catrion.com/investor-relation",
+    "ir_status": "verified",
+    "exchange_company_url": null,
+    "exchange_status": "unreachable",
+    "allowed_hosts": [],
+    "evidence": {
+      "ir": {
+        "fetched_at": "2026-09-30",
+        "sample_report_links": [
+          "https://www.catrion.com/application/files/4117/7565/9117/CATRION_En_AR25_07042026_compressed.pdf",
+          "https://www.catrion.com/application/files/2417/4298/1965/CATRION_Annual_Report_2024_ENG.pdf",
+          "https://www.catrion.com/application/files/3917/1212/7944/AR2023_-_CATRION_-_ENG.pdf"
+        ],
+        "note": ""
+      },
+      "exchange": {
+        "fetched_at": "2026-10-01",
+        "note": "Tadawul (saudiexchange.sa) returned HTTP 403 to Playwright with Chromium + the VerityResearchBot UA — Akamai bot detection, UA-based. CLAUDE.md rule 3 says 'if a site blocks you, stop for that domain, log it, move on' — Session 4 will not auto-crawl Tadawul. KSA exchange evidence must come from company IR pages or Tier 3/4 paths."
+      }
+    },
+    "notes": ""
+  },
+  {
+    "slug": "national-industrialization-co",
+    "ir_url": "https://www.tasnee.com/en/investor-relations",
+    "ir_status": "unreachable",
+    "exchange_company_url": null,
+    "exchange_status": "unreachable",
+    "allowed_hosts": [],
+    "evidence": {
+      "ir": {
+        "fetched_at": "2026-09-30",
+        "sample_report_links": [
+          "https://www.tasnee.com/media/oxfi0ltt/tasnee-q2-2025-eng.pdf"
+        ],
+        "note": "WebFetch failed with a TLS cert verification error; search evidence has canonical PDFs."
+      },
+      "exchange": {
+        "fetched_at": "2026-10-01",
+        "note": "Tadawul (saudiexchange.sa) returned HTTP 403 to Playwright with Chromium + the VerityResearchBot UA — Akamai bot detection, UA-based. CLAUDE.md rule 3 says 'if a site blocks you, stop for that domain, log it, move on' — Session 4 will not auto-crawl Tadawul. KSA exchange evidence must come from company IR pages or Tier 3/4 paths."
+      }
+    },
+    "notes": "Also known as TASNEE."
+  },
+  {
+    "slug": "rabigh-refining-petrochemical-co",
+    "ir_url": "https://www.petrorabigh.com/en/Investors",
+    "ir_status": "unreachable",
+    "exchange_company_url": null,
+    "exchange_status": "unreachable",
+    "allowed_hosts": [],
+    "evidence": {
+      "ir": {
+        "fetched_at": "2026-10-01",
+        "sample_report_links": [],
+        "note": "Playwright: HTTP 403. Server 403 to Playwright + honest UA"
+      },
+      "exchange": {
+        "fetched_at": "2026-10-01",
+        "note": "Tadawul (saudiexchange.sa) returned HTTP 403 to Playwright with Chromium + the VerityResearchBot UA — Akamai bot detection, UA-based. CLAUDE.md rule 3 says 'if a site blocks you, stop for that domain, log it, move on' — Session 4 will not auto-crawl Tadawul. KSA exchange evidence must come from company IR pages or Tier 3/4 paths."
+      }
+    },
+    "notes": "Also known as Petro Rabigh."
+  },
+  {
+    "slug": "sahara-international-petrochemical-co",
+    "ir_url": "https://www.sipchem.com/",
+    "ir_status": "verified",
+    "exchange_company_url": null,
+    "exchange_status": "unreachable",
+    "allowed_hosts": [],
+    "evidence": {
+      "ir": {
+        "fetched_at": "2026-10-01",
+        "sample_report_links": [
+          "https://www.sipchem.com/sites/default/files/annual-reports/28656b51-9878-49d3-8115-aff5f4d80e56.pdf"
+        ],
+        "note": "Playwright verified: HTTP 200, title: Sipchem home (Arabic-primary).  Arabic-primary site; English version via language toggle."
+      },
+      "exchange": {
+        "fetched_at": "2026-10-01",
+        "note": "Tadawul (saudiexchange.sa) returned HTTP 403 to Playwright with Chromium + the VerityResearchBot UA — Akamai bot detection, UA-based. CLAUDE.md rule 3 says 'if a site blocks you, stop for that domain, log it, move on' — Session 4 will not auto-crawl Tadawul. KSA exchange evidence must come from company IR pages or Tier 3/4 paths."
+      }
+    },
+    "notes": "Also known as Sipchem."
+  },
+  {
+    "slug": "mobile-telecommunications-co-saudi-arabia-zain",
+    "ir_url": "https://investor.sa.zain.com/2025/?lang=en",
+    "ir_status": "verified",
+    "exchange_company_url": null,
+    "exchange_status": "unreachable",
+    "allowed_hosts": [],
+    "evidence": {
+      "ir": {
+        "fetched_at": "2026-10-01",
+        "sample_report_links": [],
+        "note": "Playwright verified: HTTP 200, title: (interactive microsite shell; empty title).  JS required to populate the full report list."
+      },
+      "exchange": {
+        "fetched_at": "2026-10-01",
+        "note": "Tadawul (saudiexchange.sa) returned HTTP 403 to Playwright with Chromium + the VerityResearchBot UA — Akamai bot detection, UA-based. CLAUDE.md rule 3 says 'if a site blocks you, stop for that domain, log it, move on' — Session 4 will not auto-crawl Tadawul. KSA exchange evidence must come from company IR pages or Tier 3/4 paths."
+      }
+    },
+    "notes": "Zain KSA subsidiary of Zain Group."
+  },
+  {
+    "slug": "jarir-marketing-co",
+    "ir_url": null,
+    "ir_status": "needs_human",
+    "exchange_company_url": null,
+    "exchange_status": "unreachable",
+    "allowed_hosts": [],
+    "evidence": {
+      "ir": {
+        "fetched_at": "2026-09-30",
+        "sample_report_links": [],
+        "note": "Search returned no clear IR page on jarirbookstore.com or jarir.com.sa — only third-party sources (marketscreener, simplywall.st). Needs manual check."
+      },
+      "exchange": {
+        "fetched_at": "2026-10-01",
+        "note": "Tadawul (saudiexchange.sa) returned HTTP 403 to Playwright with Chromium + the VerityResearchBot UA — Akamai bot detection, UA-based. CLAUDE.md rule 3 says 'if a site blocks you, stop for that domain, log it, move on' — Session 4 will not auto-crawl Tadawul. KSA exchange evidence must come from company IR pages or Tier 3/4 paths."
+      }
+    },
+    "notes": ""
+  },
+  {
+    "slug": "saudi-cement",
+    "ir_url": "https://saudicement.com.sa/category/investor-relations/annual-reports/",
+    "ir_status": "verified",
+    "exchange_company_url": null,
+    "exchange_status": "unreachable",
+    "allowed_hosts": [],
+    "evidence": {
+      "ir": {
+        "fetched_at": "2026-10-01",
+        "sample_report_links": [
+          "https://saudicement.com.sa/wp-content/themes/scc001/file-download.php?path=statement-files%2FAnnual_Report16.pdf"
+        ],
+        "note": "Playwright verified: HTTP 200, title: Annual Reports | Saudi Cement. "
+      },
+      "exchange": {
+        "fetched_at": "2026-10-01",
+        "note": "Tadawul (saudiexchange.sa) returned HTTP 403 to Playwright with Chromium + the VerityResearchBot UA — Akamai bot detection, UA-based. CLAUDE.md rule 3 says 'if a site blocks you, stop for that domain, log it, move on' — Session 4 will not auto-crawl Tadawul. KSA exchange evidence must come from company IR pages or Tier 3/4 paths."
+      }
+    },
+    "notes": ""
+  },
+  {
+    "slug": "abdullah-al-othaim-markets",
+    "ir_url": "https://othaim-markets.eurolandir.com/",
+    "ir_status": "verified",
+    "exchange_company_url": null,
+    "exchange_status": "unreachable",
+    "allowed_hosts": [
+      "othaim-markets.eurolandir.com"
+    ],
+    "evidence": {
+      "ir": {
+        "fetched_at": "2026-10-01",
+        "sample_report_links": [
+          "https://othaim-markets.eurolandir.com/media/g5glig4d/%D8%A7%D9%84%D8%AA%D9%82%D8%B1%D9%8A%D8%B1-%D8%A7%D9%84%D8%B3%D9%86%D9%88%D9%8A-%D8%A7%D9%84%D8%B9%D8%AB%D9%8A%D9%85-2024-english.pdf",
+          "https://othaim-markets.eurolandir.com/media/zmfnf3g4/al-othaim_investors-presentation_q3-2024-english.pdf"
+        ],
+        "note": "Playwright verified: HTTP 200, title: Investor Relations | (othaim-markets.eurolandir.com). "
+      },
+      "exchange": {
+        "fetched_at": "2026-10-01",
+        "note": "Tadawul (saudiexchange.sa) returned HTTP 403 to Playwright with Chromium + the VerityResearchBot UA — Akamai bot detection, UA-based. CLAUDE.md rule 3 says 'if a site blocks you, stop for that domain, log it, move on' — Session 4 will not auto-crawl Tadawul. KSA exchange evidence must come from company IR pages or Tier 3/4 paths."
+      }
+    },
+    "notes": ""
+  },
+  {
+    "slug": "abu-dhabi-national-oil-company-for-distribution",
+    "ir_url": "https://www.adnocdistribution.ae/en/investor-relations",
+    "ir_status": "unreachable",
+    "exchange_company_url": "https://www.adx.ae/en/main-market/company-profile/overview?symbols=ADNOCDIST&secCode=ADNOCDIST",
+    "exchange_status": "verified",
+    "allowed_hosts": [],
+    "evidence": {
+      "ir": {
+        "fetched_at": "2026-10-01",
+        "sample_report_links": [],
+        "note": "Playwright: HTTP 403. Access Denied"
+      },
+      "exchange": {
+        "fetched_at": "2026-10-01",
+        "note": "Verified via Playwright (Chromium) with the VerityResearchBot UA from CLAUDE.md on 2026-10-01: HTTP 200 and final URL preserved (no redirect to homepage). Company-specific data on these pages is loaded via XHR by the SPA, so the shared ticker-scroll dominates a plain inner-text grab — the URL being honoured by the server is what proves the per-company page exists."
+      }
+    },
+    "notes": ""
+  },
+  {
+    "slug": "emirates-telecom-etisalat-group",
+    "ir_url": "https://www.eand.com/en/investors/annual-reports.html",
+    "ir_status": "verified",
+    "exchange_company_url": "https://www.adx.ae/en/main-market/company-profile/overview?symbols=EAND&secCode=EAND",
+    "exchange_status": "verified",
+    "allowed_hosts": [],
+    "evidence": {
+      "ir": {
+        "fetched_at": "2026-10-01",
+        "sample_report_links": [
+          "https://eand.com/en/system/com/assets/docs/annual-report/2022/en-2022-eand-group-annual-report.pdf"
+        ],
+        "note": "Playwright verified: HTTP 200, title: e& (etisalat and ) | Global technology group | Annual.... "
+      },
+      "exchange": {
+        "fetched_at": "2026-10-01",
+        "note": "Verified via Playwright (Chromium) with the VerityResearchBot UA from CLAUDE.md on 2026-10-01: HTTP 200 and final URL preserved (no redirect to homepage). Company-specific data on these pages is loaded via XHR by the SPA, so the shared ticker-scroll dominates a plain inner-text grab — the URL being honoured by the server is what proves the per-company page exists."
+      }
+    },
+    "notes": "Etisalat rebranded to e&."
+  },
+  {
+    "slug": "abu-dhabi-national-energy-company",
+    "ir_url": "https://www.taqa.com/announcements/",
+    "ir_status": "verified",
+    "exchange_company_url": "https://www.adx.ae/en/main-market/company-profile/overview?symbols=TAQA&secCode=TAQA",
+    "exchange_status": "verified",
+    "allowed_hosts": [],
+    "evidence": {
+      "ir": {
+        "fetched_at": "2026-10-01",
+        "sample_report_links": [
+          "https://www.taqa.com/wp-content/uploads/2020/06/20200420_TAQA-2019-Annual-Report-En-vWeb-A3.pdf"
+        ],
+        "note": "Playwright verified: HTTP 200, title: (empty title; JS-heavy).  JS required to populate the full report list."
+      },
+      "exchange": {
+        "fetched_at": "2026-10-01",
+        "note": "Verified via Playwright (Chromium) with the VerityResearchBot UA from CLAUDE.md on 2026-10-01: HTTP 200 and final URL preserved (no redirect to homepage). Company-specific data on these pages is loaded via XHR by the SPA, so the shared ticker-scroll dominates a plain inner-text grab — the URL being honoured by the server is what proves the per-company page exists."
+      }
+    },
+    "notes": "Also known as TAQA."
+  },
+  {
+    "slug": "aldar-properties-pjsc",
+    "ir_url": "https://www.aldar.com/en/investors/reports/annual-reports",
+    "ir_status": "unreachable",
+    "exchange_company_url": "https://www.adx.ae/en/main-market/company-profile/overview?symbols=ALDAR&secCode=ALDAR",
+    "exchange_status": "verified",
+    "allowed_hosts": [],
+    "evidence": {
+      "ir": {
+        "fetched_at": "2026-10-01",
+        "sample_report_links": [
+          "https://cdn.aldar.com/-/media/project/aldar-tenant/aldar2/investors-documents/aldar-properties-investor-presentation---nov-2025.pdf"
+        ],
+        "note": "Playwright: HTTP 403. Access Denied"
+      },
+      "exchange": {
+        "fetched_at": "2026-10-01",
+        "note": "Verified via Playwright (Chromium) with the VerityResearchBot UA from CLAUDE.md on 2026-10-01: HTTP 200 and final URL preserved (no redirect to homepage). Company-specific data on these pages is loaded via XHR by the SPA, so the shared ticker-scroll dominates a plain inner-text grab — the URL being honoured by the server is what proves the per-company page exists."
+      }
+    },
+    "notes": ""
+  },
+  {
+    "slug": "emaar-properties",
+    "ir_url": "https://www.emaar.com/en/investor-relations",
+    "ir_status": "verified",
+    "exchange_company_url": "https://www.dfm.ae/the-exchange/market-information/company/EMAAR/profile",
+    "exchange_status": "verified",
+    "allowed_hosts": [],
+    "evidence": {
+      "ir": {
+        "fetched_at": "2026-10-01",
+        "sample_report_links": [],
+        "note": "Playwright verified: HTTP 200, title: Real Estate Investor Relations. "
+      },
+      "exchange": {
+        "fetched_at": "2026-10-01",
+        "note": "Verified via Playwright (Chromium) with the VerityResearchBot UA from CLAUDE.md on 2026-10-01: HTTP 200 and final URL preserved (no redirect to homepage). Company-specific data on these pages is loaded via XHR by the SPA, so the shared ticker-scroll dominates a plain inner-text grab — the URL being honoured by the server is what proves the per-company page exists."
+      }
+    },
+    "notes": "Session 4 must confirm which ticker (EMAAR / EMAARDEV) is which and disambiguate."
+  },
+  {
+    "slug": "air-arabia-pjsc",
+    "ir_url": "https://www.airarabia.com/en/about-us/investor-relations",
+    "ir_status": "verified",
+    "exchange_company_url": "https://www.dfm.ae/the-exchange/market-information/company/AIRARABIA/profile",
+    "exchange_status": "verified",
+    "allowed_hosts": [],
+    "evidence": {
+      "ir": {
+        "fetched_at": "2026-10-01",
+        "sample_report_links": [
+          "https://www.airarabia.com/-/media/investor-relations/2024/annualreport_2024.pdf",
+          "https://www.airarabia.com/-/media/project/air-arabia/air-arabia/investor-relations/annualreport_2025.pdf"
+        ],
+        "note": "Playwright verified: HTTP 200, title: Investor Relations. "
+      },
+      "exchange": {
+        "fetched_at": "2026-10-01",
+        "note": "Verified via Playwright (Chromium) with the VerityResearchBot UA from CLAUDE.md on 2026-10-01: HTTP 200 and final URL preserved (no redirect to homepage). Company-specific data on these pages is loaded via XHR by the SPA, so the shared ticker-scroll dominates a plain inner-text grab — the URL being honoured by the server is what proves the per-company page exists."
+      }
+    },
+    "notes": ""
+  },
+  {
+    "slug": "industries-qatar",
+    "ir_url": "https://iq.com.qa/en/investor-relations/",
+    "ir_status": "verified",
+    "exchange_company_url": "https://www.qe.com.qa/company-profile?InformationCategory=Company&InformationType=News&CompanyCode=IQCD",
+    "exchange_status": "verified",
+    "allowed_hosts": [],
+    "evidence": {
+      "ir": {
+        "fetched_at": "2026-10-01",
+        "sample_report_links": [
+          "https://iq.com.qa/media/eusnovi0/iq-annual-report-2023-en-5.pdf"
+        ],
+        "note": "Playwright verified: HTTP 200, title: Investor Relations | Industries Qatar Q.P.S.C. "
+      },
+      "exchange": {
+        "fetched_at": "2026-10-01",
+        "note": "Verified via Playwright (Chromium) with the VerityResearchBot UA from CLAUDE.md on 2026-10-01: HTTP 200 and final URL preserved (no redirect to homepage). Company-specific data on these pages is loaded via XHR by the SPA, so the shared ticker-scroll dominates a plain inner-text grab — the URL being honoured by the server is what proves the per-company page exists."
+      }
+    },
+    "notes": ""
+  },
+  {
+    "slug": "ooredoo-q-p-s-c",
+    "ir_url": "https://www.ooredoo.com/en/investors/financial_information/annual-reports/",
+    "ir_status": "verified",
+    "exchange_company_url": "https://www.qe.com.qa/company-profile?InformationCategory=Company&InformationType=News&CompanyCode=ORDS",
+    "exchange_status": "verified",
+    "allowed_hosts": [],
+    "evidence": {
+      "ir": {
+        "fetched_at": "2026-10-01",
+        "sample_report_links": [
+          "https://www.ooredoo.com/wp-content/uploads/2025/03/Ooredoo_Annual-Report_2024_English.pdf"
+        ],
+        "note": "Playwright verified: HTTP 200, title: Annual reports | Ooredoo corporate. "
+      },
+      "exchange": {
+        "fetched_at": "2026-10-01",
+        "note": "Verified via Playwright (Chromium) with the VerityResearchBot UA from CLAUDE.md on 2026-10-01: HTTP 200 and final URL preserved (no redirect to homepage). Company-specific data on these pages is loaded via XHR by the SPA, so the shared ticker-scroll dominates a plain inner-text grab — the URL being honoured by the server is what proves the per-company page exists."
+      }
+    },
+    "notes": ""
+  },
+  {
+    "slug": "qatar-fuel-company-woqod",
+    "ir_url": "https://www.woqod.com/website/en/investor-relations",
+    "ir_status": "verified",
+    "exchange_company_url": "https://www.qe.com.qa/company-profile?InformationCategory=Company&InformationType=News&CompanyCode=QFLS",
+    "exchange_status": "verified",
+    "allowed_hosts": [],
+    "evidence": {
+      "ir": {
+        "fetched_at": "2026-10-01",
+        "sample_report_links": [],
+        "note": "Playwright verified: HTTP 200, title: Investor Relations. "
+      },
+      "exchange": {
+        "fetched_at": "2026-10-01",
+        "note": "Verified via Playwright (Chromium) with the VerityResearchBot UA from CLAUDE.md on 2026-10-01: HTTP 200 and final URL preserved (no redirect to homepage). Company-specific data on these pages is loaded via XHR by the SPA, so the shared ticker-scroll dominates a plain inner-text grab — the URL being honoured by the server is what proves the per-company page exists."
+      }
+    },
+    "notes": ""
+  },
+  {
+    "slug": "baladna",
+    "ir_url": "https://baladna.com/en/corporate/investors/financial-information/annual-reports",
+    "ir_status": "verified",
+    "exchange_company_url": "https://www.qe.com.qa/company-profile?InformationCategory=Company&InformationType=News&CompanyCode=BLDN",
+    "exchange_status": "verified",
+    "allowed_hosts": [],
+    "evidence": {
+      "ir": {
+        "fetched_at": "2026-10-01",
+        "sample_report_links": [
+          "https://baladna.com/2024/baladna/",
+          "https://baladna.com/2023/baladna/"
+        ],
+        "note": "Playwright verified: HTTP 200, title: Annual Reports | Baladna Financial Performance.... "
+      },
+      "exchange": {
+        "fetched_at": "2026-10-01",
+        "note": "Verified via Playwright (Chromium) with the VerityResearchBot UA from CLAUDE.md on 2026-10-01: HTTP 200 and final URL preserved (no redirect to homepage). Company-specific data on these pages is loaded via XHR by the SPA, so the shared ticker-scroll dominates a plain inner-text grab — the URL being honoured by the server is what proves the per-company page exists."
+      }
+    },
+    "notes": ""
+  },
+  {
+    "slug": "gulf-international-services",
+    "ir_url": "https://www.gis.com.qa/en/investor-relations/financial-information/financial-statements-en/",
+    "ir_status": "verified",
+    "exchange_company_url": "https://www.qe.com.qa/company-profile?InformationCategory=Company&InformationType=News&CompanyCode=GISS",
+    "exchange_status": "verified",
+    "allowed_hosts": [],
+    "evidence": {
+      "ir": {
+        "fetched_at": "2026-10-01",
+        "sample_report_links": [
+          "https://www.gis.com.qa/media/cqvjhu05/gis_-ir-presentation-ye-25-eng.pdf"
+        ],
+        "note": "Playwright verified: HTTP 200, title: Financial Statements | GIS. "
+      },
+      "exchange": {
+        "fetched_at": "2026-10-01",
+        "note": "Verified via Playwright (Chromium) with the VerityResearchBot UA from CLAUDE.md on 2026-10-01: HTTP 200 and final URL preserved (no redirect to homepage). Company-specific data on these pages is loaded via XHR by the SPA, so the shared ticker-scroll dominates a plain inner-text grab — the URL being honoured by the server is what proves the per-company page exists."
+      }
+    },
+    "notes": ""
+  },
+  {
+    "slug": "qatar-gas-transport-co-nakilat",
+    "ir_url": "https://www.nakilat.com/",
+    "ir_status": "verified",
+    "exchange_company_url": "https://www.qe.com.qa/company-profile?InformationCategory=Company&InformationType=News&CompanyCode=QGTS",
+    "exchange_status": "verified",
+    "allowed_hosts": [],
+    "evidence": {
+      "ir": {
+        "fetched_at": "2026-10-01",
+        "sample_report_links": [
+          "https://www.nakilat.com/wp-content/uploads/2026/02/Annual-Report-2025-English.pdf",
+          "https://www.nakilat.com/wp-content/uploads/2025/03/Annual-Report-2024-Final-Web.pdf"
+        ],
+        "note": "Playwright verified: HTTP 200, title: Home - Nakilat. "
+      },
+      "exchange": {
+        "fetched_at": "2026-10-01",
+        "note": "Verified via Playwright (Chromium) with the VerityResearchBot UA from CLAUDE.md on 2026-10-01: HTTP 200 and final URL preserved (no redirect to homepage). Company-specific data on these pages is loaded via XHR by the SPA, so the shared ticker-scroll dominates a plain inner-text grab — the URL being honoured by the server is what proves the per-company page exists."
+      }
+    },
+    "notes": ""
+  },
+  {
+    "slug": "zain-mobile-telecommunications-company",
+    "ir_url": "https://www.zain.com/en/investor-relations",
+    "ir_status": "verified",
+    "exchange_company_url": "https://www.boursakuwait.com.kw/stock/605/profile",
+    "exchange_status": "unreachable",
+    "allowed_hosts": [],
+    "evidence": {
+      "ir": {
+        "fetched_at": "2026-10-01",
+        "sample_report_links": [],
+        "note": "Playwright verified: HTTP 200, title: Investor Relations. "
+      },
+      "exchange": {
+        "fetched_at": "2026-10-01",
+        "note": "Boursa Kuwait /stock/<id>/profile returned HTTP 403 to Playwright + VerityResearchBot UA. The numeric ID is confirmed from search-surfaced docs.boursakuwait.com.kw NewsPDF URLs but the profile page itself is blocked to automated access. Session 4 to retry via Tier 3/4 or human browsing. (numeric id = 605)"
+      }
+    },
+    "notes": ""
+  },
+  {
+    "slug": "kuwait-telecommunications-company",
+    "ir_url": "https://www.stc.com.kw/en/about/investor-relations",
+    "ir_status": "unreachable",
+    "exchange_company_url": "https://www.boursakuwait.com.kw/stock/822/profile",
+    "exchange_status": "unreachable",
+    "allowed_hosts": [],
+    "evidence": {
+      "ir": {
+        "fetched_at": "2026-10-01",
+        "sample_report_links": [
+          "https://cws.stc.com.kw/DigitalStatic/AnnualReport2022/Digital-Annual-Report-2022-En.html"
+        ],
+        "note": "Playwright: HTTP 403. Access Denied"
+      },
+      "exchange": {
+        "fetched_at": "2026-10-01",
+        "note": "Boursa Kuwait /stock/<id>/profile returned HTTP 403 to Playwright + VerityResearchBot UA. The numeric ID is confirmed from search-surfaced docs.boursakuwait.com.kw NewsPDF URLs but the profile page itself is blocked to automated access. Session 4 to retry via Tier 3/4 or human browsing. (numeric id = 822)"
+      }
+    },
+    "notes": "STC Kuwait, formerly VIVA. Majority owned by Saudi STC Group."
+  },
+  {
+    "slug": "tamdeen-real-estate-company",
+    "ir_url": null,
+    "ir_status": "needs_human",
+    "exchange_company_url": "https://www.boursakuwait.com.kw/stock/406/profile",
+    "exchange_status": "unreachable",
+    "allowed_hosts": [],
+    "evidence": {
+      "ir": {
+        "fetched_at": "2026-09-30",
+        "sample_report_links": [],
+        "note": "Search did not surface a Tamdeen Real Estate IR page on tamdeen.com; parent 'Tamdeen Group' has the tamdeen.com domain but the listed entity may sit under a subsidiary domain not yet found. Needs manual research."
+      },
+      "exchange": {
+        "fetched_at": "2026-10-01",
+        "note": "Boursa Kuwait /stock/<id>/profile returned HTTP 403 to Playwright + VerityResearchBot UA. The numeric ID is confirmed from search-surfaced docs.boursakuwait.com.kw NewsPDF URLs but the profile page itself is blocked to automated access. Session 4 to retry via Tier 3/4 or human browsing. (numeric id = 406)"
+      }
+    },
+    "notes": ""
+  },
+  {
+    "slug": "oman-telecommunications-company-otel",
+    "ir_url": "https://www.omantel.om/Investors/investors-annual-report",
+    "ir_status": "unreachable",
+    "exchange_company_url": "https://www.msx.om/snapshot.aspx?s=OTEL",
+    "exchange_status": "verified",
+    "allowed_hosts": [],
+    "evidence": {
+      "ir": {
+        "fetched_at": "2026-10-01",
+        "sample_report_links": [
+          "https://ir.omantel.om/media/ku4l2bbt/annual-report-2022-en.pdf"
+        ],
+        "note": "Playwright: HTTP 200. The /Investors/investors-annual-report URL redirects to the homepage — the specific annual-reports path returned by Session 3 search does not exist. Needs a different IR URL."
+      },
+      "exchange": {
+        "fetched_at": "2026-10-01",
+        "note": "Verified via Playwright (Chromium) with the VerityResearchBot UA from CLAUDE.md on 2026-10-01: HTTP 200 and final URL preserved (no redirect to homepage). Company-specific data on these pages is loaded via XHR by the SPA, so the shared ticker-scroll dominates a plain inner-text grab — the URL being honoured by the server is what proves the per-company page exists."
+      }
+    },
+    "notes": ""
+  },
+  {
+    "slug": "bahrain-telecommunications-beyon",
+    "ir_url": "https://beyon.com/annual-reports/",
+    "ir_status": "verified",
+    "exchange_company_url": "https://bahrainbourse.com/en/companyprofile?CompanyNameSymbol=BEYON",
+    "exchange_status": "verified",
+    "allowed_hosts": [],
+    "evidence": {
+      "ir": {
+        "fetched_at": "2026-10-01",
+        "sample_report_links": [
+          "https://beyon.com/wp-content/uploads/2026/03/Beyon_AR2025_English.pdf",
+          "https://beyon.com/wp-content/uploads/2025/03/Beyon_AR2024_English.pdf",
+          "https://beyon.com/wp-content/uploads/2023/03/Beyon-AR2022-English.pdf"
+        ],
+        "note": "Playwright verified: HTTP 200, title: Annual Reports - Beyon. "
+      },
+      "exchange": {
+        "fetched_at": "2026-10-01",
+        "note": "Verified via Playwright (Chromium) with the VerityResearchBot UA from CLAUDE.md on 2026-10-01: HTTP 200 and final URL preserved (no redirect to homepage). Company-specific data on these pages is loaded via XHR by the SPA, so the shared ticker-scroll dominates a plain inner-text grab — the URL being honoured by the server is what proves the per-company page exists."
+      }
+    },
+    "notes": "Batelco renamed to Beyon."
+  },
+  {
+    "slug": "aluminium-bahrain-alba",
+    "ir_url": "https://www.albasmelter.com/en/category/annual-report",
+    "ir_status": "verified",
+    "exchange_company_url": "https://bahrainbourse.com/en/companyprofile?CompanyNameSymbol=ALBH",
+    "exchange_status": "verified",
+    "allowed_hosts": [],
+    "evidence": {
+      "ir": {
+        "fetched_at": "2026-10-01",
+        "sample_report_links": [
+          "https://www.albasmelter.com/uploads/Alba_Annual_Report_2025_1.pdf"
+        ],
+        "note": "Playwright verified: HTTP 200, title: Annual Report - Aluminium Bahrain (Alba). "
+      },
+      "exchange": {
+        "fetched_at": "2026-10-01",
+        "note": "Verified via Playwright (Chromium) with the VerityResearchBot UA from CLAUDE.md on 2026-10-01: HTTP 200 and final URL preserved (no redirect to homepage). Company-specific data on these pages is loaded via XHR by the SPA, so the shared ticker-scroll dominates a plain inner-text grab — the URL being honoured by the server is what proves the per-company page exists."
+      }
+    },
+    "notes": ""
+  }
+]

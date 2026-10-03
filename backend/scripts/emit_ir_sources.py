@@ -1,0 +1,740 @@
+"""Emit data/ir_sources.json and data/exchange_portals.json from the
+Session 3 discovery log.
+
+Ir_sources structure (one entry per institution slug):
+- slug, ir_url, ir_status, exchange_company_url, exchange_status,
+  allowed_hosts, evidence (ir + exchange separately), notes.
+
+Statuses: verified | unreachable | needs_human.
+
+Verification convention this session:
+- "verified" means Claude's WebFetch returned HTTP 200 AND the page's own
+  content confirmed it was the institution's IR (or exchange-company)
+  page. Where WebFetch also surfaced direct annual-report PDFs those are
+  recorded in evidence.sample_report_links.
+- "unreachable" means the fetch failed (403/404/timeout/cert). If web
+  search evidence surfaced canonical URLs on the company's own domain
+  they are recorded in evidence.sample_report_links with a note.
+- "needs_human" means neither fetch nor search evidence was sufficient,
+  or the URL space is session-based and needs Playwright.
+
+For most Saudi and Abu Dhabi listed companies, the exchange portals
+(saudiexchange.sa and adx.ae) returned 403 to Claude's WebFetch, so
+exchange_status = needs_human across those exchanges regardless of the
+per-company URL — Session 4 with Playwright is the right retry path.
+"""
+from __future__ import annotations
+
+import json
+from pathlib import Path
+
+
+REPO_ROOT = Path(__file__).resolve().parents[2]
+OUT_IR = REPO_ROOT / "data" / "ir_sources.json"
+OUT_PORTALS = REPO_ROOT / "data" / "exchange_portals.json"
+
+
+# ---------------------------------------------------------------------------
+# EXCHANGE PORTALS
+# ---------------------------------------------------------------------------
+PORTALS: list[dict] = [
+    {
+        "country": "Saudi Arabia",
+        "exchange_name": "Saudi Exchange (Tadawul)",
+        "url": "https://www.saudiexchange.sa/",
+        "fetched_at": "2026-09-30",
+        "http_status": 403,
+        "loads_without_login": None,
+        "requires_account": False,
+        "js_required": True,
+        "note": "WebFetch returned 403 (likely UA-based block via WAF). Portal is public per general knowledge; company-profile URLs are portlet-based (long random strings, e.g. .../saudiexchange/hidden/company-profile-main/!ut/p/z1/...?companySymbol=NNNN). Session 4 must retry with Playwright + descriptive UA.",
+    },
+    {
+        "country": "United Arab Emirates",
+        "exchange_name": "Abu Dhabi Securities Exchange (ADX)",
+        "url": "https://www.adx.ae/issuers/issuers-information/listed-companies-disclosures",
+        "fetched_at": "2026-09-30",
+        "http_status": 403,
+        "loads_without_login": None,
+        "requires_account": False,
+        "js_required": True,
+        "note": "WebFetch returned 403. Public per general knowledge; retry with Playwright.",
+    },
+    {
+        "country": "United Arab Emirates",
+        "exchange_name": "Dubai Financial Market (DFM)",
+        "url": "https://www.dfm.ae/the-exchange/news-disclosures/disclosures",
+        "fetched_at": "2026-09-30",
+        "http_status": 200,
+        "loads_without_login": True,
+        "requires_account": False,
+        "js_required": True,
+        "note": "Sign-in optional. Disclosure list needs JS (\"Fetching Data...\"). Per-company profile URL: /the-exchange/market-information/company/<TICKER>/profile — pattern confirmed for EMIRATESNBD, DIB and DIC via search-surfaced hits.",
+    },
+    {
+        "country": "Qatar",
+        "exchange_name": "Qatar Stock Exchange (QSE)",
+        "url": "https://www.qe.com.qa/financial-disclosures",
+        "fetched_at": "2026-09-30",
+        "http_status": 200,
+        "loads_without_login": True,
+        "requires_account": False,
+        "js_required": False,
+        "note": "Lists annual/interim disclosure dates for all listed companies. Bilingual EN/AR. Per-company profile URL: /company-profile?CompanyCode=<TICKER> — shell page loads but data is JS-populated.",
+    },
+    {
+        "country": "Kuwait",
+        "exchange_name": "Boursa Kuwait",
+        "url": "https://www.boursakuwait.com.kw/en/financial-reports/",
+        "fetched_at": "2026-09-30",
+        "http_status": 200,
+        "loads_without_login": True,
+        "requires_account": False,
+        "js_required": True,
+        "note": "Sign-in optional. Per-company profile URLs use numeric internal IDs (e.g. /stock/109/profile = Boubyan). Ticker->id mapping needs to be discovered via the exchange's own search; do not guess.",
+    },
+    {
+        "country": "Oman",
+        "exchange_name": "Muscat Stock Exchange (MSX)",
+        "url": "https://www.msx.om/",
+        "fetched_at": "2026-09-30",
+        "http_status": 200,
+        "loads_without_login": True,
+        "requires_account": False,
+        "js_required": True,
+        "note": "Real-time data requires login; static per-company snapshots at /snapshot.aspx?s=<TICKER> are public and searchable. Ticker in query string.",
+    },
+    {
+        "country": "Bahrain",
+        "exchange_name": "Bahrain Bourse",
+        "url": "https://bahrainbourse.com/en/News%20and%20Events/CompanyAnnouncements",
+        "fetched_at": "2026-09-30",
+        "http_status": 200,
+        "loads_without_login": True,
+        "requires_account": False,
+        "js_required": True,
+        "note": "Public disclosure list. Per-company profile URL: /en/companyprofile?CompanyNameSymbol=<TICKER>.",
+    },
+]
+
+
+# ---------------------------------------------------------------------------
+# INSTITUTIONS — wave=financial (23), then wave=other (42)
+# Every entry records what I actually saw during Session 3.
+# ---------------------------------------------------------------------------
+def _v(slug, ir_url, ir_status, exch_url, exch_status, notes="",
+       ir_pdfs=None, ir_note=None, exch_note=None, allowed=None):
+    return {
+        "slug": slug,
+        "ir_url": ir_url,
+        "ir_status": ir_status,
+        "exchange_company_url": exch_url,
+        "exchange_status": exch_status,
+        "allowed_hosts": allowed or [],
+        "evidence": {
+            "ir": {
+                "fetched_at": "2026-09-30",
+                "sample_report_links": ir_pdfs or [],
+                "note": ir_note or "",
+            },
+            "exchange": {
+                "fetched_at": "2026-09-30",
+                "note": exch_note or "",
+            },
+        },
+        "notes": notes,
+    }
+
+
+INSTITUTIONS: list[dict] = [
+    # ---- Saudi Arabia financial (7) — Tadawul portal 403 to WebFetch, all exchange = needs_human ----
+    _v("al-rajhi-bank",
+       "https://www.alrajhibank.com.sa/en/about-alrajhi-bank/investor-relations", "verified",
+       None, "needs_human",
+       ir_pdfs=[
+           "https://objectstorage.me-jeddah-1.oraclecloud.com/n/ax0k7s74wvl7/b/Marketing_Email_Images/o/ARBIAR25%20integrated%20annual%20report%20full%20proof%20English.pdf",
+           "https://objectstorage.me-jeddah-1.oraclecloud.com/n/ax0k7s74wvl7/b/Marketing_Email_Images/o/ARBAR24-English.pdf",
+           "https://www.alrajhibank.com.sa/-/media/Project/AlRajhi/ARBRevamp/Investor-Relation/Annual-Reports/Annual-Report-EN-2023.pdf",
+       ],
+       allowed=["objectstorage.me-jeddah-1.oraclecloud.com"],
+       exch_note="Tadawul portal returned 403 to WebFetch tool. Retry with Playwright.",
+       notes="Bilingual EN/AR; direct PDF anchors, no JS required to reach report URLs."),
+    _v("the-saudi-national-bank",
+       "https://www.alahli.com/en/pages/about-us/investor-relations", "unreachable",
+       None, "needs_human",
+       ir_pdfs=[
+           "https://www.alahli.com/-/media/project/snb/snb-web/about-us/02-1-investor-relations/financial-information/financial-statements/english/SNB-English-YE-2024-Financials-Final.pdf",
+           "https://www.alahli.com/-/media/project/snb/snb-web/about-us/02-1-investor-relations/financial-information/investor-presentations/documents/english/SNB-4Q-2024-Investor-Presentation.pdf",
+       ],
+       ir_note="WebFetch failed with a TLS cert verification error (Claude tool limitation, not a site block). Search evidence surfaced canonical PDFs on the same domain, so the page is real.",
+       exch_note="Tadawul portal 403.",
+       notes="SNB rebranded from NCB; the legacy alahli.com domain is live. Session-1 hint snb.com resolves to Webster Bank USA — bad hint."),
+    _v("riyad-bank",
+       "https://www.riyadbank.com/investor-relations/annual-reports", "verified",
+       None, "needs_human",
+       ir_pdfs=[
+           "https://www.riyadbank.com/documents/20121/0/Riyad+Bank+Annual+Report+2024+with+FS+-+English.pdf",
+           "https://www.riyadbank.com/documents/20121/0/Riyad+Bank+Annual+Report+2023+-+English.pdf",
+           "https://www.riyadbank.com/documents/20121/0/Annual+Report+2022+%E2%80%93+English.pdf",
+       ],
+       exch_note="Tadawul portal 403.",
+       notes="Year-tab UI is JS-enhanced but PDF anchors are direct."),
+    _v("alinma-bank",
+       "https://ir.alinma.com/", "verified",
+       None, "needs_human",
+       ir_pdfs=["https://ir.alinma.com/en/investor-relations/financial-information/?query=annual-reports#annual-reports"],
+       ir_note="Session-2 hint alinma.com/en/investor-relations 404s; real portal is the ir.alinma.com sub-domain.",
+       exch_note="Tadawul portal 403.",
+       notes=""),
+    _v("bank-albilad",
+       "https://www.bankalbilad.com.sa/en/about/investor-relations/Pages/annual-reports.aspx", "verified",
+       None, "needs_human",
+       ir_pdfs=[
+           "https://www.bankalbilad.com.sa/Documents/boardscv2019/Albilad%20Annual%20Report%202018_English%20draft%201.pdf",
+           "https://www.bankalbilad.com.sa/sites/en/Documents/bab-annual-report-%20compressed.pdf",
+           "https://www.bankalbilad.com.sa/downloads/about/financial-results/Annual%20Report%202025%20Bank%20Albilad.pdf",
+       ],
+       ir_note="Session-2 hint bankalbilad.com redirects to bankalbilad.com.sa.",
+       exch_note="Tadawul portal 403.",
+       notes="2005-2009 reports are Arabic-only per the page's own footnote."),
+    _v("bupa-arabia-for-cooperative-insurance-company",
+       "https://www.bupa.com.sa/en/investor-relations", "unreachable",
+       None, "needs_human",
+       ir_note="F5-style WAF returns 'The requested URL was rejected' regardless of URL casing. Search evidence confirms the URL is the intended IR page.",
+       exch_note="Tadawul portal 403.",
+       notes="WAF rejects WebFetch UA; Session 4 crawler with descriptive UA may or may not clear it."),
+    _v("saudi-industrial-investment-group",
+       "https://siig.com.sa/investors-presentation/", "verified",
+       None, "needs_human",
+       ir_pdfs=[
+           "https://siig.com.sa/investors-presentation/",
+           "https://siig.com.sa/board-reports/",
+           "https://siig.com.sa/financial-year/",
+       ],
+       ir_note="Homepage confirmed with IR-nav links; not directly fetched at the annual-report-list level.",
+       exch_note="Tadawul portal 403.",
+       notes="Verified at IR-nav level, not at annual-report-list level."),
+    # ---- UAE financial (6) ----
+    _v("first-abu-dhabi-bank",
+       "https://www.bankfab.com/en-ae/about-fab/investor-relations", "verified",
+       None, "needs_human",
+       ir_pdfs=[
+           "https://www.bankfab.com/-/media/fab-uds/about-fab/investor-relations/reports-and-presentations/quarterly-and-annual-reports/2025/fab-annual-report-2025-en.pdf",
+           "https://www.bankfab.com/en-ae/about-fab/investor-relations/reports-and-presentations",
+           "https://www.bankfab.com/-/media/fab-uds/about-fab/investor-relations/fab-investment-case/pdfs/fab-at-a-glance-q2-2026.pdf",
+       ],
+       ir_note="Session 2 flagged this hint as 'verified' without evidence — it actually is the real IR page.",
+       exch_note="ADX portal 403 to WebFetch.",
+       notes="Lists on ADX (ticker FAB)."),
+    _v("abu-dhabi-commercial-bank",
+       "https://www.adcb.com/en/about-us/investor-relations/", "unreachable",
+       None, "needs_human",
+       ir_pdfs=[
+           "https://www.adcb.com/en/about-us/investor-relations/annual-report/2024",
+           "https://www.adcb.com/en/about-us/investor-relations/annual-report/2023",
+           "https://portalvhds1fxb0jchzgjph.blob.core.windows.net/press-releases-attachments/3530141/en_20250215000000_43.pdf",
+       ],
+       allowed=["portalvhds1fxb0jchzgjph.blob.core.windows.net"],
+       ir_note="adcb.com returns 403; search surfaced canonical annual-report URLs.",
+       exch_note="ADX 403.",
+       notes="ADX ticker ADCB."),
+    _v("the-national-bank-of-ras-al-khaimah",
+       "https://www.rakbank.ae/en/about-us/investor-relations/financials/reports", "verified",
+       None, "needs_human",
+       ir_pdfs=["https://agm.rakbank.ae/2025/"],
+       allowed=["agm.rakbank.ae"],
+       ir_note="PDF links behind a JS-populated year selector; only the 2025 interactive report URL was directly visible in Claude's WebFetch view.",
+       exch_note="ADX 403.",
+       notes="JS-heavy; ADX ticker RAKBANK."),
+    _v("dubai-islamic-bank",
+       "https://www.dib.ae/about-us/investor-relations/financial-information", "verified",
+       "https://www.dfm.ae/the-exchange/market-information/company/DIB/profile", "verified",
+       ir_pdfs=[
+           "https://www.dib.ae/docs/default-source/financial-reports/dib-fs-ye-2025-en.pdf?sfvrsn=a683b014_2",
+           "https://www.dib.ae/docs/default-source/financial-reports/dib-fs-dec-2024-en.pdf?sfvrsn=546dcf94_6",
+           "https://www.dib.ae/docs/default-source/financial-reports/dib-fs-2023-fy-english.pdf?sfvrsn=4cda11a_4",
+       ],
+       exch_note="DFM profile shell loads; disclosure list is JS-populated.",
+       notes="Session-2 hint dib.ae/investor-relations 404s; real path is /about-us/investor-relations/financial-information."),
+    _v("dubai-investment",
+       "https://dubaiinvestments.com/investor-relations", "verified",
+       "https://www.dfm.ae/the-exchange/market-information/company/DIC/profile", "verified",
+       ir_pdfs=[
+           "https://diweb.blob.core.windows.net/dubaiinvestmentcontainer/dip-images/public/1134/DI_INTEGRATED_REPORT-EN-2025.pdf",
+           "https://diweb.blob.core.windows.net/dubaiinvestmentcontainer/dip-images/public/352/DIC-Integrated-Report-English-2024-website_compressed.pdf",
+           "https://diweb.blob.core.windows.net/dubaiinvestmentcontainer/dip-images/public/1086/DIC_FS_2025_E_24_03_2026.pdf",
+       ],
+       allowed=["diweb.blob.core.windows.net"],
+       notes="DFM ticker DIC."),
+    _v("emirates-nbd-pjsc",
+       "https://www.emiratesnbd.com/en/investor-relations", "verified",
+       "https://www.dfm.ae/the-exchange/market-information/company/EMIRATESNBD/profile", "verified",
+       ir_pdfs=[
+           "https://www.emiratesnbd.com/en/investor-relations/financial-information/annual-reports",
+           "https://www.emiratesnbd.com/en/investor-relations/financial-information/quarterly-results",
+       ],
+       allowed=["tools.eurolandir.com"],
+       ir_note="Annual-reports section reachable but actual PDF list is populated via JS/eurolandir. Session 4 needs Playwright to enumerate PDFs.",
+       notes="Session-1 direct-PDF fetch got 403 on WebFetch UA (see docs/DATA_SOURCING_LOG.md)."),
+    # ---- Qatar financial (1) ----
+    _v("qnb-qatar-national-bank",
+       "https://www.qnb.com/sites/qnb/qnbqatar/page/en/enirfaqs.html", "verified",
+       "https://www.qe.com.qa/company-profile?InformationCategory=Company&InformationType=News&CompanyCode=QNBK", "verified",
+       ir_pdfs=[
+           "https://www.qnb.com/cs/Satellite/QNBQatar/en_QA/InvestorRelations/enAnnualReports",
+           "https://www.qnb.com/cs/Satellite/QNBQatar/en_QA/InvestorRelations/enFinancialStatement",
+           "https://www.qnb.com/cs/Satellite/QNBQatar/en_QA/enFinancialCalendar",
+       ],
+       exch_note="QSE shell loads with CompanyCode=QNBK; data is JS-populated.",
+       notes="Session-2 hint was the FAQ URL; the real annual-reports index is en_QA/InvestorRelations/enAnnualReports."),
+    # ---- Kuwait financial (4) ----
+    _v("kuwait-finance-house",
+       "https://kfh.com/en/home/Investor-Relations/Annual-Reports.html", "verified",
+       None, "needs_human",
+       ir_pdfs=[
+           "https://kfh.com/en/reports/kuwait/Annual-Reports/Annual-Report-2025/document_en/KFH%20Annual%20Report%20En%202025%20(Draft-17)%20Web.pdf.pdf",
+           "https://kfh.com/en/reports/kuwait/Annual-Reports/Annual-Report-2024/document_en/KFH%20Annual%20Report%20En%202024%20(Draft-16).pdf.pdf",
+           "https://kfh.com/en/reports/kuwait/Annual-Reports/Annual-Report-2023/document_en/KFH%20Annual%20Report%20En%202023.pdf.pdf",
+       ],
+       ir_note="Same page Session 1 used for the smoke test — reliable and stable.",
+       exch_note="Search surfaced KFH's doc PDFs (docs.boursakuwait.com.kw/NewsPDF/108_...) but not the profile page. Boursa Kuwait uses numeric IDs, mapping from ticker to internal ID needs the exchange's own search UI; do not guess pattern.",
+       notes=""),
+    _v("national-bank-of-kuwait",
+       "https://www.nbk.com/nbk-group/investor-relations/latest-annual-report", "verified",
+       None, "needs_human",
+       ir_pdfs=[
+           "https://www.nbk.com/dam/jcr:73b1509e-5280-4ef3-a29a-392c1b565299/nbk-annual-report-2025-e.pdf",
+           "https://www.nbk.com/dam/jcr:374076fd-2bb1-4b60-ad6a-df7fae2d25ae/nbk-annual-report-2024-e.pdf",
+           "https://www.nbk.com/dam/jcr:2db8abcf-42dc-4307-a9cf-791e0e22540a/Annual_Report_2023_EN.pdf",
+       ],
+       exch_note="Search surfaced NBK docs (101_NEWS_...) but not the profile page directly.",
+       notes=""),
+    _v("boubyan-bank",
+       "https://www.bankboubyan.com/en/investor-relations/", "verified",
+       "https://www.boursakuwait.com.kw/stock/109/profile", "verified",
+       ir_pdfs=[
+           "https://www.bankboubyan.com/en/investor-relations#annual-reports",
+           "https://www.bankboubyan.com/en/investor-relations/sustainability-report",
+       ],
+       ir_note="Next.js SPA; PDFs behind JS. Session-2 hint boubyan.com.kw redirects to bankboubyan.com.",
+       exch_note="URL surfaced via search; Boursa Kuwait uses numeric IDs (109 = Boubyan).",
+       notes=""),
+    _v("alafco-aviation-lease-and-finance-company",
+       "https://www.alafco.com/en/investors/", "unreachable",
+       None, "needs_human",
+       ir_note="Cloudflare 523 backend down; search confirms URL is the intended IR page.",
+       exch_note="Delisted from Boursa Kuwait 2025-03-05 per Almowazi.com — profile page may no longer exist. Historical disclosures should be in Wayback.",
+       notes="Delisted March 2025."),
+    # ---- Oman financial (4) ----
+    _v("bank-muscat-bkmb",
+       "https://www.bankmuscat.om/en/investorrelations/pages/reports.aspx", "verified",
+       "https://www.msx.om/snapshot.aspx?s=BKMB", "verified",
+       ir_pdfs=[
+           "https://www.bankmuscat.om/en/investorrelations/AnnualReports/BM_AFS_2025_Audited_BM_Website_EN.pdf",
+           "https://www.bankmuscat.om/en/investorrelations/AnnualReports/Annual_Report_EN_2025.pdf",
+           "https://www.bankmuscat.om/en/investorrelations/AnnualReports/Annual_Results_2025_EN.pdf",
+       ],
+       ir_note="Session-2 hint bankmuscat.com redirects to bankmuscat.om.",
+       exch_note="MSX snapshot loads; documents list is JS-populated.",
+       notes=""),
+    _v("oman-international-development-and-investment-company",
+       None, "needs_human",
+       "https://www.msx.om/snapshot.aspx?s=OMVS", "verified",
+       ir_note="ominvest.com returns 403 to WebFetch; no verified IR URL surfaced via search.",
+       notes="Company also known as Ominvest. MSX profile confirmed; IR page needs human check."),
+    _v("sohar-international-bank",
+       "https://www.sib.om/investor-relations", "verified",
+       "https://www.msx.om/snapshot.aspx?s=BKSB", "verified",
+       ir_pdfs=[
+           "https://res.cloudinary.com/dtqjagydd/image/upload/v1775368385/Sohar_Int_Annual_Report2025_English_1_at0ign.pdf",
+           "https://res.cloudinary.com/dtqjagydd/image/upload/v1785663205/sohardevelopment/SIB_Financial_Statements_English_Jun_2026_3ced800a79.pdf",
+       ],
+       allowed=["res.cloudinary.com"],
+       ir_note="soharinternational.com now redirects to sib.om.",
+       notes=""),
+    _v("bank-dhofar",
+       "https://www.bankdhofar.com/investor-relations/financial-reports/", "unreachable",
+       "https://www.msx.om/snapshot.aspx?s=BKDB", "verified",
+       ir_pdfs=[
+           "https://www.bankdhofar.com/media/4edbsroz/annual-report-2023-en.pdf",
+           "https://www.bankdhofar.com/media/xxvjzekb/ir-presentation-q2-2026-final.pdf",
+       ],
+       ir_note="WebFetch got 404 on the financial-reports subpage. Search evidence has canonical PDFs on the same domain — Session 4 should retry.",
+       notes=""),
+    # ---- Bahrain financial (1) ----
+    _v("national-bank-of-bahrain",
+       "https://www.nbbonline.com/en/investor-relations/financial/financial/annual-reports", "unreachable",
+       "https://bahrainbourse.com/en/companyprofile?CompanyNameSymbol=NBB", "verified",
+       ir_pdfs=["https://nbbonline.com/wp-content/uploads/2026/03/Annual-Financial-and-Sustainability-Report-2025-3.pdf"],
+       ir_note="nbbonline.com returns 403 to WebFetch. Search evidence confirms URL + surfaced the 2025 PDF.",
+       notes=""),
+
+    # ==== NON-FINANCIAL WAVE (42) ====
+    # Convention: rows where WebFetch got 200 + content are "verified".
+    # Rows where WebFetch failed but search surfaced canonical URLs with
+    # direct PDFs on the company's own domain are recorded as
+    # "unreachable" (with the search-evidence PDFs in sample_report_links)
+    # if I attempted a fetch, or "needs_human" if I only searched and did
+    # not attempt to fetch.
+
+    # ---- Saudi Arabia other (24) ----
+    _v("saudi-aramco",
+       "https://www.aramco.com/en/investors/reports-and-presentations", "verified",
+       None, "needs_human",
+       ir_pdfs=[
+           "https://www.aramco.com/-/media/publications/corporate-reports/reports-and-presentations/2025/fy/saudi-aramco-ara-2025-english.pdf",
+           "https://www.aramco.com/-/media/publications/corporate-reports/annual-reports/saudi-aramco-ara-2024-english.pdf",
+           "https://www.aramco.com/-/media/publications/corporate-reports/annual-reports/saudi-aramco-ara-2023-english.pdf",
+       ],
+       exch_note="Tadawul portal 403."),
+    _v("sabic",
+       "https://www.sabic.com/en/investors/performance-financial-highlights/annual-report", "unreachable",
+       None, "needs_human",
+       ir_pdfs=["https://www.sabic.com/en/Images/SABIC-Integrated-Annual-Report-2025-EN_tcm1010-49452.pdf"],
+       ir_note="WebFetch failed with 'too many redirects'. Search evidence has canonical PDFs.",
+       exch_note="Tadawul portal 403."),
+    _v("saudi-telecom-company",
+       "https://www.stc.com/content/stcgroupwebsite/sa/en/investors.html", "verified",
+       None, "needs_human",
+       ir_pdfs=[
+           "https://www.stc.com.sa/content/dam/stc/stc-annual-report-2023/",
+           "https://www.stc.com.sa/content/dam/corporatesite/en/generic/pdf/investor/AnnualReport2021-En.pdf",
+       ],
+       ir_note="Annual reports served as an interactive microsite (JS-required). stc.com.sa redirects to stc.com.",
+       exch_note="Tadawul portal 403."),
+    _v("maaden",
+       "https://www.maaden.com/investor-relations", "needs_human",
+       None, "needs_human",
+       ir_note="WebFetch returned a bare title only; page is heavy JS. Search evidence exists but no direct PDF surfaced on the maaden.com domain — third-party sources cite reports at argaamplus.s3.amazonaws.com.",
+       exch_note="Tadawul portal 403."),
+    _v("saudi-electricity",
+       "https://www.se.com.sa/en/Investors/Reports-and-Presentations/Annual-Reports/", "unreachable",
+       None, "needs_human",
+       ir_pdfs=[
+           "https://www.se.com.sa/-/media/sec/Investors/Finance/SEC_Annual_Report_EN_23_V2.ashx",
+           "https://www.se.com.sa/-/media/sec/Investors/Financial-Results/sec-fy-2024-results-presentation-english.ashx",
+       ],
+       ir_note="WebFetch ECONNREFUSED; search evidence has canonical .ashx PDF proxies.",
+       exch_note="Tadawul portal 403.",
+       notes="Rebranded to Saudi Energy Feb 2026 per press coverage."),
+    _v("yanbu-cement-company",
+       "https://www.ycc.sa/en/financial-statements/", "verified",
+       None, "needs_human",
+       ir_pdfs=[
+           "https://www.saudiexchange.sa/Resources/fsPdf/428_0_2024-03-20_11-26-43_En.pdf",
+           "https://www.saudiexchange.sa/Resources/fsPdf/428_0_2023-03-21_09-20-55_En.pdf",
+           "https://www.saudiexchange.sa/Resources/fsPdf/428_0_2022-03-13_07-47-28_En.pdf",
+       ],
+       allowed=["www.saudiexchange.sa"],
+       exch_note="Tadawul portal 403.",
+       notes="Yanbu Cement's own IR page links out to saudiexchange.sa-hosted PDFs — direct download URLs may work (Tadawul document store is separate from portlet portal)."),
+    _v("saudi-arabian-fertilizer-company",
+       "https://www.safco.com.sa/en/investor-relations/reports", "needs_human",
+       None, "needs_human",
+       ir_note="WebFetch got the /en/news page (200) which showed Investor Relations > Reports in nav (/en/investor-relations/reports); did not directly confirm annual-report PDFs. Rebranded to SABIC Agri-Nutrients.",
+       exch_note="Tadawul portal 403.",
+       notes="Also known as SABIC Agri-Nutrients; may also be at sabic-agrinutrients.com."),
+    _v("almarai",
+       "https://www.almarai.com/en/corporate/investors/annual-report-financial-statement/", "unreachable",
+       None, "needs_human",
+       ir_pdfs=[
+           "https://annualreport.almarai.com/assets/img/pdfs/Almarai%20AR%202024-English.pdf",
+       ],
+       allowed=["annualreport.almarai.com"],
+       ir_note="WebFetch 406 on primary URL; search evidence has canonical 2024 PDF. annualreport.almarai.com host loads interactive report site (JS-heavy).",
+       exch_note="Tadawul portal 403."),
+    _v("etihad-etisalat-mobily",
+       "https://www.mobily.com.sa/wps/portal/web/personal/am-overview/ir-details/", "verified",
+       None, "needs_human",
+       ir_pdfs=[
+           "https://www.mobily.com.sa/wps/wcm/connect/b619d237-477d-473f-b8aa-d2b59c662260/Earnings+Release+FY-24+EN.pdf?MOD=AJPERES",
+           "https://www.mobily.com.sa/wps/wcm/connect/11116a7c-3148-4149-9440-d392a8edf483/Earnings_Presentation_FY+2023.pdf?MOD=AJPERES",
+       ],
+       ir_note="IR page loaded; several documents are Arabic-only. English earnings releases surfaced via search.",
+       exch_note="Tadawul portal 403.",
+       notes="IBM WebSphere Portal URLs (long portlet-based)."),
+    _v("savola-group",
+       "https://www.savola.com/en/investors/annual-reports", "verified",
+       None, "needs_human",
+       ir_pdfs=[
+           "https://savola.blob.core.windows.net/website/docs/default-source/annual-reports/20260330-savola-ar25_en_front-gov-(1)a.pdf",
+           "https://savola.blob.core.windows.net/website/docs/default-source/annual-reports/savola-english-annual-report-2024.pdf",
+           "https://savola.blob.core.windows.net/website/docs/default-source/annual-reports/savola-annual-report-23-en-25-4-24.pdf",
+       ],
+       allowed=["savola.blob.core.windows.net"],
+       exch_note="Tadawul portal 403."),
+    _v("yanbu-national-petrochemical",
+       "https://www.yansab.com.sa/en/news", "unreachable",
+       None, "needs_human",
+       ir_pdfs=[
+           "https://www.yansab.com.sa/en/Images/YANSAB%20Annual%20Report%202025%20EN_tcm1047-49427.pdf",
+           "https://www.yansab.com.sa/en/Images/Yansab%20Annual%20Report%202024%20-EN_tcm1047-46828.pdf",
+           "https://www.yansab.com.sa/en/Images/Yansab-Annual-Report-EN-2022_tcm1047-38873.pdf",
+       ],
+       ir_note="News page loads but PDF list needs JS; search evidence surfaced canonical PDFs.",
+       exch_note="Tadawul portal 403."),
+    _v("dar-al-arkan-real-estate-development-company",
+       "https://www.daralarkan.com/investor-relations/financial-information/annual-reports/", "verified",
+       None, "needs_human",
+       ir_pdfs=[
+           "https://cdn.daralarkan.com/DAR_annual_report_2025_EN_d044f7afc3.pdf",
+           "https://cdn.daralarkan.com/DAR_annual_report_2024_EN_Mar24_f0e7d40ee9.pdf",
+           "https://cdn.daralarkan.com/Annual_Report_2023_EN_b88d2e3ee8.pdf",
+       ],
+       allowed=["cdn.daralarkan.com"],
+       exch_note="Tadawul portal 403."),
+    _v("emaar-the-economic-city",
+       "https://www.kaec.net/investor-relations/", "unreachable",
+       None, "needs_human",
+       ir_pdfs=[
+           "https://www.kaec.net/wp-content/uploads/2024/04/En-KAEC-Annual-Report-2023.pdf",
+           "https://www.kaec.net/wp-content/uploads/2024/04/BoD-Report-2022.pdf",
+       ],
+       ir_note="WebFetch got 403; search evidence has canonical PDFs at wp-content/uploads.",
+       exch_note="Tadawul portal 403.",
+       notes="Registered on Tadawul as 'Emaar The Economic City' but branded as KAEC (King Abdullah Economic City)."),
+    _v("advanced-petrochemical",
+       "https://ir.advancedpetrochem.com/", "verified",
+       None, "needs_human",
+       ir_pdfs=[
+           "https://ir.advancedpetrochem.com/media/mbeiem5u/advanced_annual-report_2025_eng.pdf",
+           "https://ir.advancedpetrochem.com/media/3donny2s/annual-report-2024-en.pdf",
+           "https://ir.advancedpetrochem.com/media/aaofmcjt/2022-en-annual-report.pdf",
+       ],
+       exch_note="Tadawul portal 403.",
+       notes="Dedicated IR sub-domain."),
+    _v("saudi-kayan-petrochemical-company",
+       "https://www.saudikayan.com/en/investor-relations", "unreachable",
+       None, "needs_human",
+       ir_pdfs=[
+           "https://www.saudikayan.com/en/Images/Annual%20Report%202024%20SK_tcm1043-46850.pdf",
+           "https://www.saudikayan.com/en/Images/Annual%20Report%202022%20En_tcm1043-42458.pdf",
+           "https://www.saudikayan.com/en/Images/Annual%20Report%202021%20En_tcm1043-34671.pdf",
+       ],
+       ir_note="WebFetch ECONNREFUSED; search evidence has canonical PDFs.",
+       exch_note="Tadawul portal 403."),
+    _v("mouwasat-medical-services-company",
+       "https://www.mouwasat.com/en/annual-reports", "verified",
+       None, "needs_human",
+       ir_pdfs=[
+           "https://www.mouwasat.com/en/annual-reports",
+       ],
+       ir_note="Page uses signed-URL PDFs with expiration tokens rather than static PDF URLs.",
+       exch_note="Tadawul portal 403."),
+    _v("saudi-airlines-catering-company-catrion",
+       "https://www.catrion.com/investor-relation", "verified",
+       None, "needs_human",
+       ir_pdfs=[
+           "https://www.catrion.com/application/files/4117/7565/9117/CATRION_En_AR25_07042026_compressed.pdf",
+           "https://www.catrion.com/application/files/2417/4298/1965/CATRION_Annual_Report_2024_ENG.pdf",
+           "https://www.catrion.com/application/files/3917/1212/7944/AR2023_-_CATRION_-_ENG.pdf",
+       ],
+       exch_note="Tadawul portal 403."),
+    _v("national-industrialization-co",
+       "https://www.tasnee.com/en/investor-relations", "unreachable",
+       None, "needs_human",
+       ir_pdfs=[
+           "https://www.tasnee.com/media/oxfi0ltt/tasnee-q2-2025-eng.pdf",
+       ],
+       ir_note="WebFetch failed with a TLS cert verification error; search evidence has canonical PDFs.",
+       exch_note="Tadawul portal 403.",
+       notes="Also known as TASNEE."),
+    _v("rabigh-refining-petrochemical-co",
+       "https://www.petrorabigh.com/en/Investors", "needs_human",
+       None, "needs_human",
+       ir_note="Search surfaced /en/Investors as the IR page on the company's own domain; not directly fetched.",
+       exch_note="Tadawul portal 403.",
+       notes="Also known as Petro Rabigh."),
+    _v("sahara-international-petrochemical-co",
+       "https://www.sipchem.com/", "needs_human",
+       None, "needs_human",
+       ir_pdfs=[
+           "https://www.sipchem.com/sites/default/files/annual-reports/28656b51-9878-49d3-8115-aff5f4d80e56.pdf",
+       ],
+       ir_note="Search surfaced canonical PDF but not the IR-list URL; not fetched.",
+       exch_note="Tadawul portal 403.",
+       notes="Also known as Sipchem."),
+    _v("mobile-telecommunications-co-saudi-arabia-zain",
+       "https://investor.sa.zain.com/2025/?lang=en", "needs_human",
+       None, "needs_human",
+       ir_note="Search surfaced a 2025 investor microsite URL; canonical IR listing URL not identified; not fetched.",
+       exch_note="Tadawul portal 403.",
+       notes="Zain KSA subsidiary of Zain Group."),
+    _v("jarir-marketing-co",
+       None, "needs_human",
+       None, "needs_human",
+       ir_note="Search returned no clear IR page on jarirbookstore.com or jarir.com.sa — only third-party sources (marketscreener, simplywall.st). Needs manual check.",
+       exch_note="Tadawul portal 403."),
+    _v("saudi-cement",
+       "https://saudicement.com.sa/category/investor-relations/annual-reports/", "needs_human",
+       None, "needs_human",
+       ir_pdfs=["https://saudicement.com.sa/wp-content/themes/scc001/file-download.php?path=statement-files%2FAnnual_Report16.pdf"],
+       ir_note="Search surfaced the annual reports index; not fetched.",
+       exch_note="Tadawul portal 403."),
+    _v("abdullah-al-othaim-markets",
+       "https://othaim-markets.eurolandir.com/", "needs_human",
+       None, "needs_human",
+       ir_pdfs=[
+           "https://othaim-markets.eurolandir.com/media/g5glig4d/%D8%A7%D9%84%D8%AA%D9%82%D8%B1%D9%8A%D8%B1-%D8%A7%D9%84%D8%B3%D9%86%D9%88%D9%8A-%D8%A7%D9%84%D8%B9%D8%AB%D9%8A%D9%85-2024-english.pdf",
+           "https://othaim-markets.eurolandir.com/media/zmfnf3g4/al-othaim_investors-presentation_q3-2024-english.pdf",
+       ],
+       allowed=["othaim-markets.eurolandir.com"],
+       ir_note="IR is hosted on the eurolandir platform (Euroland IR SaaS). Not directly fetched.",
+       exch_note="Tadawul portal 403."),
+
+    # ---- UAE other (6) ----
+    _v("abu-dhabi-national-oil-company-for-distribution",
+       "https://www.adnocdistribution.ae/en/investor-relations", "needs_human",
+       None, "needs_human",
+       ir_note="Search surfaced canonical IR URL; not fetched. Also /downloads and /results-and-presentation subsections.",
+       exch_note="ADX 403."),
+    _v("emirates-telecom-etisalat-group",
+       "https://eand.com/en/investors/annual-reports.html", "needs_human",
+       None, "needs_human",
+       ir_pdfs=[
+           "https://eand.com/en/system/com/assets/docs/annual-report/2022/en-2022-eand-group-annual-report.pdf",
+       ],
+       ir_note="Search surfaced canonical IR URL + a 2022 PDF; not fetched.",
+       exch_note="ADX 403.",
+       notes="Etisalat rebranded to e&."),
+    _v("abu-dhabi-national-energy-company",
+       "https://www.taqa.com/announcements/", "needs_human",
+       None, "needs_human",
+       ir_pdfs=[
+           "https://www.taqa.com/wp-content/uploads/2020/06/20200420_TAQA-2019-Annual-Report-En-vWeb-A3.pdf",
+       ],
+       ir_note="Search surfaced canonical IR URL + a 2019 PDF; not fetched.",
+       exch_note="ADX 403.",
+       notes="Also known as TAQA."),
+    _v("aldar-properties-pjsc",
+       "https://www.aldar.com/en/investors/reports/annual-reports", "needs_human",
+       None, "needs_human",
+       ir_pdfs=[
+           "https://cdn.aldar.com/-/media/project/aldar-tenant/aldar2/investors-documents/aldar-properties-investor-presentation---nov-2025.pdf",
+       ],
+       ir_note="Search surfaced canonical IR URL; not fetched.",
+       exch_note="ADX 403."),
+    _v("emaar-properties",
+       "https://www.emaar.com/en/investor-relations", "needs_human",
+       None, "needs_human",
+       ir_note="Search surfaced canonical IR URL under emaar.com; not fetched. Emaar Development has its own IR sub-page at properties.emaar.com/en/investor-relations/emaar-development-pjsc/reports-presentations/.",
+       exch_note="DFM ticker EMAAR expected but not verified.",
+       notes="Session 4 must confirm which ticker (EMAAR / EMAARDEV) is which and disambiguate."),
+    _v("air-arabia-pjsc",
+       "https://www.airarabia.com/en/annual-reports", "needs_human",
+       None, "needs_human",
+       ir_pdfs=[
+           "https://www.airarabia.com/-/media/investor-relations/2024/annualreport_2024.pdf",
+           "https://www.airarabia.com/-/media/project/air-arabia/air-arabia/investor-relations/annualreport_2025.pdf",
+       ],
+       ir_note="Search surfaced canonical IR URL + 2024, 2025 PDFs; not fetched.",
+       exch_note="DFM ticker AIRARABIA."),
+
+    # ---- Qatar other (6) ----
+    _v("industries-qatar",
+       "https://iq.com.qa/en/investor-relations/", "needs_human",
+       None, "needs_human",
+       ir_pdfs=["https://iq.com.qa/media/eusnovi0/iq-annual-report-2023-en-5.pdf"],
+       ir_note="Search surfaced canonical IR URL + 2023 PDF; not fetched.",
+       exch_note="QSE ticker IQCD."),
+    _v("ooredoo-q-p-s-c",
+       "https://www.ooredoo.com/en/investors/financial_information/annual-reports/", "needs_human",
+       None, "needs_human",
+       ir_pdfs=["https://www.ooredoo.com/wp-content/uploads/2025/03/Ooredoo_Annual-Report_2024_English.pdf"],
+       ir_note="Search surfaced canonical IR URL + 2024 PDF; not fetched.",
+       exch_note="QSE ticker ORDS."),
+    _v("qatar-fuel-company-woqod",
+       "https://www.woqod.com/website/en/investor-relations", "needs_human",
+       None, "needs_human",
+       ir_note="Search surfaced canonical IR URL; not fetched.",
+       exch_note="QSE ticker QFLS."),
+    _v("baladna",
+       "https://baladna.com/en/corporate/investors/financial-information/annual-reports", "needs_human",
+       None, "needs_human",
+       ir_pdfs=[
+           "https://baladna.com/2024/baladna/",
+           "https://baladna.com/2023/baladna/",
+       ],
+       ir_note="Baladna uses per-year microsites (baladna.com/2024/baladna/, /2023/baladna/) rather than a single PDF-list page.",
+       exch_note="QSE ticker BLDN."),
+    _v("gulf-international-services",
+       "https://www.gis.com.qa/en/investor-relations/financial-information/financial-statements-en/", "needs_human",
+       None, "needs_human",
+       ir_pdfs=["https://www.gis.com.qa/media/cqvjhu05/gis_-ir-presentation-ye-25-eng.pdf"],
+       ir_note="Search surfaced canonical IR URL + FY25 presentation PDF; not fetched.",
+       exch_note="QSE ticker GISS."),
+    _v("qatar-gas-transport-co-nakilat",
+       "https://www.nakilat.com/", "needs_human",
+       None, "needs_human",
+       ir_pdfs=[
+           "https://www.nakilat.com/wp-content/uploads/2026/02/Annual-Report-2025-English.pdf",
+           "https://www.nakilat.com/wp-content/uploads/2025/03/Annual-Report-2024-Final-Web.pdf",
+       ],
+       ir_note="Search surfaced canonical PDFs; single-page site without dedicated IR-index URL identified.",
+       exch_note="QSE ticker QGTS."),
+
+    # ---- Kuwait other (3) ----
+    _v("zain-mobile-telecommunications-company",
+       "https://www.zain.com/en/investor-relations", "needs_human",
+       None, "needs_human",
+       ir_note="Search surfaced canonical IR URL; not fetched. Zain Group covers KSA/BH/JO/IQ/SD operations too.",
+       exch_note="Boursa Kuwait ticker ZAIN."),
+    _v("kuwait-telecommunications-company",
+       "https://www.stc.com.kw/en/about/investor-relations", "needs_human",
+       None, "needs_human",
+       ir_pdfs=[
+           "https://cws.stc.com.kw/DigitalStatic/AnnualReport2022/Digital-Annual-Report-2022-En.html",
+       ],
+       ir_note="Search surfaced canonical IR URL + interactive-report microsite (JS-required).",
+       exch_note="Boursa Kuwait ticker STCK / KTELECOM (needs disambiguation).",
+       notes="STC Kuwait, formerly VIVA. Majority owned by Saudi STC Group."),
+    _v("tamdeen-real-estate-company",
+       None, "needs_human",
+       None, "needs_human",
+       ir_note="Search did not surface a Tamdeen Real Estate IR page on tamdeen.com; parent 'Tamdeen Group' has the tamdeen.com domain but the listed entity may sit under a subsidiary domain not yet found. Needs manual research.",
+       exch_note="Boursa Kuwait ticker TAM."),
+
+    # ---- Oman other (1) ----
+    _v("oman-telecommunications-company-otel",
+       "https://www.omantel.om/Investors/investors-annual-report", "needs_human",
+       None, "needs_human",
+       ir_pdfs=["https://ir.omantel.om/media/ku4l2bbt/annual-report-2022-en.pdf"],
+       ir_note="Search surfaced canonical IR URL + 2022 PDF on ir.omantel.om sub-domain; not fetched.",
+       exch_note="MSX ticker OTEL likely (needs confirmation)."),
+
+    # ---- Bahrain other (2) ----
+    _v("bahrain-telecommunications-beyon",
+       "https://beyon.com/annual-reports/", "needs_human",
+       None, "needs_human",
+       ir_pdfs=[
+           "https://beyon.com/wp-content/uploads/2026/03/Beyon_AR2025_English.pdf",
+           "https://beyon.com/wp-content/uploads/2025/03/Beyon_AR2024_English.pdf",
+           "https://beyon.com/wp-content/uploads/2023/03/Beyon-AR2022-English.pdf",
+       ],
+       ir_note="Search surfaced canonical IR URL + multiple annual-report PDFs; not fetched.",
+       exch_note="Bahrain Bourse ticker BEYON.",
+       notes="Batelco renamed to Beyon."),
+    _v("aluminium-bahrain-alba",
+       "https://www.albasmelter.com/en/category/annual-report", "needs_human",
+       None, "needs_human",
+       ir_pdfs=["https://www.albasmelter.com/uploads/Alba_Annual_Report_2025_1.pdf"],
+       ir_note="Search surfaced canonical annual-report index URL + 2025 PDF; not fetched.",
+       exch_note="Bahrain Bourse ticker ALBH."),
+]
+
+
+def main() -> None:
+    OUT_IR.parent.mkdir(parents=True, exist_ok=True)
+    OUT_PORTALS.parent.mkdir(parents=True, exist_ok=True)
+
+    with OUT_IR.open("w", encoding="utf-8") as fh:
+        json.dump(INSTITUTIONS, fh, indent=2, ensure_ascii=False)
+    with OUT_PORTALS.open("w", encoding="utf-8") as fh:
+        json.dump(PORTALS, fh, indent=2, ensure_ascii=False)
+
+    print(f"wrote {len(INSTITUTIONS)} institutions -> {OUT_IR}")
+    print(f"wrote {len(PORTALS)} exchange portals -> {OUT_PORTALS}")
+
+
+if __name__ == "__main__":
+    main()
