@@ -32,13 +32,18 @@ frontend
 node_modules
 backend/node_modules
 
-# One-off scripts, tests, docs — not needed at runtime
+# One-off scripts, seed/, and tests are not needed at runtime.
 backend/scripts
 backend/seed
 backend/tests
-docs
-exports
-*.md
+
+# docs/ and exports/ ARE needed at runtime: the dashboard reads
+# docs/METHODOLOGY.md, docs/SENSITIVITY_SUMMARY.md, and
+# exports/sensitivity_summary.csv (see
+# app/api/routes/dashboard.py SENSITIVITY_CSV / SENSITIVITY_MD /
+# METHODOLOGY_MD constants). Keep them in the build context and let the
+# Dockerfile pick them up with explicit COPY lines. Do NOT re-add
+# "docs", "exports", or "*.md" to this ignore list.
 
 # IDE / editor junk
 .idea

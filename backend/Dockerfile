@@ -66,6 +66,14 @@ COPY backend/alembic ./backend/alembic
 COPY backend/alembic.ini ./backend/alembic.ini
 COPY config ./config
 COPY data ./data
+# docs/ and exports/ are runtime inputs for the dashboard:
+#   docs/METHODOLOGY.md         -> GET /dashboard/methodology
+#   docs/SENSITIVITY_SUMMARY.md -> GET /dashboard/sensitivity  (headline stats)
+#   exports/sensitivity_summary.csv -> GET /dashboard/sensitivity  (rows)
+# Without these the sensitivity route 404s and methodology returns a
+# placeholder stub. .dockerignore keeps them in the build context.
+COPY docs ./docs
+COPY exports ./exports
 
 # End-to-end OCR smoke test at build time. Shells into Python and
 # synthesises a tiny image with the word "DISCLOSURE" rendered on it,

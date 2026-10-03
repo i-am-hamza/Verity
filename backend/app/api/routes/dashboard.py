@@ -340,13 +340,25 @@ def get_coverage(db: Session = Depends(get_db)) -> CoverageOut:
         .all()
     )
     # Scored reports for the matrix.
+    #
+    # Previously this was one big JOIN with .distinct() to collapse the
+    # one-row-per-CategoryScore fan-out. That worked on SQLite but blows
+    # up on Postgres because `reports.excluded_contents_pages` is a JSON
+    # column: Postgres has no equality operator for `json` (vs `jsonb`)
+    # so `SELECT DISTINCT ... json_col ...` dies with
+    # `UndefinedFunction: could not identify an equality operator for
+    # type json`. Fix by pushing the dedupe into a subquery over the
+    # INTEGER report_id, which Postgres has no trouble with.
+    scored_report_ids = (
+        db.query(CategoryScore.report_id)
+        .filter(CategoryScore.taxonomy_version_id == tv.id)
+        .distinct()
+    )
     scored_rows = (
         db.query(Report, Institution, SourceDocument)
         .join(Institution, Institution.id == Report.institution_id)
-        .join(CategoryScore, CategoryScore.report_id == Report.id)
         .outerjoin(SourceDocument, SourceDocument.id == Report.source_document_id)
-        .filter(CategoryScore.taxonomy_version_id == tv.id)
-        .distinct()
+        .filter(Report.id.in_(scored_report_ids))
         .all()
     )
     scored_by_key: dict[tuple[int, int], tuple[Report, SourceDocument | None]] = {}
@@ -362,9 +374,15 @@ def get_coverage(db: Session = Depends(get_db)) -> CoverageOut:
         .all()
     )
     sds_by_key: dict[tuple[int, int], list[SourceDocument]] = defaultdict(list)
+    # Also group by institution so the unscored-bucket classifier below
+    # doesn't emit a per-institution SELECT (was 18 extra round trips to
+    # Supabase on every /coverage hit — the dominant cost in the ~16 s
+    # pre-fix response time).
+    sds_by_inst: dict[int, list[SourceDocument]] = defaultdict(list)
     for sd, inst in sd_rows:
         if sd.superseded_by_id is None:
             sds_by_key[(inst.id, sd.fiscal_year)].append(sd)
+            sds_by_inst[inst.id].append(sd)
 
     gaps_by_key: dict[tuple[int, int], Gap] = {
         (g.institution_id, g.fiscal_year): g
@@ -419,10 +437,10 @@ def get_coverage(db: Session = Depends(get_db)) -> CoverageOut:
             cells=cells, years_covered=years_cov,
         ))
         if inst.id not in scored_inst_ids:
-            # Bucket this not-covered institution.
-            all_sds = [sd for sd in db.query(SourceDocument)
-                       .filter(SourceDocument.institution_id == inst.id,
-                               SourceDocument.superseded_by_id.is_(None)).all()]
+            # Bucket this not-covered institution. Uses the pre-built
+            # sds_by_inst dict so we don't fire a fresh SELECT per
+            # institution.
+            all_sds = sds_by_inst.get(inst.id, [])
             if not all_sds:
                 unscored_buckets["A_no_file"] += 1
                 continue
