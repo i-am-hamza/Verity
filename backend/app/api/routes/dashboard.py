@@ -248,15 +248,25 @@ def get_institution_detail(
     if inst is None:
         raise HTTPException(status_code=404, detail=f"Institution {slug!r} not found")
     tv = _latest_tv(db)
+    # Same Postgres gotcha as get_coverage: `reports.excluded_contents_pages`
+    # is a JSON column with no equality operator, so `SELECT DISTINCT ...
+    # json_col ...` dies with `UndefinedFunction: could not identify an
+    # equality operator for type json`. Push the DISTINCT into a subquery
+    # over the INTEGER CategoryScore.report_id, then filter the main
+    # Report select on `.in_()` so the outer query returns one row per
+    # Report with no DISTINCT needed.
+    scored_report_ids = (
+        db.query(CategoryScore.report_id)
+        .filter(CategoryScore.taxonomy_version_id == tv.id)
+        .distinct()
+    )
     reports = (
         db.query(Report)
-        .join(CategoryScore, CategoryScore.report_id == Report.id)
         .filter(
             Report.institution_id == inst.id,
-            CategoryScore.taxonomy_version_id == tv.id,
             Report.status == ReportStatus.scored,
+            Report.id.in_(scored_report_ids),
         )
-        .distinct()
         .order_by(Report.fiscal_year)
         .all()
     )
