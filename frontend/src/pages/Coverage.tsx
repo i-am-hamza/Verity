@@ -80,19 +80,32 @@ export function CoveragePage() {
         </span>
       </div>
 
-      {/* 60 × 6 matrix. Horizontal scroll on narrow viewports with the
-          institution-name column stuck to the left edge so row context
-          follows the swipe. A gradient fade on the right edge is the
-          scroll affordance — tells the user there's more off-screen,
-          since mobile browsers don't paint a persistent scrollbar. */}
+      {/* 60 × 6 matrix. Two layout modes:
+          - Below ~800 px viewport: `min-w-max` + fixed column widths means
+            the table is wider than the container, horizontal scroll kicks
+            in, the institution column is sticky-left. (Phone / small-tablet
+            path. Unchanged from Session 8.)
+          - At `min-[800px]:` and up: switch to `table-fixed` + percentage
+            widths so the table fills the full container. The institution
+            column keeps its sticky positioning but takes 25 % of the
+            container; the 6 FY columns share the remaining 75 % evenly
+            (12.5 % each). The pixel min/max from the mobile path are
+            explicitly lifted (`min-w-0`, `max-w-none`, `w-auto`) because
+            Tailwind doesn't automatically retract an earlier breakpoint's
+            fixed widths.
+          The 800 px threshold is derived from the mobile minimums: a
+          220 px institution column + 6 × 88 px FY columns + 2 px border
+          + 48 px main-content side padding = 798 px viewport. Below
+          that, scroll is necessary; at or above, the columns already fit
+          and the empty gap on the right is purely wasted space. */}
       <div className="relative rounded-md border border-border">
-        <div className="overflow-x-auto">
-          <table className="min-w-max text-sm">
+        <div className="overflow-x-auto min-[800px]:overflow-visible">
+          <table className="min-w-max text-sm min-[800px]:w-full min-[800px]:min-w-full min-[800px]:table-fixed">
             <thead className="bg-surface-2">
               <tr>
                 <th
                   scope="col"
-                  className="sticky left-0 z-10 w-[160px] min-w-[160px] max-w-[160px] bg-surface-2 px-3 py-3 text-left text-xs uppercase tracking-wide text-text-muted shadow-[2px_0_0_rgb(var(--border))] sm:w-[220px] sm:min-w-[220px] sm:max-w-[220px] sm:px-4"
+                  className="sticky left-0 z-10 w-[160px] min-w-[160px] max-w-[160px] bg-surface-2 px-3 py-3 text-left text-xs uppercase tracking-wide text-text-muted shadow-[2px_0_0_rgb(var(--border))] sm:w-[220px] sm:min-w-[220px] sm:max-w-[220px] sm:px-4 min-[800px]:w-1/4 min-[800px]:min-w-0 min-[800px]:max-w-none"
                 >
                   Institution
                 </th>
@@ -100,7 +113,7 @@ export function CoveragePage() {
                   <th
                     key={fy}
                     scope="col"
-                    className="min-w-[64px] px-2 py-3 text-center text-xs uppercase tracking-wide text-text-muted sm:min-w-[88px] sm:px-4"
+                    className="min-w-[64px] px-2 py-3 text-center text-xs uppercase tracking-wide text-text-muted sm:min-w-[88px] sm:px-4 min-[800px]:w-[12.5%] min-[800px]:min-w-0"
                   >
                     FY{fy}
                   </th>
@@ -110,7 +123,7 @@ export function CoveragePage() {
             <tbody>
               {data.rows.map((row) => (
                 <tr key={row.slug} className="border-t border-border">
-                  <td className="sticky left-0 z-10 w-[160px] min-w-[160px] max-w-[160px] bg-surface px-3 py-2.5 text-left shadow-[2px_0_0_rgb(var(--border))] sm:w-[220px] sm:min-w-[220px] sm:max-w-[220px] sm:px-4 sm:py-3">
+                  <td className="sticky left-0 z-10 w-[160px] min-w-[160px] max-w-[160px] bg-surface px-3 py-2.5 text-left shadow-[2px_0_0_rgb(var(--border))] sm:w-[220px] sm:min-w-[220px] sm:max-w-[220px] sm:px-4 sm:py-3 min-[800px]:w-1/4 min-[800px]:min-w-0 min-[800px]:max-w-none">
                     <Link
                       to={`/institution/${row.slug}`}
                       className="block truncate text-sm hover:text-accent"
@@ -127,7 +140,7 @@ export function CoveragePage() {
                     if (!cell) return <td key={fy} />;
                     const cls = CELL_STYLE[cell.status] ?? "";
                     return (
-                      <td key={fy} className="px-2 py-2 text-center sm:px-3 sm:py-2.5">
+                      <td key={fy} className="px-2 py-2 text-center sm:px-3 sm:py-2.5 min-[800px]:w-[12.5%]">
                         <button
                           type="button"
                           onClick={() => setSelected({ slug: row.slug, fy, cell })}
@@ -145,12 +158,13 @@ export function CoveragePage() {
             </tbody>
           </table>
         </div>
-        {/* Right-edge scroll affordance: gradient fade shows that there's
-            more table off-screen. Pointer-events none so it never blocks
-            a tap on a cell underneath. */}
+        {/* Right-edge scroll affordance: gradient fade shows there's more
+            table off-screen. Only visible below the 800 px breakpoint;
+            above that the table fills the container so there is nothing
+            to scroll to and the gradient would just be visual noise. */}
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute inset-y-0 right-0 w-8 bg-gradient-to-l from-bg to-transparent sm:w-10"
+          className="pointer-events-none absolute inset-y-0 right-0 w-8 bg-gradient-to-l from-bg to-transparent sm:w-10 min-[800px]:hidden"
         />
       </div>
 
