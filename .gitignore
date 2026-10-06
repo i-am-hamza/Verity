@@ -17,6 +17,8 @@ venv/
 
 # Storage: uploaded PDFs and any derived artefacts stay out of git.
 backend/storage/
+# Root-level storage/ drop-box for new PDFs before ingest (Phase 1 onward).
+storage/
 backend/tessdata/*.traineddata
 
 # Real fixtures (downloaded PDFs — content, not the manifest).
