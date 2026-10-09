@@ -1,20 +1,16 @@
-"""Session 9 storage layer.
+"""Storage layer: PDF read/write backed by Cloudflare R2.
 
-Backend-wide PDF read/write wrapper. In production (Session 9+), PDFs live
-in Cloudflare R2 and `SourceDocument.file_path` holds the R2 object key
-(no backslashes, no absolute paths, just something like
-`al-rajhi-bank/2025_integrated_e66e4adf.pdf`). The crawler calls
-`write_pdf()`, the dashboard streams via `open_pdf_stream()`, the scoring
-pipeline reads bytes via `read_pdf_bytes()` and passes them to pymupdf.
+In production PDFs live in R2; `SourceDocument.file_path` holds the R2 object
+key (forward-slash, no absolute prefix — e.g.
+`al-rajhi-bank/2025_integrated_e66e4adf.pdf`). The crawler calls `write_pdf()`,
+the dashboard streams via `open_pdf_stream()`, the scoring pipeline reads bytes
+via `read_pdf_bytes()`.
 
-Keeping this behind a thin wrapper has three benefits:
-1. The backend's dependence on "there's a local disk somewhere" collapses
-   to this one module — the FastAPI process is stateless.
-2. Local development against a volume mount still works: if R2 env vars
-   are missing, the wrapper falls through to a plain filesystem path
-   relative to `settings.storage_dir`.
-3. The S3 API lives in exactly one place; swapping to a different
-   object store later is a config change, not a code refactor.
+**R2 is required in production.** All four I/O functions raise `RuntimeError`
+when the R2 client cannot be constructed (missing env vars) UNLESS the env var
+`VERITY_LOCAL_STORAGE=1` is explicitly set, which enables the local-disk fallback
+for developer environments without R2 credentials. Never set
+`VERITY_LOCAL_STORAGE=1` in a deployed environment.
 """
 from __future__ import annotations
 
@@ -25,13 +21,13 @@ from typing import BinaryIO
 
 import boto3
 from botocore.config import Config
+from botocore.exceptions import ClientError
 
 from app.config import settings
 
 
 class R2Settings:
-    """Read R2 config from env. Lazy so dev / tests without R2 just see
-    `enabled=False` and get the local-disk path instead."""
+    """Read R2 config from env."""
 
     def __init__(self) -> None:
         self.account_id = os.environ.get("R2_ACCOUNT_ID", "")
@@ -70,19 +66,37 @@ def r2_enabled() -> bool:
     return R2Settings().enabled
 
 
+def _local_storage_enabled() -> bool:
+    """True only when VERITY_LOCAL_STORAGE=1 is explicitly set.
+    Intended for local development without R2 credentials."""
+    return os.environ.get("VERITY_LOCAL_STORAGE", "") == "1"
+
+
+def _require_r2(fn_name: str) -> None:
+    """Raise if R2 is unavailable and the local-storage flag is not set."""
+    raise RuntimeError(
+        f"{fn_name}: R2 is not configured and VERITY_LOCAL_STORAGE=1 is not set. "
+        "Configure R2 credentials (R2_ACCOUNT_ID, R2_ACCESS_KEY_ID, "
+        "R2_SECRET_ACCESS_KEY, R2_BUCKET_NAME), or set VERITY_LOCAL_STORAGE=1 "
+        "for local development only."
+    )
+
+
 def _local_path(key: str) -> Path:
     """Dev fallback: resolve an R2 object key to a path under storage_dir."""
     return Path(settings.storage_dir) / key
 
 
 def write_pdf(key: str, body: bytes) -> str:
-    """Upload bytes to R2 (or write to disk in dev) at the given key.
+    """Upload bytes to R2 at the given key.
 
-    Returns the key, which is what the caller should persist as
-    `SourceDocument.file_path`.
+    Returns the key for the caller to persist as `SourceDocument.file_path`.
+    Raises `RuntimeError` if R2 is unavailable, unless `VERITY_LOCAL_STORAGE=1`.
     """
     client = _r2_client()
     if client is None:
+        if not _local_storage_enabled():
+            _require_r2("write_pdf")
         p = _local_path(key)
         p.parent.mkdir(parents=True, exist_ok=True)
         p.write_bytes(body)
@@ -95,41 +109,64 @@ def write_pdf(key: str, body: bytes) -> str:
 
 
 def read_pdf_bytes(key: str) -> bytes:
-    """Return the full PDF content for the given key. Used by the scoring
-    pipeline to hand bytes to pymupdf; one read per report, cached by
-    nothing because the pipeline consumes the result immediately."""
+    """Return the full PDF content for the given key.
+
+    Raises `RuntimeError` if R2 is unavailable (unless `VERITY_LOCAL_STORAGE=1`).
+    Raises `FileNotFoundError` if the object does not exist in R2.
+    """
     client = _r2_client()
     if client is None:
+        if not _local_storage_enabled():
+            _require_r2("read_pdf_bytes")
         p = _local_path(key)
         if not p.exists():
             raise FileNotFoundError(f"local PDF missing: {p}")
         return p.read_bytes()
-    obj = client.get_object(Bucket=R2Settings().bucket, Key=key)
+    try:
+        obj = client.get_object(Bucket=R2Settings().bucket, Key=key)
+    except ClientError as exc:
+        if exc.response["Error"]["Code"] in ("NoSuchKey", "404"):
+            raise FileNotFoundError(f"R2 object not found: {key}") from exc
+        raise
     return obj["Body"].read()
 
 
 def open_pdf_stream(key: str) -> BinaryIO:
-    """Return a file-like object for the dashboard's PDF endpoint. For R2
-    this is the raw botocore StreamingBody; for local dev it's a file
-    handle. Caller closes it (FastAPI StreamingResponse handles that for
-    the HTTP side)."""
+    """Return a file-like object for streaming the PDF.
+
+    For R2 this is the raw botocore StreamingBody; for local dev a file handle.
+    Caller is responsible for closing (FastAPI StreamingResponse handles the
+    HTTP side). Raises `RuntimeError` if R2 is unavailable, unless
+    `VERITY_LOCAL_STORAGE=1`.
+    """
     client = _r2_client()
     if client is None:
+        if not _local_storage_enabled():
+            _require_r2("open_pdf_stream")
         return _local_path(key).open("rb")
-    obj = client.get_object(Bucket=R2Settings().bucket, Key=key)
+    try:
+        obj = client.get_object(Bucket=R2Settings().bucket, Key=key)
+    except ClientError as exc:
+        if exc.response["Error"]["Code"] in ("NoSuchKey", "404"):
+            raise FileNotFoundError(f"R2 object not found: {key}") from exc
+        raise
     return obj["Body"]
 
 
 def pdf_exists(key: str) -> bool:
-    """True iff an object exists at the given key. Used by the provenance
-    audit to confirm every SourceDocument's file is still reachable."""
+    """True iff an object exists at the given key.
+
+    Raises `RuntimeError` if R2 is unavailable, unless `VERITY_LOCAL_STORAGE=1`.
+    """
     client = _r2_client()
     if client is None:
+        if not _local_storage_enabled():
+            _require_r2("pdf_exists")
         return _local_path(key).exists()
     try:
         client.head_object(Bucket=R2Settings().bucket, Key=key)
         return True
-    except Exception:
+    except ClientError:
         return False
 
 
@@ -147,5 +184,4 @@ def file_path_to_r2_key(file_path: str) -> str:
     i = norm.rfind(marker)
     if i >= 0:
         return norm[i + len(marker):]
-    # If a file_path is already a bare key (no absolute prefix), return as-is.
     return norm.lstrip("/")

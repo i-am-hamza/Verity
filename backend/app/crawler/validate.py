@@ -111,6 +111,18 @@ def _detect_year_in_text(text: str) -> int | None:
     return None
 
 
+def _detect_structured_year(text: str) -> int | None:
+    """Return the year from a clear reporting-period phrase only.
+
+    Uses _YEAR_FROM_TEXT_RX (patterns like "Annual Report 2023" or
+    "for the year ended 31 December 2023"). Returns None if no such
+    phrase is found — bare 20XX occurrences such as "Vision 2030" are
+    not a stated reporting period and must not trigger the mismatch flag.
+    """
+    m = _YEAR_FROM_TEXT_RX.search(text)
+    return int(m.group(1)) if m else None
+
+
 def validate_pdf(body: bytes, *, source_filename: str, expected_year: int | None) -> Validation:
     sha = _hash(body)
     size = len(body)
@@ -169,28 +181,32 @@ def validate_pdf(body: bytes, *, source_filename: str, expected_year: int | None
         review = "needs_review"
         reason = reason or "report_type unknown from filename and first 3 pages"
 
-    # Year check: if we were given an expected year, verify it matches the
-    # inferred-from-text year. Mismatch keeps the file but marks it.
+    # Year check: if the document's cover text contains a clear reporting-period
+    # phrase ("Annual Report YYYY", "for the year ended DD Month YYYY", etc.) and
+    # its year differs from expected_year, flag for review with evidence.
     #
-    # Session 6 refinement: when the caller provides an expected_year AND
-    # it falls inside the configured reporting window (schedule.years),
-    # the filename (or crawl-link) FY is treated as authoritative. A
-    # differing text year is then considered incidental — commonly a
-    # "Vision 2030" strategy reference, a 2015-era chairman anecdote, or
-    # a comparative-period column header — rather than a real mislabel.
-    # We only fall back to the stricter mismatch flag when expected_year
-    # is either absent or outside the window.
-    from app.services.verity_config import load_verity_config
-    _window = set(load_verity_config().years)
-    if expected_year is not None and expected_year in _window:
-        year_mismatch = False
-    else:
-        year_mismatch = (expected_year is not None and inferred_year is not None
-                         and expected_year != inferred_year)
+    # Only _YEAR_FROM_TEXT_RX matches (structured phrases) trigger the flag.
+    # Plain 20XX occurrences — "Vision 2030", comparative-column headers,
+    # chairman anecdotes — are not a stated reporting period and do not fire.
+    # The previous window-based suppression (in-window → never flag) is removed:
+    # a genuine cover-page mislabel should be caught regardless of which year
+    # the filename claims.
+    structured_year = _detect_structured_year(head_text)
+    if (
+        expected_year is not None
+        and structured_year is not None
+        and expected_year != structured_year
+    ):
+        review = "needs_review"
+        yr_note = (
+            f"year mismatch: document says FY{structured_year}, "
+            f"assigned FY{expected_year}"
+        )
+        reason = f"{reason}; {yr_note}" if reason else yr_note
 
     return Validation(
         ok=True, sha256=sha, byte_count=size, page_count=page_count,
         report_type=report_type, includes_financial_statements=includes_fs,
         inferred_year=inferred_year, reason=reason,
-        review_status="needs_review" if (review == "needs_review" or year_mismatch) else "auto_ok",
+        review_status="needs_review" if review == "needs_review" else "auto_ok",
     )

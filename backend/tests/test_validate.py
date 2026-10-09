@@ -123,17 +123,11 @@ def test_year_mismatch_marks_needs_review_when_expected_outside_window():
     assert v.review_status == "needs_review"
 
 
-def test_in_window_expected_year_overrides_incidental_text_year():
-    """Session 6 refinement: a Vision-2030-style stray year in body text
-    must not flag the file as needs_review when the caller provides an
-    expected_year inside the reporting window (filename-year is
-    authoritative in-window). Covers the Advanced Petrochemical FY2024
-    regression where body text 'Vision 2030' got picked up as the
-    inferred FY."""
-    # Body carries ONLY the stray year (Vision 2030) — filename provides
-    # the type-detection anchor. _detect_year_in_text falls through to
-    # _PLAIN_YEAR_RX and picks the max in-range, which is 2030. The
-    # expected_year=2024 is in-window so the mismatch flag is suppressed.
+def test_stray_year_in_body_does_not_trigger_mismatch():
+    """A plain 20XX occurrence such as 'Vision 2030' in body text must not
+    flag needs_review. Only structured phrases ('Annual Report YYYY',
+    'for the year ended DD Month YYYY') count as a stated reporting period.
+    The mismatch check uses _detect_structured_year, not the plain fallback."""
     body = _make_pdf(
         "ACME CORP\n"
         "Saudi Arabia remains committed to Vision 2030 for sustainable development.",
@@ -142,5 +136,34 @@ def test_in_window_expected_year_overrides_incidental_text_year():
     v = validate_pdf(body, source_filename="acme annual report 2024.pdf",
                      expected_year=2024)
     assert v.ok, v.reason
-    assert v.inferred_year == 2030
+    assert v.inferred_year == 2030   # plain fallback still returns 2030
+    assert v.review_status == "auto_ok"  # no structured year found → no mismatch
+
+
+def test_year_mismatch_within_window_now_flagged():
+    """The previous window-based suppression (in-window years → never flag)
+    is removed. A document whose cover text clearly states 'Annual Report 2022'
+    but is assigned FY2023 is flagged needs_review, even though both years
+    are inside the 2020-2025 scoring window."""
+    body = _make_pdf(
+        "ACME CORP\nAnnual Report 2022\nFor the year ended 31 December 2022",
+        pages=40,
+    )
+    v = validate_pdf(body, source_filename="acme_annual_report.pdf", expected_year=2023)
+    assert v.ok, v.reason
+    assert v.inferred_year == 2022
+    assert v.review_status == "needs_review"
+    assert v.reason is not None
+    assert "2022" in v.reason and "2023" in v.reason
+
+
+def test_year_match_within_window_is_auto_ok():
+    """Document cover text matches assigned year → auto_ok."""
+    body = _make_pdf(
+        "ACME CORP\nAnnual Report 2023\nFor the year ended 31 December 2023",
+        pages=40,
+    )
+    v = validate_pdf(body, source_filename="acme_annual_report.pdf", expected_year=2023)
+    assert v.ok, v.reason
+    assert v.inferred_year == 2023
     assert v.review_status == "auto_ok"

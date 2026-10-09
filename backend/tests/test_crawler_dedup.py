@@ -107,6 +107,10 @@ def test_same_sha256_from_exchange_doesnt_double_store(isolated_db, tmp_path, mo
     from app.crawler.pipeline import Pipeline, new_run_id
     from app.models.provenance import SourceDocument
 
+    # This is a local integration test — enable local-disk fallback so the
+    # pipeline's write_pdf calls write to tmp_path instead of requiring R2.
+    monkeypatch.setenv("VERITY_LOCAL_STORAGE", "1")
+
     # Point the manifest/storage at tmp_path so tests don't touch the real tree.
     monkeypatch.setattr(pipeline_mod, "IR_SOURCES_PATH", _seed_institution_and_sources(isolated_db, tmp_path))
     import app.crawler.manifest as manifest_mod
