@@ -14,9 +14,10 @@ import os
 import random
 import re
 import sys
+import threading
 import time
 from collections import defaultdict
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from pathlib import Path
 
 BACKEND = Path(__file__).resolve().parent.parent
@@ -24,6 +25,7 @@ REPO_ROOT = BACKEND.parent
 sys.path.insert(0, str(BACKEND))
 
 from dotenv import load_dotenv  # noqa: E402
+
 load_dotenv(BACKEND / ".env")
 
 # ── Candidate terms ────────────────────────────────────────────────────────────
@@ -96,6 +98,7 @@ CANDIDATES: list[tuple[str, str, bool]] = [
 
 SAMPLE_SEED = 20261006
 SAMPLE_N    = 20
+FREQ_THRESHOLD = 10.0  # PASS if pct_material >= this
 
 # ── Industry materiality: SASB category → set of SASB industries ─────────────
 # Built from docs/methodology/Verity_SASB_Mapping_Signed.xlsx
@@ -106,21 +109,14 @@ def _norm(s: str) -> str:
 
 
 def load_materiality(workbook_path: Path) -> tuple[
-    dict[str, str],          # slug -> sasb_industry (normalised)
+    dict[str, str],          # company name -> sasb_industry (normalised)
     dict[str, set[str]],     # normed_category -> set of normed industries
 ]:
     import openpyxl
     wb = openpyxl.load_workbook(str(workbook_path), data_only=True)
 
-    # Company industries: col B = company name, col C = symbol (unused),
-    # col D = country (unused), col H = SASB industry
+    # Company industries: col B = company name, col H = SASB industry
     ws_co = wb["Company industries"]
-    # row 0 = header; slug computed identically to how load_institutions.py does it
-    def _slugify(name: str) -> str:
-        s = name.lower()
-        s = re.sub(r"[^a-z0-9\s]", "", s)
-        return re.sub(r"\s+", "-", s).strip("-")
-
     name_to_industry: dict[str, str] = {}
     for row in list(ws_co.iter_rows(values_only=True))[1:]:
         company_name = row[1]
@@ -142,46 +138,46 @@ def load_materiality(workbook_path: Path) -> tuple[
 
 # ── DB query ──────────────────────────────────────────────────────────────────
 
-def load_scored_docs(db_url: str) -> list[dict]:
-    """Return list of dicts with id, file_path, fiscal_year, slug, name, industry,
-    latin_word_count (from existing Report row, so we don't re-compute it)."""
+def load_all_docs(db_url: str) -> list[dict]:
+    """Return all eligible source_documents (auto_ok, annual/integrated, not superseded).
+
+    Does NOT join with reports — that table may be empty. latin_word_count is
+    initialised to 0 and populated during process_document.
+    """
     import psycopg
     conn = psycopg.connect(db_url)
     cur = conn.cursor()
     cur.execute("""
         SELECT sd.id, sd.file_path, sd.fiscal_year,
-               i.slug, i.name, i.industry,
-               r.latin_word_count
+               i.slug, i.name, i.industry
         FROM source_documents sd
         JOIN institutions i ON i.id = sd.institution_id
-        JOIN reports r ON r.source_document_id = sd.id
         WHERE i.active = true
           AND sd.review_status = 'auto_ok'
           AND sd.superseded_by_id IS NULL
           AND sd.report_type IN ('annual', 'integrated')
-          AND r.status = 'scored'
         ORDER BY i.slug, sd.fiscal_year
     """)
     rows = cur.fetchall()
     conn.close()
-    # De-duplicate: if a source_document has multiple reports (re-processing),
-    # take the one with the highest id (most recent).
-    seen_sdid: dict[int, dict] = {}
-    for sd_id, file_path, fy, slug, name, industry, latin_wc in rows:
-        if sd_id not in seen_sdid:
-            seen_sdid[sd_id] = dict(
-                id=sd_id, file_path=file_path, fiscal_year=fy,
-                slug=slug, name=name,
-                industry=_norm(str(industry)) if industry else "",
-                latin_word_count=latin_wc or 0,
-            )
-    return list(seen_sdid.values())
+    return [
+        dict(
+            id=sd_id,
+            file_path=file_path,
+            fiscal_year=fy,
+            slug=slug,
+            name=name,
+            industry=_norm(str(industry)) if industry else "",
+            latin_word_count=0,
+        )
+        for sd_id, file_path, fy, slug, name, industry in rows
+    ]
 
 
 # ── Term class for TaxonomyMatcher ────────────────────────────────────────────
 
 class _CandidateTerm:
-    __slots__ = ("id", "phrase", "lemma_based", "weight", "category_id", "category_weight")
+    __slots__ = ("category_id", "category_weight", "id", "lemma_based", "phrase", "weight")
     def __init__(self, tid: int, phrase: str, lemma_based: bool) -> None:
         self.id           = tid
         self.phrase       = phrase
@@ -205,58 +201,69 @@ class HitRow:
     sentence: str
 
 
+_MAX_PAGE_CHARS = 20_000  # guard against pathological pages slowing spaCy
+_DOC_TIMEOUT_SECS = 300  # skip documents that take more than 5 minutes
+
+
 def process_document(
     doc: dict,
     matcher,  # TaxonomyMatcher
     id_to_phrase: dict[int, str],
     id_to_cat: dict[int, str],
     cfg,
-) -> list[HitRow]:
+) -> tuple[list[HitRow], int]:
+    """Returns (hits, latin_word_count).
+
+    latin_word_count is counted from cleaned pages (FS and ToC excluded),
+    matching the scoring pipeline's denominator exactly.
+    """
+    from app.services.pdf_extraction import PageText, count_words, extract_pdf_pages
     from app.services.storage import read_pdf_bytes
-    from app.services.pdf_extraction import extract_pdf_pages
-    from app.services.text_quality import apply_text_quality
     from app.services.text_processing import segment_sentences
+    from app.services.text_quality import apply_text_quality
 
     try:
         pdf_bytes = read_pdf_bytes(doc["file_path"])
     except Exception as exc:
-        # R2 NoSuchKey → try local fallback (PDFs ingested before R2 upload completed)
-        if "NoSuchKey" in str(exc):
-            local_p = BACKEND / "storage" / "reports" / doc["file_path"].replace("/", os.sep)
-            if local_p.exists():
-                pdf_bytes = local_p.read_bytes()
-            else:
-                print(f"  SKIP {doc['slug']} FY{doc['fiscal_year']}: fetch failed: {exc}")
-                return []
-        else:
-            print(f"  SKIP {doc['slug']} FY{doc['fiscal_year']}: fetch failed: {exc}")
-            return []
+        print(f"  SKIP {doc['slug']} FY{doc['fiscal_year']}: fetch failed: {exc}")
+        return [], 0
 
     try:
         pages = extract_pdf_pages(pdf_bytes)
     except Exception as exc:
         print(f"  SKIP {doc['slug']} FY{doc['fiscal_year']}: extract failed: {exc}")
-        return []
+        return [], 0
 
     try:
         cleaned = apply_text_quality(pages, cfg)
     except Exception as exc:
         print(f"  SKIP {doc['slug']} FY{doc['fiscal_year']}: text quality failed: {exc}")
-        return []
+        return [], 0
+
+    latin_word_count = count_words(cleaned.pages).latin
+
+    # Truncate very long pages before spaCy to avoid quadratic slowdown on
+    # dense table/boilerplate pages. 20k chars ≈ 3,000 words, more than enough
+    # to capture any candidate term that would appear in running prose.
+    capped = [
+        PageText(page_number=p.page_number, text=p.text[:_MAX_PAGE_CHARS], used_ocr=p.used_ocr)
+        if len(p.text) > _MAX_PAGE_CHARS else p
+        for p in cleaned.pages
+    ]
 
     try:
-        sentences = segment_sentences(cleaned.pages)
+        sentences = segment_sentences(capped)
     except Exception as exc:
         print(f"  SKIP {doc['slug']} FY{doc['fiscal_year']}: segment failed: {exc}")
-        return []
+        return [], latin_word_count
 
     try:
         matches = matcher.match_sentences(sentences)
     except Exception as exc:
         print(f"  SKIP {doc['slug']} FY{doc['fiscal_year']}: match failed: {exc}")
-        return []
+        return [], latin_word_count
 
-    return [
+    hits = [
         HitRow(
             term_phrase=id_to_phrase[m.term_id],
             sasb_category=id_to_cat[m.term_id],
@@ -269,6 +276,7 @@ def process_document(
         )
         for m in matches
     ]
+    return hits, latin_word_count
 
 
 # ── Statistics ─────────────────────────────────────────────────────────────────
@@ -278,13 +286,11 @@ def compute_stats(
     docs: list[dict],
     name_to_industry: dict[str, str],
     cat_industries: dict[str, set[str]],
+    total_latin: int,
 ) -> dict:
-    """Returns per-term stats dict."""
-    # Total Latin words across all scored docs
-    total_latin = sum(d["latin_word_count"] for d in docs)
+    """Returns per-term stats dict, including pass_fail based on FREQ_THRESHOLD."""
     total_docs = len(docs)
 
-    # Build mapping: term_phrase -> list[HitRow]
     by_term: dict[str, list[HitRow]] = defaultdict(list)
     for h in hits:
         by_term[h.term_phrase].append(h)
@@ -293,13 +299,13 @@ def compute_stats(
     for phrase, cat, _ in CANDIDATES:
         term_hits = by_term.get(phrase, [])
 
-        # Reports (not sentences) containing this term
         docs_with_hit: set[tuple[str, int]] = {(h.slug, h.fiscal_year) for h in term_hits}
         n_reports = len(docs_with_hit)
         pct_all = n_reports / total_docs * 100 if total_docs else 0.0
 
         # Within-material-industry stats
-        cat_norm = _norm(cat.split(" / ")[-1])  # last segment: "circular economy / Materials Sourcing & Efficiency" → correct category
+        # "circular economy / Materials Sourcing & Efficiency" → last segment
+        cat_norm = _norm(cat.split(" / ")[-1])
         mat_industries = cat_industries.get(cat_norm, set())
         if mat_industries:
             mat_docs = [d for d in docs if d["industry"] in mat_industries]
@@ -309,18 +315,20 @@ def compute_stats(
             pct_material = n_mat_reports / len(mat_docs) * 100 if mat_docs else 0.0
             n_mat_docs = len(mat_docs)
         else:
+            # GCC check: treat all 390 as the denominator
             n_mat_reports = n_reports
             pct_material = pct_all
-            n_mat_docs = total_docs  # GCC check: all industries
+            n_mat_docs = total_docs
 
         total_mentions = len(term_hits)
         per_1000 = total_mentions / total_latin * 1000 if total_latin else 0.0
 
-        # Top industries by mention count
         ind_counts: dict[str, int] = defaultdict(int)
         for h in term_hits:
             ind_counts[h.industry] += 1
         top_industries = sorted(ind_counts.items(), key=lambda x: -x[1])[:3]
+
+        pass_fail = "pass" if pct_material >= FREQ_THRESHOLD else "fail"
 
         stats[phrase] = {
             "phrase": phrase,
@@ -333,6 +341,7 @@ def compute_stats(
             "total_mentions": total_mentions,
             "per_1000_words": per_1000,
             "top_industries": top_industries,
+            "pass_fail": pass_fail,
             "hits": term_hits,
         }
     return stats
@@ -341,14 +350,26 @@ def compute_stats(
 # ── Sampling ──────────────────────────────────────────────────────────────────
 
 def sample_hits(stats: dict) -> dict[str, list[HitRow]]:
+    """Sample ≤SAMPLE_N hits per PASS term, max 3 from the same company slug."""
     rng = random.Random(SAMPLE_SEED)
     samples: dict[str, list[HitRow]] = {}
     for phrase, s in stats.items():
-        hits = s["hits"]
-        if len(hits) <= SAMPLE_N:
-            samples[phrase] = list(hits)
-        else:
-            samples[phrase] = rng.sample(hits, SAMPLE_N)
+        if s["pass_fail"] != "pass":
+            continue
+        hits = list(s["hits"])
+        if not hits:
+            samples[phrase] = []
+            continue
+        rng.shuffle(hits)
+        per_company: dict[str, int] = defaultdict(int)
+        selected: list[HitRow] = []
+        for h in hits:
+            if per_company[h.slug] < 3:
+                selected.append(h)
+                per_company[h.slug] += 1
+        if len(selected) > SAMPLE_N:
+            selected = rng.sample(selected, SAMPLE_N)
+        samples[phrase] = selected
     return samples
 
 
@@ -359,17 +380,21 @@ def write_candidates_md(
     samples: dict[str, list[HitRow]],
     docs: list[dict],
     out_path: Path,
+    total_latin: int,
     cfg_matching_mode: str,
 ) -> None:
+    n_pass = sum(1 for s in stats.values() if s["pass_fail"] == "pass")
+    n_fail = sum(1 for s in stats.values() if s["pass_fail"] == "fail")
     lines: list[str] = [
         "# Candidate Term Evidence",
         "",
-        f"_Generated: 2026-10-06  |  corpus: all scored annual/integrated reports of 65 active companies_",
+        "_Generated: 2026-10-09  |  corpus: 390 source_documents (annual/integrated, auto_ok, not superseded) across 65 active companies_",
         f"_Matching settings: lemma_based (LEMMA attr) or exact (LOWER attr) per term; "
         f"overlap_resolution={cfg_matching_mode}; financial-statements and ToC pages excluded_",
-        f"_Sample seed: {SAMPLE_SEED}  |  sample_n: {SAMPLE_N}_",
-        f"_Scored reports in corpus: {len(docs)}_",
-        f"_Total Latin narrative words: {sum(d['latin_word_count'] for d in docs):,}_",
+        f"_Sample seed: {SAMPLE_SEED}  |  sample_n: {SAMPLE_N}  |  max 3 sentences per company_",
+        f"_FREQUENCY TEST: PASS if % material-industry reports ≥ {FREQ_THRESHOLD:.0f}%  |  {n_pass} PASS / {n_fail} FAIL_",
+        f"_Reports in corpus: {len(docs)}_",
+        f"_Total Latin narrative words: {total_latin:,}_",
         "",
     ]
 
@@ -381,31 +406,32 @@ def write_candidates_md(
             lines += [
                 f"## {cat}",
                 "",
-                "| Term | Match | Reports (all) | % all | Reports (material) | % material | Material denominator | Mentions | per 1,000 w | Top industries |",
-                "|---|---|---:|---:|---:|---:|---:|---:|---:|---|",
+                "| Term | PASS/FAIL | Match | Reports (all) | % all | Reports (material) | % material | Material denominator | Mentions | per 1,000 w | Top industries |",
+                "|---|:---:|---|---:|---:|---:|---:|---:|---:|---:|---|",
             ]
         match_type = "lemma" if lemma_based else "exact"
         top3 = "; ".join(f"{ind} ({n})" for ind, n in s["top_industries"]) if s["top_industries"] else "—"
-        flag = "" if s["total_mentions"] > 0 else " ⚠️ ZERO"
-        few_flag = " ⚠️ FEW (<5)" if 0 < s["total_mentions"] < 5 else ""
+        pf_badge = "✅ PASS" if s["pass_fail"] == "pass" else "❌ FAIL"
         lines.append(
-            f"| `{phrase}`{flag}{few_flag} | {match_type} | {s['n_reports']} | {s['pct_all']:.1f}% "
+            f"| `{phrase}` | {pf_badge} | {match_type} | {s['n_reports']} | {s['pct_all']:.1f}% "
             f"| {s['n_mat_reports']} | {s['pct_material']:.1f}% | {s['n_mat_docs']} "
             f"| {s['total_mentions']} | {s['per_1000_words']:.4f} | {top3} |"
         )
 
-    # Sample sentences section
-    lines += ["", "---", "", "## Sample sentences (≤20 per term, seed=20261006)", ""]
+    # Sample sentences (all terms, for analyst reference)
+    lines += ["", "---", "", "## Sample sentences (PASS terms only; ≤20 per term, max 3 per company, seed=20261006)", ""]
     for phrase, cat, _ in CANDIDATES:
+        s = stats[phrase]
+        if s["pass_fail"] != "pass":
+            continue
         sents = samples.get(phrase, [])
         lines += [f"### `{phrase}` — {cat}", ""]
         if not sents:
             lines += ["_No matches in corpus._", ""]
             continue
-        lines.append(f"_{len(sents)} sentence(s) shown (of {stats[phrase]['total_mentions']} total)_")
+        lines.append(f"_{len(sents)} sentence(s) shown (of {s['total_mentions']} total)_")
         lines.append("")
         for h in sents:
-            # Truncate long sentences for readability
             text = h.sentence[:300] + ("…" if len(h.sentence) > 300 else "")
             lines.append(
                 f"- **{h.company_name}** FY{h.fiscal_year} p.{h.page_number}: "
@@ -420,11 +446,12 @@ def write_candidates_md(
 # ── Output: coding_sheet.xlsx ─────────────────────────────────────────────────
 
 def write_coding_sheet(
+    stats: dict,
     samples: dict[str, list[HitRow]],
     out_path: Path,
 ) -> None:
     import openpyxl
-    from openpyxl.styles import Font, PatternFill, Alignment
+    from openpyxl.styles import Alignment, Font, PatternFill
 
     wb = openpyxl.Workbook()
     ws = wb.active
@@ -437,24 +464,24 @@ def write_coding_sheet(
     ]
     ws.append(headers)
 
-    # Style header row
     header_fill = PatternFill("solid", fgColor="4472C4")
     header_font = Font(bold=True, color="FFFFFF")
-    coder_fill  = PatternFill("solid", fgColor="FFF2CC")  # light yellow for coder cols
+    coder_fill  = PatternFill("solid", fgColor="FFF2CC")
     for col_idx, cell in enumerate(ws[1], start=1):
         cell.font      = header_font
         cell.fill      = header_fill
         cell.alignment = Alignment(wrap_text=True, vertical="center")
         if col_idx >= 7:
-            cell.fill = PatternFill("solid", fgColor="2E74B5")  # darker blue for coder
+            cell.fill = PatternFill("solid", fgColor="2E74B5")
 
     def _clean(s: str) -> str:
-        """Strip control characters that openpyxl rejects; collapse whitespace."""
         s = re.sub(r"[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]", " ", s)
         return re.sub(r"[\t\n\r]+", " ", s).strip()
 
     row_num = 2
-    for phrase, cat, _ in CANDIDATES:
+    for phrase, _cat, _ in CANDIDATES:
+        if stats.get(phrase, {}).get("pass_fail") != "pass":
+            continue
         for h in samples.get(phrase, []):
             ws.append([
                 phrase,
@@ -463,15 +490,13 @@ def write_coding_sheet(
                 h.fiscal_year,
                 h.page_number,
                 _clean(h.sentence),
-                "",  # ESG-relevant — EMPTY for human coder
-                "",  # Comment    — EMPTY for human coder
+                "",
+                "",
             ])
-            # Highlight coder columns
             ws.cell(row=row_num, column=7).fill = coder_fill
             ws.cell(row=row_num, column=8).fill = coder_fill
             row_num += 1
 
-    # Column widths
     ws.column_dimensions["A"].width = 28
     ws.column_dimensions["B"].width = 40
     ws.column_dimensions["C"].width = 38
@@ -481,7 +506,6 @@ def write_coding_sheet(
     ws.column_dimensions["G"].width = 22
     ws.column_dimensions["H"].width = 30
 
-    # Wrap sentence column
     for row in ws.iter_rows(min_row=2, min_col=6, max_col=6):
         for cell in row:
             cell.alignment = Alignment(wrap_text=True, vertical="top")
@@ -493,10 +517,18 @@ def write_coding_sheet(
 # ── Main ──────────────────────────────────────────────────────────────────────
 
 def main() -> None:
+    from app.config import settings as app_settings
     from app.crawler import register_all_mappers
     from app.services.matcher import TaxonomyMatcher
     from app.services.verity_config import load_verity_config
     register_all_mappers()
+
+    # Disable OCR for this read-only analysis: candidate terms are English phrases
+    # that won't appear in scanned/Arabic pages. Tesseract on a scanned MENA
+    # annual report page can take minutes per page, blocking the whole run.
+    # Setting the threshold to 0 means every page passes the native-text check,
+    # so extract_pdf_pages never falls back to Tesseract.
+    app_settings.ocr_trigger_char_threshold = 0
 
     db_url = os.environ.get("DATABASE_URL", "")
     if not db_url:
@@ -512,16 +544,15 @@ def main() -> None:
     print("Loading workbook industry mappings…")
     name_to_industry, cat_industries = load_materiality(workbook_path)
 
-    print("Querying scored documents from DB…")
-    docs = load_scored_docs(db_url)
-    print(f"  {len(docs)} scored source_documents")
+    print("Querying eligible source_documents from DB…")
+    docs = load_all_docs(db_url)
+    print(f"  {len(docs)} source_documents")
 
-    # Attach normalised industry from workbook (overrides DB industry if available)
+    # Attach normalised industry from workbook (overrides DB value when available)
     for d in docs:
         matched = name_to_industry.get(d["name"])
         if matched:
             d["industry"] = matched
-        # else keep d["industry"] from DB (already normalised)
 
     cfg = load_verity_config()
     print(f"  matching_mode from config: {cfg.matching_mode}")
@@ -538,11 +569,27 @@ def main() -> None:
 
     print(f"Processing {len(docs)} documents…")
     all_hits: list[HitRow] = []
+    total_latin = 0
     t0 = time.monotonic()
     for idx, doc in enumerate(docs, start=1):
         t_doc = time.monotonic()
-        hits = process_document(doc, matcher, id_to_phrase, id_to_cat, cfg)
+        # Run in a daemon thread with a timeout so a hung document (e.g. a very
+        # large PDF that causes spaCy to take >5 min) doesn't block the whole run.
+        _result: list[tuple[list[HitRow], int] | None] = [None]
+        _done = threading.Event()
+        def _worker(_doc=doc, _r=_result, _e=_done) -> None:
+            _r[0] = process_document(_doc, matcher, id_to_phrase, id_to_cat, cfg)
+            _e.set()
+        _t = threading.Thread(target=_worker, daemon=True)
+        _t.start()
+        if not _done.wait(timeout=_DOC_TIMEOUT_SECS):
+            print(f"  TIMEOUT {doc['slug']} FY{doc['fiscal_year']}: exceeded {_DOC_TIMEOUT_SECS}s")
+            hits, latin_wc = [], 0
+        else:
+            hits, latin_wc = _result[0]  # type: ignore[misc]
         elapsed = time.monotonic() - t_doc
+        doc["latin_word_count"] = latin_wc
+        total_latin += latin_wc
         all_hits.extend(hits)
         if idx % 10 == 0 or idx == len(docs):
             print(
@@ -551,23 +598,30 @@ def main() -> None:
             )
 
     print(f"Total hits: {len(all_hits)}")
+    print(f"Total Latin narrative words: {total_latin:,}")
     print("Computing statistics…")
-    stats = compute_stats(all_hits, docs, name_to_industry, cat_industries)
-    samples = sample_hits(stats)
+    stats = compute_stats(all_hits, docs, name_to_industry, cat_industries, total_latin)
 
-    # Zero / few flags
-    n_zero = sum(1 for s in stats.values() if s["total_mentions"] == 0)
-    n_few  = sum(1 for s in stats.values() if 0 < s["total_mentions"] < 5)
-    print(f"  {n_zero} terms with ZERO matches, {n_few} terms with < 5 matches")
+    n_pass = sum(1 for s in stats.values() if s["pass_fail"] == "pass")
+    n_fail = sum(1 for s in stats.values() if s["pass_fail"] == "fail")
+    print(f"  FREQUENCY TEST ({FREQ_THRESHOLD:.0f}% threshold): {n_pass} PASS / {n_fail} FAIL")
+    for phrase, s in stats.items():
+        marker = "PASS" if s["pass_fail"] == "pass" else "FAIL"
+        print(f"    [{marker}] {phrase!r:45s}  {s['pct_material']:.1f}% of material reports  ({s['n_mat_reports']}/{s['n_mat_docs']})")
+
+    samples = sample_hits(stats)
+    coding_rows = sum(len(v) for v in samples.values())
+    print(f"  Coding sheet: {coding_rows} rows across {len(samples)} PASS terms")
 
     print("Writing outputs…")
     write_candidates_md(
         stats, samples, docs, out_dir / "CANDIDATES.md",
+        total_latin=total_latin,
         cfg_matching_mode=cfg.matching_mode,
     )
-    write_coding_sheet(samples, out_dir / "coding_sheet.xlsx")
+    write_coding_sheet(stats, samples, out_dir / "coding_sheet.xlsx")
 
-    print("\nDone.")
+    print(f"\nDone.  PASS={n_pass}  FAIL={n_fail}  coding_sheet_rows={coding_rows}")
 
 
 if __name__ == "__main__":
