@@ -46,6 +46,7 @@ frontend/playwright-report/
 frontend/test-results/
 
 # Session artefacts / temp outputs
+_*.log
 backend/_*.log
 backend/_*.json
 backend/_openapi.json
