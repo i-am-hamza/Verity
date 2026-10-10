@@ -1,8 +1,7 @@
 """Phase 3 step E: robustness checks on v4 scores.
 
-Runs three weight variants (1.25, 2.0, unweighted) and one industry-adjusted
-ranking variant, then reports Spearman correlations with the main 1.5-weight
-composite and lists the 5 biggest movers.
+Runs three weight variants (1.25, 2.0, unweighted) and reports Spearman
+correlations with the main 1.5-weight composite and lists the 5 biggest movers.
 
 Also runs the "without 5 added companies" check (Gulf Hotels, Jazeera Steel,
 Salam, Barwa, Jazeera Airways).
@@ -210,61 +209,8 @@ def main() -> int:
         print(f"  {label:<28} {rho:>8.4f}  {', '.join(movers[:2])}")
     print()
 
-    # ---- Industry-adjusted ranking ----
-    # Instead of pooling all 390, rank within each SASB industry separately,
-    # then rescale to 0-10 within that pool.
-    print("Industry-adjusted ranking (rank within SASB industry, then pool Spearman):")
-    from collections import defaultdict as dd2
-
-    from scripts.compute_ranks import _rank_scores
-
-    industry_groups: dict[str, list[int]] = dd2(list)
-    for i, r in enumerate(reports):
-        inst = inst_map.get(r.institution_id)
-        ind = inst.sasb_industry if inst else "Unknown"
-        industry_groups[ind or "Unknown"].append(i)
-
-    e_ind = [None] * len(reports)
-    s_ind = [None] * len(reports)
-    g_ind = [None] * len(reports)
-
-    for _ind, idxs in industry_groups.items():
-        ev = [reports[i].e_density for i in idxs]
-        sv = [reports[i].s_density for i in idxs]
-        gv = [reports[i].g_density for i in idxs]
-        er = _rank_scores(ev)
-        sr = _rank_scores(sv)
-        gr = _rank_scores(gv)
-        for k, idx in enumerate(idxs):
-            e_ind[idx] = er[k]
-            s_ind[idx] = sr[k]
-            g_ind[idx] = gr[k]
-
-    ind_comp = []
-    for e, s, g in zip(e_ind, s_ind, g_ind, strict=True):
-        if e is not None and s is not None and g is not None:
-            ind_comp.append((e + s + g) / 3.0)
-        else:
-            ind_comp.append(None)
-
-    pairs = [(m, a) for m, a in zip(main_composite, ind_comp, strict=True)
-             if m is not None and a is not None]
-    if pairs:
-        ms, als = zip(*pairs, strict=True)
-        rho = _spearman(list(ms), list(als))
-        print(f"  Spearman rho (main pool vs industry-adjusted): {rho:.4f}")
-        diffs = [(abs(a - m), i) for i, (m, a) in enumerate(zip(main_composite, ind_comp, strict=True))
-                 if m is not None and a is not None]
-        diffs.sort(reverse=True)
-        print("  Top 5 movers under industry-adjusted ranking:")
-        for _, i in diffs[:5]:
-            inst = inst_map.get(reports[i].institution_id)
-            sl = inst.slug if inst else "?"
-            print(f"    {sl:<40} FY{reports[i].fiscal_year}  "
-                  f"main={main_composite[i]:.3f}  ind-adj={ind_comp[i]:.3f}")
-    print()
-
     # ---- Without 5 added companies ----
+    from scripts.compute_ranks import _rank_scores
     print("Without 5 added companies (Gulf Hotels, Jazeera Steel, Salam, Barwa, Jazeera Airways):")
     keep_idxs = [i for i, r in enumerate(reports)
                  if inst_map.get(r.institution_id) and
