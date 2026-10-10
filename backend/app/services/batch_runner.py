@@ -47,6 +47,20 @@ from app.services.verity_config import load_verity_config
 log = logging.getLogger("verity.batch")
 
 
+def _worker_env_init(env_snapshot: dict[str, str]) -> None:
+    """Re-apply the parent's runtime environment in each spawned worker.
+
+    ProcessPoolExecutor on Windows uses the 'spawn' start method, so worker
+    processes do not inherit os.environ changes made after process start
+    (e.g., values injected by the tool runner that never reached the system
+    environment). Passing a snapshot ensures R2 credentials and other
+    runtime vars are available inside workers.
+    """
+    for k, v in env_snapshot.items():
+        if k not in os.environ:
+            os.environ[k] = v
+
+
 @dataclass
 class BatchSummary:
     scored: int = 0
@@ -265,7 +279,12 @@ def run_batch(
                 )
             _handle(res, idx)
     else:
-        with ProcessPoolExecutor(max_workers=worker_n) as pool:
+        env_snapshot = dict(os.environ)
+        with ProcessPoolExecutor(
+            max_workers=worker_n,
+            initializer=_worker_env_init,
+            initargs=(env_snapshot,),
+        ) as pool:
             futures = {
                 pool.submit(
                     _run_pipeline_cpu,

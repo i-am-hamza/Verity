@@ -19,8 +19,13 @@ import argparse
 import contextlib
 import logging
 import sys
+from pathlib import Path
 
-from app.crawler.config import make_user_agent
+from dotenv import load_dotenv
+
+load_dotenv(Path(__file__).resolve().parents[1] / ".env")
+
+from app.crawler.config import make_user_agent  # noqa: E402
 
 
 def _force_utf8_stdout() -> None:

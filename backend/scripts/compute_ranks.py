@@ -69,6 +69,9 @@ def _rank_scores(values: list[float | None]) -> list[float | None]:
 
 
 def main(dry_run: bool = False) -> int:
+    import app.models.provenance
+    import app.models.score
+    import app.models.taxonomy  # noqa: F401
     from app.database import SessionLocal
     from app.models.institution import Institution
     from app.models.report import Report, ReportStatus
