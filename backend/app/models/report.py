@@ -98,6 +98,36 @@ class Report(Base):
     all_mode_extra_matches: Mapped[int | None] = mapped_column(nullable=True)
     composite_score: Mapped[float | None] = mapped_column(Float, nullable=True)
 
+    # v4 scoring fields -------------------------------------------------------
+    # narrative_word_count: Latin words on the pages the matcher actually
+    # searched (i.e. after text-quality cleaning: FS excluded, ToC excluded).
+    # This is the denominator for all v4 density calculations.
+    narrative_word_count: Mapped[int] = mapped_column(default=0)
+
+    # Pillar densities: (sum of weighted core-term matches for pillar)
+    # / narrative_word_count * 1000. None until scored.
+    e_density: Mapped[float | None] = mapped_column(Float, nullable=True)
+    s_density: Mapped[float | None] = mapped_column(Float, nullable=True)
+    g_density: Mapped[float | None] = mapped_column(Float, nullable=True)
+
+    # 0-10 rank scores across all 390 company-years pooled (ascending rank).
+    # Set by compute_ranks.py after the full run completes.
+    e_score: Mapped[float | None] = mapped_column(Float, nullable=True)
+    s_score: Mapped[float | None] = mapped_column(Float, nullable=True)
+    g_score: Mapped[float | None] = mapped_column(Float, nullable=True)
+    # composite_score repurposed as simple average(e_score, s_score, g_score).
+
+    # Generic terms (ESG, sustainability, GRI, sustainable development, CSR):
+    # counted separately, excluded from pillars and composite.
+    generic_density: Mapped[float | None] = mapped_column(Float, nullable=True)
+
+    # Financial add-on terms: only populated for the 19 financial companies.
+    addon_density: Mapped[float | None] = mapped_column(Float, nullable=True)
+    addon_rank: Mapped[float | None] = mapped_column(Float, nullable=True)
+
+    # Report type carried from source_document for use as a control variable.
+    report_type: Mapped[str | None] = mapped_column(String, nullable=True)
+
     # Processing review bookkeeping. The source_documents table also has a
     # review_status; this one is specific to the SCORING pass (e.g. an IQR
     # outlier that validated-fine but scored way off its cohort).

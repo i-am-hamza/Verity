@@ -43,6 +43,16 @@ class Term(Base):
     # match "governed/governing/governance" as one hit
     lemma_based: Mapped[bool] = mapped_column(default=True)
 
+    # v4 fields ----------------------------------------------------------------
+    # group: "core" terms contribute to E/S/G pillar densities;
+    #        "addon" terms are scored separately for financial companies only;
+    #        "generic" terms are counted separately and excluded from pillars.
+    group: Mapped[str] = mapped_column(String, default="core")
+    # SASB General Issue Category for materiality-based weighting.
+    # None means "no SASB category" → always weight 1.0.
+    sasb_category_primary: Mapped[str | None] = mapped_column(String, nullable=True)
+    sasb_category_secondary: Mapped[str | None] = mapped_column(String, nullable=True)
+
     category: Mapped[Category] = relationship("Category", back_populates="terms")
 
 

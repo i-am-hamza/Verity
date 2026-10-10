@@ -262,7 +262,6 @@ def _cmd_reproduce(args: argparse.Namespace) -> int:
         tv = _current_taxonomy_version(db)
         terms = db.query(Term).all()
         cats = db.query(Category).all()
-        payload = build_terms_payload(terms, cats)
         cfg = load_verity_config()
 
         scored = (
@@ -305,9 +304,11 @@ def _cmd_reproduce(args: argparse.Namespace) -> int:
                         MatchEvidence.taxonomy_version_id == tv.id)
                 .all()
             )
+            inst_payload = build_terms_payload(terms, cats, inst.sasb_industry)
             wr = _run_pipeline_cpu(
                 source_document_id=rpt.source_document_id or 0,
-                file_path=rpt.file_path, terms_payload=payload, cfg=cfg,
+                file_path=rpt.file_path, terms_payload=inst_payload, cfg=cfg,
+                is_financial=bool(inst.is_financial),
             )
             recomputed = Counter((m.term_id, m.page_number) for m in wr.matches)
 

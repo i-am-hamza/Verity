@@ -25,7 +25,7 @@ from app.models.score import CategoryScore, MatchEvidence
 from app.models.taxonomy import Category, TaxonomyVersion, Term
 from app.services.matcher import TaxonomyMatcher
 from app.services.pdf_extraction import count_words, extract_pdf_pages
-from app.services.scoring import composite_score, score_report_categories
+from app.services.scoring import score_report_categories
 from app.services.storage import read_pdf_bytes
 from app.services.taxonomy_hash import compute_taxonomy_hash
 from app.services.text_processing import segment_sentences
@@ -36,7 +36,7 @@ from app.services.verity_config import VerityConfig, load_verity_config
 # CategoryScore / MatchEvidence row so historical scores stay linked to the
 # code path that produced them. 0.3.0 adds the Session 5 text-quality
 # switches (header/footer removal, contents detection, FS boundary).
-PIPELINE_VERSION = "0.3.0"
+PIPELINE_VERSION = "0.4.0"
 
 
 # --------------------------------------------------------------------------- #
@@ -97,6 +97,15 @@ class WorkerResult:
     category_scores: list[CategoryScoreRow] = field(default_factory=list)
     composite: float | None = None
 
+    # v4 density fields (narrative denominator, post-cleaning)
+    narrative_word_count: int = 0
+    e_density: float | None = None
+    s_density: float | None = None
+    g_density: float | None = None
+    generic_density: float | None = None
+    addon_density: float | None = None
+    report_type: str | None = None
+
     # Review bookkeeping specific to processing (vs source_document review).
     processing_review_status: str = "auto_ok"
     processing_review_reason: str | None = None
@@ -114,10 +123,11 @@ def _run_pipeline_cpu(
     file_path: str,
     terms_payload: list[dict],
     cfg: VerityConfig,
+    is_financial: bool = False,
 ) -> WorkerResult:
     """CPU-side of the pipeline. terms_payload is a plain-dict snapshot of
     the Term rows so this function stays serialisable across processes.
-    Each dict: {id, phrase, weight, lemma_based, category_id}.
+    Each dict: {id, phrase, weight, lemma_based, category_id, group, pillar}.
     """
     t_total = time.monotonic()
     result = WorkerResult(source_document_id=source_document_id, file_path=file_path,
@@ -211,23 +221,48 @@ def _run_pipeline_cpu(
         all_matches = _match_with_mode(longest_matcher, sentences, "all")
         result.all_mode_extra_matches = max(0, len(all_matches) - len(longest))
 
-    # Score (density per 1000 Latin words — denominator is the FULL report's
-    # Latin word count, matching Session 1's definition; cleaning changes
-    # which sentences are matched, not the denominator).
+    # v4 denominator: Latin words on the pages the matcher actually searched
+    # (post-cleaning: FS excluded, ToC excluded, heavily-Arabic pages dropped).
+    narrative_wc = count_words(pages_for_match).latin
+    result.narrative_word_count = narrative_wc
+
+    # Per-category scores (evidence rows). Denominator is narrative_wc so
+    # density_per_1000_words is consistent with the pillar densities below.
     term_lookup = {t.id: t for t in terms}
-    category_results = score_report_categories(longest, term_lookup, counts.latin)
+    category_results = score_report_categories(longest, term_lookup, narrative_wc)
     result.category_scores = [
         CategoryScoreRow(category_id=c.category_id,
                          raw_weighted_count=c.raw_weighted_count,
                          density_per_1000_words=c.density_per_1000_words)
         for c in category_results
     ]
-    # Convenience composite: sum of (density * category_weight). The scorer
-    # expects a {category_id: weight} dict so pass taxonomy-stored weights.
-    cat_weights = {t.category_id: t.category_weight for t in terms}
-    # Collapse duplicates (same category_id across many terms with the same weight).
-    cat_weights = dict(cat_weights.items())
-    result.composite = composite_score(category_results, cat_weights)
+
+    # v4 pillar densities: weighted core matches per pillar / narrative_wc * 1000.
+    # Generic and addon are counted separately.
+    # composite_score (rank-based average of e/s/g 0-10) is left null here;
+    # compute_ranks.py fills it after the full run.
+    if narrative_wc > 0:
+        k = 1000.0 / narrative_wc
+        e_raw = s_raw = g_raw = gen_raw = adn_raw = 0.0
+        for m in longest:
+            trm = term_lookup[m.term_id]
+            if trm.group == "core":
+                if trm.pillar == "Environmental":
+                    e_raw += trm.weight
+                elif trm.pillar == "Social":
+                    s_raw += trm.weight
+                elif trm.pillar == "Governance":
+                    g_raw += trm.weight
+            elif trm.group == "generic":
+                gen_raw += trm.weight
+            elif trm.group == "addon":
+                adn_raw += trm.weight
+        result.e_density = round(e_raw * k, 6)
+        result.s_density = round(s_raw * k, 6)
+        result.g_density = round(g_raw * k, 6)
+        result.generic_density = round(gen_raw * k, 6)
+        if is_financial:
+            result.addon_density = round(adn_raw * k, 6)
 
     result.matches = [
         TermMatchRow(term_id=m.term_id, page_number=m.page_number,
@@ -242,16 +277,20 @@ class _TermLike:
     """Plain object stand-in for Term ORM rows inside workers — needed
     because ORM instances aren't pickleable across process boundaries.
     """
-    __slots__ = ("category_id", "category_weight", "id", "lemma_based", "phrase", "weight")
+    __slots__ = ("category_id", "category_weight", "group", "id", "lemma_based",
+                 "phrase", "pillar", "weight")
 
     def __init__(self, id: int, phrase: str, weight: float, lemma_based: bool,
-                 category_id: int, category_weight: float) -> None:
+                 category_id: int, category_weight: float,
+                 group: str, pillar: str) -> None:
         self.id = id
         self.phrase = phrase
         self.weight = weight
         self.lemma_based = lemma_based
         self.category_id = category_id
         self.category_weight = category_weight
+        self.group = group
+        self.pillar = pillar
 
 
 def _match_with_mode(matcher: TaxonomyMatcher, sentences: list, mode: str):
@@ -270,18 +309,31 @@ def _match_with_mode(matcher: TaxonomyMatcher, sentences: list, mode: str):
         matcher_module.load_verity_config = original
 
 
-def build_terms_payload(terms: list[Term], categories: list[Category]) -> list[dict]:
-    """Snapshot every Term as a plain dict (+ its category weight so
-    the worker can compute composite without a DB session)."""
+def build_terms_payload(
+    terms: list[Term],
+    categories: list[Category],
+    sasb_industry: str | None = None,
+) -> list[dict]:
+    """Snapshot every Term as a plain dict for the CPU worker.
+
+    v4: weight is dynamic (1.5 if SASB category is material for the
+    company's industry, else 1.0). group and pillar are included so the
+    worker can route matches to the right density bucket.
+    """
+    from app.services.sasb_materiality import term_weight as _tw
+
     cat_weight = {c.id: c.weight for c in categories}
+    cat_pillar = {c.id: c.pillar for c in categories}
     return [
         {
             "id": t.id,
             "phrase": t.phrase,
-            "weight": float(t.weight),
+            "weight": _tw(t.sasb_category_primary, t.sasb_category_secondary, sasb_industry),
             "lemma_based": bool(t.lemma_based),
             "category_id": t.category_id,
             "category_weight": float(cat_weight.get(t.category_id, 1.0)),
+            "group": t.group,
+            "pillar": cat_pillar.get(t.category_id, ""),
         }
         for t in terms
     ]
@@ -372,7 +424,14 @@ def persist_worker_result(
         financial_statements_excluded_pages=worker_result.financial_statements_excluded_pages,
         matches_count=worker_result.matches_count,
         all_mode_extra_matches=worker_result.all_mode_extra_matches,
-        composite_score=worker_result.composite,
+        composite_score=None,  # set by compute_ranks.py after full run
+        narrative_word_count=worker_result.narrative_word_count,
+        e_density=worker_result.e_density,
+        s_density=worker_result.s_density,
+        g_density=worker_result.g_density,
+        generic_density=worker_result.generic_density,
+        addon_density=worker_result.addon_density,
+        report_type=worker_result.report_type,
         processing_review_status=worker_result.processing_review_status,
         processing_review_reason=worker_result.processing_review_reason,
     )
@@ -412,6 +471,8 @@ def persist_worker_result(
 
 def process_report(db: Session, report: Report) -> Report:
     """Run the full pipeline synchronously against an existing Report."""
+    from app.models.institution import Institution
+
     cfg = load_verity_config()
     terms = db.query(Term).all()
     categories = db.query(Category).all()
@@ -419,11 +480,15 @@ def process_report(db: Session, report: Report) -> Report:
         raise ValueError(
             "No taxonomy terms defined yet — add categories/terms before scoring reports."
         )
-    payload = build_terms_payload(terms, categories)
+    institution = db.query(Institution).filter(Institution.id == report.institution_id).first()
+    sasb_industry = institution.sasb_industry if institution else None
+    is_financial = bool(institution and institution.is_financial)
+    payload = build_terms_payload(terms, categories, sasb_industry)
     tv = _current_taxonomy_version(db)
     worker = _run_pipeline_cpu(
         source_document_id=report.source_document_id or 0,
         file_path=report.file_path, terms_payload=payload, cfg=cfg,
+        is_financial=is_financial,
     )
     # Fold the worker result back onto the existing Report row.
     for col in ("extract_seconds", "segment_seconds", "match_seconds", "total_seconds",
@@ -432,10 +497,12 @@ def process_report(db: Session, report: Report) -> Report:
                 "repeated_lines_removed", "pages_mostly_arabic",
                 "financial_statements_start_page", "financial_statements_excluded_pages",
                 "matches_count", "all_mode_extra_matches",
+                "narrative_word_count", "e_density", "s_density", "g_density",
+                "generic_density", "addon_density",
                 "processing_review_status", "processing_review_reason"):
         setattr(report, col, getattr(worker, col))
     report.excluded_contents_pages = worker.excluded_contents_pages or None
-    report.composite_score = worker.composite
+    report.composite_score = None  # set by compute_ranks.py after full run
     report.taxonomy_version = tv.hash
     report.pipeline_version = PIPELINE_VERSION
     report.status = (ReportStatus.scored if worker.status == "scored"

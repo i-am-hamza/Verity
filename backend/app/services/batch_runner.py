@@ -140,7 +140,6 @@ def run_batch(
         raise RuntimeError(
             "No taxonomy terms in the DB. Load seed/taxonomy_starter.json first."
         )
-    payload = build_terms_payload(terms, categories)
     tv = _current_taxonomy_version(db)
 
     candidates, skipped_type, skipped_review = _select_candidates(
@@ -172,10 +171,25 @@ def run_batch(
               f"  (type-filter skipped {skipped_type}, source-review skipped {skipped_review})")
         return summary
 
-    # Snapshot (institution_id, fiscal_year, file_path) up front since the
-    # worker returns a WorkerResult referring to source_document_id only.
+    # v4: build one payload per institution so SASB materiality weights (1.5/1.0)
+    # are tailored to each company's industry. Institutions sharing the same
+    # sasb_industry get identical payloads; the dict deduplicates by institution_id.
+    institutions = {i.id: i for i in db.query(Institution).filter(Institution.active).all()}
+    payload_by_inst: dict[int, list[dict]] = {}
+    for inst in institutions.values():
+        payload_by_inst[inst.id] = build_terms_payload(terms, categories, inst.sasb_industry)
+
+    # Snapshot per-SourceDocument metadata up front (workers return WorkerResult
+    # by source_document_id only and have no DB access).
     sd_meta = {
-        sd.id: (sd.institution_id, sd.fiscal_year, sd.file_path, sd.institution.slug)
+        sd.id: (
+            sd.institution_id,
+            sd.fiscal_year,
+            sd.file_path,
+            sd.institution.slug,
+            bool(sd.institution.is_financial),
+            sd.report_type.value if sd.report_type else None,
+        )
         for sd in to_run
     }
 
@@ -204,7 +218,9 @@ def run_batch(
     timings: list[float] = []
 
     def _handle(result: WorkerResult, idx: int) -> None:
-        iid, fy_, _path, slug = sd_meta[result.source_document_id]
+        iid, fy_, _path, slug, _is_fin, rtype = sd_meta[result.source_document_id]
+        if result.report_type is None:
+            result.report_type = rtype
         _progress(idx, len(to_run), result, slug, fy_)
         timings.append(result.total_seconds or 0.0)
         try:
@@ -224,13 +240,23 @@ def run_batch(
         else:
             summary.errors += 1
 
+    _fallback_payload = next(iter(payload_by_inst.values()))
+
+    def _inst_payload(inst_id: int) -> list[dict]:
+        return payload_by_inst.get(inst_id) or _fallback_payload
+
+    def _is_financial(inst_id: int) -> bool:
+        inst = institutions.get(inst_id)
+        return bool(inst and inst.is_financial)
+
     if worker_n == 1:
         # Simpler single-process path — easier debugging + accurate timings.
         for idx, sd in enumerate(to_run, start=1):
             try:
                 res = _run_pipeline_cpu(
                     source_document_id=sd.id, file_path=sd.file_path,
-                    terms_payload=payload, cfg=cfg,
+                    terms_payload=_inst_payload(sd.institution_id), cfg=cfg,
+                    is_financial=_is_financial(sd.institution_id),
                 )
             except Exception as exc:
                 res = WorkerResult(
@@ -244,7 +270,9 @@ def run_batch(
                 pool.submit(
                     _run_pipeline_cpu,
                     source_document_id=sd.id, file_path=sd.file_path,
-                    terms_payload=payload, cfg=cfg,
+                    terms_payload=_inst_payload(sd.institution_id),
+                    cfg=cfg,
+                    is_financial=_is_financial(sd.institution_id),
                 ): sd for sd in to_run
             }
             for idx, fut in enumerate(as_completed(futures), start=1):

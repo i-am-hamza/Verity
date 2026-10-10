@@ -62,6 +62,11 @@ class Institution(Base):
     # that cares about "active universe" filters on this flag.
     active: Mapped[bool] = mapped_column(default=True, index=True)
 
+    # v4 materiality: SASB industry from Verity_SASB_Mapping_Signed.xlsx.
+    # Used at scoring time to decide which SASB categories are material
+    # (weight 1.5) vs non-material (weight 1.0) for this institution.
+    sasb_industry: Mapped[str | None] = mapped_column(String, nullable=True, index=True)
+
     reports: Mapped[list[Report]] = relationship(
         "Report", back_populates="institution", cascade="all, delete-orphan"
     )
