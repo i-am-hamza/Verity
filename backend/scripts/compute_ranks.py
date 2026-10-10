@@ -79,8 +79,10 @@ def main(dry_run: bool = False) -> int:
 
     db = SessionLocal()
 
-    # Load all scored reports under the current pipeline version
-    reports = (
+    # Load all scored reports under the current pipeline version.
+    # When --force produced duplicate rows for the same source_document under the
+    # same pipeline version, keep only the latest (highest id) per source_document.
+    all_scored = (
         db.query(Report)
         .join(Institution, Institution.id == Report.institution_id)
         .filter(
@@ -88,15 +90,35 @@ def main(dry_run: bool = False) -> int:
             Report.pipeline_version == PIPELINE_VERSION,
             Institution.active,
         )
-        .order_by(Institution.id, Report.fiscal_year)
+        .order_by(Institution.id, Report.fiscal_year, Report.id)
         .all()
     )
+
+    # Deduplicate: for each (source_document_id, pipeline_version) keep the row
+    # with the highest id. source_document_id may be None for legacy rows — fall
+    # back to (institution_id, fiscal_year) in that case.
+    seen: dict[tuple, int] = {}  # key → index in reports list
+    reports_dedup: list = []
+    for r in all_scored:
+        key = (r.source_document_id, PIPELINE_VERSION) if r.source_document_id else (r.institution_id, r.fiscal_year, PIPELINE_VERSION)
+        if key in seen:
+            # Replace with newer row (higher id)
+            reports_dedup[seen[key]] = r
+        else:
+            seen[key] = len(reports_dedup)
+            reports_dedup.append(r)
+    reports = reports_dedup
 
     if not reports:
         print(f"No scored reports found for pipeline_version={PIPELINE_VERSION}")
         return 1
 
-    print(f"Found {len(reports)} scored reports (pipeline={PIPELINE_VERSION})")
+    n_raw = len(all_scored)
+    n_dedup = len(reports)
+    if n_raw != n_dedup:
+        print(f"Found {n_raw} scored rows -> deduplicated to {n_dedup} (pipeline={PIPELINE_VERSION})")
+    else:
+        print(f"Found {n_dedup} scored reports (pipeline={PIPELINE_VERSION})")
 
     # Load institution lookup for is_financial check
     inst_map: dict[int, Institution] = {

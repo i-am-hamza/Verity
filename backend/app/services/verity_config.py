@@ -43,6 +43,10 @@ class VerityConfig:
     header_footer_repeat_ratio: float = 0.30
     arabic_page_token_ratio: float = 0.50
     ocr_max_page_ratio: float = 0.40
+    # Researcher-approved SHA-256s whose OCR ratio exceeds ocr_max_page_ratio.
+    # The OCR cap check is bypassed for these documents so that re-runs don't
+    # revert them to needs_review after a human has already inspected them.
+    ocr_approved_sha256s: list[str] = field(default_factory=list)
     log_all_mode_diff: bool = True
     financial_statement_boundary_markers: list[str] = field(
         default_factory=lambda: list(_DEFAULT_FS_MARKERS)
@@ -104,6 +108,9 @@ def load_verity_config(path: Path | None = None) -> VerityConfig:
             ),
             ocr_max_page_ratio=float(
                 pipe.get("ocr_max_page_ratio", defaults.ocr_max_page_ratio)
+            ),
+            ocr_approved_sha256s=list(
+                pipe.get("ocr_approved_sha256s", defaults.ocr_approved_sha256s)
             ),
             log_all_mode_diff=bool(
                 pipe.get("log_all_mode_diff", defaults.log_all_mode_diff)

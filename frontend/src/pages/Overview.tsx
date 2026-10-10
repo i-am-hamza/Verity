@@ -3,6 +3,8 @@ import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 
 import {
+  exportCsvUrl,
+  exportXlsxUrl,
   getLeaderboard,
   type LeaderboardRow,
 } from "../lib/api/client";
@@ -141,12 +143,26 @@ export function OverviewPage() {
           </p>
         </div>
         <div className="flex items-center gap-2">
+          <a
+            href={exportXlsxUrl()}
+            download
+            className="rounded-md border border-border bg-surface px-3 py-1.5 text-xs text-text-muted hover:text-text"
+          >
+            Download Excel
+          </a>
+          <a
+            href={exportCsvUrl()}
+            download
+            className="rounded-md border border-border bg-surface px-3 py-1.5 text-xs text-text-muted hover:text-text"
+          >
+            Download CSV
+          </a>
           <button
             type="button"
             onClick={downloadCsv}
             className="rounded-md border border-border bg-surface px-3 py-1.5 text-xs text-text-muted hover:text-text"
           >
-            Export CSV
+            Export filtered CSV
           </button>
         </div>
       </header>

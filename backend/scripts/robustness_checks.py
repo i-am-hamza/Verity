@@ -72,8 +72,8 @@ def main() -> int:
 
     db = SessionLocal()
 
-    # Load all scored reports
-    reports = (
+    # Load all scored reports — deduplicate in case --force created extra rows.
+    all_reports = (
         db.query(Report)
         .join(Institution, Institution.id == Report.institution_id)
         .filter(
@@ -82,9 +82,19 @@ def main() -> int:
             Institution.active,
             Report.e_score.isnot(None),
         )
-        .order_by(Institution.id, Report.fiscal_year)
+        .order_by(Institution.id, Report.fiscal_year, Report.id)
         .all()
     )
+    seen_sd: dict[tuple, int] = {}
+    reports_list: list = []
+    for r in all_reports:
+        key = (r.source_document_id, PIPELINE_VERSION) if r.source_document_id else (r.institution_id, r.fiscal_year, PIPELINE_VERSION)
+        if key in seen_sd:
+            reports_list[seen_sd[key]] = r
+        else:
+            seen_sd[key] = len(reports_list)
+            reports_list.append(r)
+    reports = reports_list
 
     if not reports:
         print("No ranked reports found. Run compute_ranks.py first.")

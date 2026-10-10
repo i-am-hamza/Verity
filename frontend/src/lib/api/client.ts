@@ -161,3 +161,11 @@ export function pdfUrl(reportId: number, page?: number): string {
   const base = `${BASE}/dashboard/pdf/${reportId}`;
   return page ? `${base}#page=${page}` : base;
 }
+
+export function exportXlsxUrl(): string {
+  return `${BASE}/dashboard/export/verity_esg_scores.xlsx`;
+}
+
+export function exportCsvUrl(): string {
+  return `${BASE}/dashboard/export/verity_esg_scores.csv`;
+}

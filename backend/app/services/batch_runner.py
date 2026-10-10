@@ -195,6 +195,7 @@ def run_batch(
 
     # Snapshot per-SourceDocument metadata up front (workers return WorkerResult
     # by source_document_id only and have no DB access).
+    approved_sha256s = set(cfg.ocr_approved_sha256s)
     sd_meta = {
         sd.id: (
             sd.institution_id,
@@ -203,6 +204,7 @@ def run_batch(
             sd.institution.slug,
             bool(sd.institution.is_financial),
             sd.report_type.value if sd.report_type else None,
+            sd.sha256 in approved_sha256s if sd.sha256 else False,
         )
         for sd in to_run
     }
@@ -232,7 +234,7 @@ def run_batch(
     timings: list[float] = []
 
     def _handle(result: WorkerResult, idx: int) -> None:
-        iid, fy_, _path, slug, _is_fin, rtype = sd_meta[result.source_document_id]
+        iid, fy_, _path, slug, _is_fin, rtype, _ocr_ov = sd_meta[result.source_document_id]
         if result.report_type is None:
             result.report_type = rtype
         _progress(idx, len(to_run), result, slug, fy_)
@@ -263,6 +265,9 @@ def run_batch(
         inst = institutions.get(inst_id)
         return bool(inst and inst.is_financial)
 
+    def _ocr_override(sd_id: int) -> bool:
+        return sd_meta[sd_id][6]
+
     if worker_n == 1:
         # Simpler single-process path — easier debugging + accurate timings.
         for idx, sd in enumerate(to_run, start=1):
@@ -271,6 +276,7 @@ def run_batch(
                     source_document_id=sd.id, file_path=sd.file_path,
                     terms_payload=_inst_payload(sd.institution_id), cfg=cfg,
                     is_financial=_is_financial(sd.institution_id),
+                    ocr_override=_ocr_override(sd.id),
                 )
             except Exception as exc:
                 res = WorkerResult(
@@ -292,6 +298,7 @@ def run_batch(
                     terms_payload=_inst_payload(sd.institution_id),
                     cfg=cfg,
                     is_financial=_is_financial(sd.institution_id),
+                    ocr_override=_ocr_override(sd.id),
                 ): sd for sd in to_run
             }
             for idx, fut in enumerate(as_completed(futures), start=1):

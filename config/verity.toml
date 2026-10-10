@@ -24,6 +24,15 @@ arabic_page_token_ratio = 0.50
 # skip the slow OCR pass — a scanned-image report scores worse than it
 # should on a density denominator anyway.
 ocr_max_page_ratio = 0.40
+# SHA-256 hashes of reports that a researcher has manually inspected and
+# approved despite exceeding the OCR cap. The cap check is bypassed for
+# these documents on every future run (permanent researcher override).
+ocr_approved_sha256s = [
+  "f233d20969bfcc41557a795d124159ed5f319b93886e7c6a5cce1940e0340ba4",  # kuwait-telecommunications-company FY2020
+  "a1d0a721104e847c5252131d37af7ef12cc20f95d61d73ef3ce0a942670f2ace",  # air-arabia-pjsc FY2023
+  "af7230c785a92cd0112cb477fef4f8685158fd347bdbd00e958c02c54e487426",  # air-arabia-pjsc FY2024
+  "a4c5617596a46f9c2898519ef3254fff0586db8909774af1d3f38c9e604598ae",  # dubai-islamic-bank FY2021
+]
 # When true, run the shadow all-mode matcher after longest-mode and
 # log how many extra matches "all" would have added. Purely diagnostic
 # (longest is what's scored); keeps us honest about overlap density.

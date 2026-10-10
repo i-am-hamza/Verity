@@ -50,7 +50,7 @@ router = APIRouter(prefix="/dashboard", tags=["dashboard"])
 REPO_ROOT = Path(__file__).resolve().parents[4]
 SENSITIVITY_CSV = REPO_ROOT / "exports" / "sensitivity_summary.csv"
 SENSITIVITY_MD = REPO_ROOT / "docs" / "SENSITIVITY_SUMMARY.md"
-METHODOLOGY_MD = REPO_ROOT / "docs" / "METHODOLOGY.md"
+METHODOLOGY_MD = REPO_ROOT / "docs" / "methodology" / "website_methodology.md"
 
 # Keep the Rabigh artifact table in one place; mirrors scripts/build_leaderboard.py
 # and docs/DECISIONS.md 2026-10-02.
@@ -804,3 +804,36 @@ def export_leaderboard(db: Session = Depends(get_db)):
     return Response(buf.getvalue(), media_type="text/csv",
                     headers={"Content-Disposition":
                              "attachment; filename=leaderboard.csv"})
+
+
+EXPORTS_DIR = REPO_ROOT / "docs" / "exports"
+
+
+@router.get("/export/verity_esg_scores.xlsx")
+def export_xlsx():
+    path = EXPORTS_DIR / "verity_esg_scores.xlsx"
+    if not path.exists():
+        raise HTTPException(
+            status_code=404,
+            detail="verity_esg_scores.xlsx not found. Run scripts/export_esg_scores.py first.",
+        )
+    return Response(
+        content=path.read_bytes(),
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": "attachment; filename=verity_esg_scores.xlsx"},
+    )
+
+
+@router.get("/export/verity_esg_scores.csv")
+def export_csv():
+    path = EXPORTS_DIR / "verity_esg_scores.csv"
+    if not path.exists():
+        raise HTTPException(
+            status_code=404,
+            detail="verity_esg_scores.csv not found. Run scripts/export_esg_scores.py first.",
+        )
+    return Response(
+        content=path.read_bytes(),
+        media_type="text/csv",
+        headers={"Content-Disposition": "attachment; filename=verity_esg_scores.csv"},
+    )

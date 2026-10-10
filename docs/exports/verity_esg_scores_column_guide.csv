@@ -1,0 +1,23 @@
+column,meaning,unit
+Company,Company name,
+Ticker,Stock ticker symbol,
+Country,Country of primary listing,
+SASB sector,SASB macro-sector (11 categories),
+SASB industry,SASB industry (77 categories),
+Financial,Yes = one of the 19 financial companies; No = non-financial,
+Fiscal year,Fiscal year of the annual report,YYYY
+Report type,annual or integrated,
+Environmental (0-10),Rank-normalised Environmental pillar score,0–10
+Social (0-10),Rank-normalised Social pillar score,0–10
+Governance (0-10),Rank-normalised Governance pillar score,0–10
+Composite (0-10),Mean of the three pillar scores,0–10
+E density,"Weighted Environmental term matches per 1,000 narrative words","per 1,000 words"
+S density,"Weighted Social term matches per 1,000 narrative words","per 1,000 words"
+G density,"Weighted Governance term matches per 1,000 narrative words","per 1,000 words"
+General ESG density,"General ESG terms (ESG, sustainability, GRI, …) per 1,000 words","per 1,000 words"
+Banking add-on density,"Financial-sector add-on terms per 1,000 words (financial companies only)","per 1,000 words"
+Banking add-on score,Rank-normalised banking add-on score (financial companies only),0–10
+Words analysed,Latin-script words on narrative pages used as scoring denominator,words
+Total words,Total Latin-script words in the full report,words
+Share of text analysed,Words analysed / Total words,0–1
+Data-quality flag,Non-empty if the report has a known quality issue,

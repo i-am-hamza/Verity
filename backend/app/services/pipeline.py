@@ -124,6 +124,7 @@ def _run_pipeline_cpu(
     terms_payload: list[dict],
     cfg: VerityConfig,
     is_financial: bool = False,
+    ocr_override: bool = False,
 ) -> WorkerResult:
     """CPU-side of the pipeline. terms_payload is a plain-dict snapshot of
     the Term rows so this function stays serialisable across processes.
@@ -164,14 +165,24 @@ def _run_pipeline_cpu(
     result.page_count = total_pages
 
     if ocr_fraction > cfg.ocr_max_page_ratio:
-        result.status = "needs_review"
-        result.processing_review_status = "needs_review"
-        result.processing_review_reason = (
-            f"heavily scanned: {ocr_fraction:.0%} of {total_pages} pages would need "
-            f"OCR (> {cfg.ocr_max_page_ratio:.0%} cap); skipped to avoid multi-hour run"
-        )
-        result.total_seconds = time.monotonic() - t_total
-        return result
+        if ocr_override:
+            # Researcher has permanently approved this document despite the OCR
+            # cap. Log the override so it is visible in processing_review_reason
+            # but continue scoring normally.
+            result.processing_review_status = "auto_ok"
+            result.processing_review_reason = (
+                f"ocr_override: {ocr_fraction:.0%} of {total_pages} pages are scanned "
+                f"(exceeds {cfg.ocr_max_page_ratio:.0%} cap) — approved by researcher"
+            )
+        else:
+            result.status = "needs_review"
+            result.processing_review_status = "needs_review"
+            result.processing_review_reason = (
+                f"heavily scanned: {ocr_fraction:.0%} of {total_pages} pages would need "
+                f"OCR (> {cfg.ocr_max_page_ratio:.0%} cap); skipped to avoid multi-hour run"
+            )
+            result.total_seconds = time.monotonic() - t_total
+            return result
 
     # Extract
     t = time.monotonic()
