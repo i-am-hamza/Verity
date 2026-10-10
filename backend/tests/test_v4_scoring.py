@@ -11,9 +11,10 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
+import itertools
+
 from app.services.sasb_materiality import DEFAULT_WEIGHT, MATERIAL_WEIGHT, term_weight
 from scripts.compute_ranks import _rank_scores
-
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -126,7 +127,7 @@ def test_rank_scores_monotone_range():
     assert result is not None
     assert result[0] == 0.0
     assert result[-1] == 10.0
-    for a, b in zip(result[:-1], result[1:], strict=True):
+    for a, b in itertools.pairwise(result):
         assert a is not None and b is not None
         assert a < b
 

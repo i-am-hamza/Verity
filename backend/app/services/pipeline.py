@@ -36,7 +36,7 @@ from app.services.verity_config import VerityConfig, load_verity_config
 # CategoryScore / MatchEvidence row so historical scores stay linked to the
 # code path that produced them. 0.3.0 adds the Session 5 text-quality
 # switches (header/footer removal, contents detection, FS boundary).
-PIPELINE_VERSION = "0.4.0"
+PIPELINE_VERSION = "0.4.1"
 
 
 # --------------------------------------------------------------------------- #

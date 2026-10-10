@@ -109,3 +109,57 @@ def test_non_overlapping_matches_all_kept(monkeypatch):
         [_sent("The board covers governance and risk management as separate committee remits.")]
     )
     assert sorted(m.term_id for m in matches) == [1, 2]
+
+
+# ── Case-insensitive lemma matching (pipeline 0.4.1 fix) ─────────────────────
+
+
+def test_lemma_match_title_case(monkeypatch):
+    """Title-Case multi-word term: 'Risk Management Committee' should match
+    the 'risk management' lemma pattern.  Before the 0.4.1 fix, spaCy tagged
+    'Risk' and 'Management' as PROPN in this context, giving them capitalised
+    lemmas that did not match the lowercase pattern."""
+    _use_mode(monkeypatch, "longest")
+    terms = [
+        FakeTerm(id=2, phrase="risk management", weight=1.0, lemma_based=True, category_id=1),
+    ]
+    matcher = TaxonomyMatcher(terms)
+    matches = matcher.match_sentences(
+        [_sent("The Risk Management Committee met quarterly to review exposure.")]
+    )
+    assert [m.term_id for m in matches] == [2], (
+        "Title-Case 'Risk Management' must match the lemma-based 'risk management' pattern"
+    )
+
+
+def test_lemma_match_all_caps(monkeypatch):
+    """ALL-CAPS token: 'GOVERNANCE' should match the 'governance' lemma pattern.
+    spaCy assigns lemma 'GOVERNANCE' (PROPN) to an all-caps token, so without
+    pre-lowercasing the sentence the pattern would never fire."""
+    _use_mode(monkeypatch, "longest")
+    terms = [
+        FakeTerm(id=1, phrase="governance", weight=1.0, lemma_based=True, category_id=1),
+    ]
+    matcher = TaxonomyMatcher(terms)
+    matches = matcher.match_sentences(
+        [_sent("GOVERNANCE AND RISK DISCLOSURES are detailed in section 4.")]
+    )
+    assert any(m.term_id == 1 for m in matches), (
+        "ALL-CAPS 'GOVERNANCE' must match the lemma-based 'governance' pattern"
+    )
+
+
+def test_sentence_text_preserved_as_original(monkeypatch):
+    """TermMatch.sentence_text must store the original (non-lowercased) text
+    even though the NLP pass uses a lowercased copy for correct lemma lookup."""
+    _use_mode(monkeypatch, "longest")
+    terms = [
+        FakeTerm(id=1, phrase="governance", weight=1.0, lemma_based=True, category_id=1),
+    ]
+    matcher = TaxonomyMatcher(terms)
+    original = "Corporate Governance principles guide our decisions."
+    matches = matcher.match_sentences([_sent(original)])
+    assert len(matches) == 1
+    assert matches[0].sentence_text == original, (
+        "sentence_text must be the original text, not a lowercased copy"
+    )

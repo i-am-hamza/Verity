@@ -85,7 +85,13 @@ class TaxonomyMatcher:
             )
 
         for sent in sentences:
-            doc = self.nlp(sent.text)
+            # Lowercase before NLP so Title-Case / ALL-CAPS tokens get the same
+            # lemma as their lowercase equivalents.  "Risk Management Committee"
+            # tagged as PROPN yields lemma "Risk"/"Management"; lowercased first
+            # it yields "risk"/"management", matching the pattern.  exact_matcher
+            # uses attr="LOWER" so it is already case-insensitive — pre-lowercasing
+            # leaves its behaviour unchanged.
+            doc = self.nlp(sent.text.lower())
             spans = self._spans(doc)
             if not spans:
                 continue
@@ -102,7 +108,7 @@ class TaxonomyMatcher:
                     TermMatch(
                         term_id=term_id,
                         page_number=sent.page_number,
-                        sentence_text=sent.text,
+                        sentence_text=sent.text,  # original (not lowercased) for storage
                     )
                 )
         return results
