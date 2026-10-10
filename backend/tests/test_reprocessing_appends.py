@@ -106,7 +106,11 @@ def test_reprocessing_under_a_new_version_appends_rows(isolated_db, monkeypatch)
 
         monkeypatch.setattr(pipeline_mod, "extract_pdf_pages", fake_extract)
         monkeypatch.setattr(pipeline_mod, "count_words", fake_count)
+        monkeypatch.setattr(pipeline_mod, "count_latin_words_in_text", lambda _t: 1000)
         monkeypatch.setattr(pipeline_mod, "segment_sentences", fake_segment)
+        # Bypass the sentence quality filter so the stub sentence (which
+        # intentionally doesn't meet the filter criteria) still reaches the matcher.
+        monkeypatch.setattr(pipeline_mod, "filter_sentences", lambda sents: sents)
         monkeypatch.setattr(pipeline_mod, "TaxonomyMatcher", _FakeMatcher)
         # Session 5 added an OCR pre-check that opens the PDF before
         # extract_pdf_pages fires. Stub it so the test's fake file path

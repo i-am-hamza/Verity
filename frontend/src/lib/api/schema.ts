@@ -837,11 +837,17 @@ export interface components {
             page_count: number;
             /** Composite Score */
             composite_score: number;
-            /** Env */
+            /** E Score (0-10 rank-normalised) */
+            e_score: number;
+            /** S Score (0-10 rank-normalised) */
+            s_score: number;
+            /** G Score (0-10 rank-normalised) */
+            g_score: number;
+            /** Env (raw weighted density per 1,000 words) */
             env: number;
-            /** Soc */
+            /** Soc (raw weighted density per 1,000 words) */
             soc: number;
-            /** Gov */
+            /** Gov (raw weighted density per 1,000 words) */
             gov: number;
         };
         /** ReportScoreOut */

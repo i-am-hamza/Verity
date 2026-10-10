@@ -87,19 +87,24 @@ def _latest_tv(db: Session) -> TaxonomyVersion:
 
 def _meta(db: Session) -> LeaderboardMeta:
     tv = _latest_tv(db)
+    active = db.query(Institution).filter(Institution.active).count()
     scored_insts = (
         db.query(Report.institution_id)
-        .join(CategoryScore, CategoryScore.report_id == Report.id)
-        .filter(CategoryScore.taxonomy_version_id == tv.id)
+        .filter(
+            Report.pipeline_version == PIPELINE_VERSION,
+            Report.status == ReportStatus.scored,
+            Report.e_score.isnot(None),
+        )
         .distinct()
         .count()
     )
-    active = db.query(Institution).filter(Institution.active).count()
     scored_reports = (
         db.query(Report.id)
-        .join(CategoryScore, CategoryScore.report_id == Report.id)
-        .filter(CategoryScore.taxonomy_version_id == tv.id)
-        .distinct()
+        .filter(
+            Report.pipeline_version == PIPELINE_VERSION,
+            Report.status == ReportStatus.scored,
+            Report.e_score.isnot(None),
+        )
         .count()
     )
     return LeaderboardMeta(
@@ -142,57 +147,56 @@ def get_leaderboard(
     fy: int | None = Query(None, description="If set, show that single-year composite instead of mean"),
     db: Session = Depends(get_db),
 ) -> LeaderboardOut:
-    tv = _latest_tv(db)
-    # Pull every scored (institution, FY, pillar density) under latest TV.
+    # Pull every scored report under the current pipeline version.
+    # E, S, G and composite are the 0-10 rank-normalised scores set by
+    # compute_ranks.py — headline numbers must all be on the same scale.
     rows = (
-        db.query(Report, Institution, Category, CategoryScore)
+        db.query(Report, Institution)
         .join(Institution, Institution.id == Report.institution_id)
-        .join(CategoryScore, CategoryScore.report_id == Report.id)
-        .join(Category, Category.id == CategoryScore.category_id)
-        .filter(CategoryScore.taxonomy_version_id == tv.id, Institution.active)
+        .filter(
+            Report.pipeline_version == PIPELINE_VERSION,
+            Report.status == ReportStatus.scored,
+            Institution.active,
+            Report.e_score.isnot(None),
+        )
         .all()
     )
-    per_inst_year_pillar: dict[int, dict[int, dict[str, float]]] = defaultdict(
-        lambda: defaultdict(lambda: defaultdict(float))
-    )
+    per_inst_year: dict[int, dict[int, Report]] = defaultdict(dict)
     per_inst_meta: dict[int, Institution] = {}
-    per_inst_year_composite: dict[int, dict[int, float]] = defaultdict(dict)
-    for report, inst, cat, cs in rows:
+    for report, inst in rows:
         per_inst_meta[inst.id] = inst
-        per_inst_year_pillar[inst.id][report.fiscal_year][cat.pillar] += (
-            cs.density_per_1000_words * cat.weight
-        )
-        per_inst_year_composite[inst.id][report.fiscal_year] = report.composite_score or 0.0
+        per_inst_year[inst.id][report.fiscal_year] = report
 
     def _pillar_vec(iid: int) -> tuple[float, float, float, float]:
-        """Return (env, soc, gov, composite) based on `fy` filter."""
+        """Return (env, soc, gov, composite) as 0-10 scores based on `fy` filter."""
         if fy is not None:
-            yp = per_inst_year_pillar.get(iid, {}).get(fy)
-            if yp is None:
+            r = per_inst_year.get(iid, {}).get(fy)
+            if r is None:
                 return (0.0, 0.0, 0.0, 0.0)
-            e = yp.get("Environmental", 0.0)
-            s = yp.get("Social", 0.0)
-            g = yp.get("Governance", 0.0)
-            comp = per_inst_year_composite[iid].get(fy, 0.0)
-            return (round(e, 3), round(s, 3), round(g, 3), round(comp, 3))
+            return (
+                round(r.e_score or 0.0, 3),
+                round(r.s_score or 0.0, 3),
+                round(r.g_score or 0.0, 3),
+                round(r.composite_score or 0.0, 3),
+            )
         # mean across years
-        years = sorted(per_inst_year_pillar.get(iid, {}).keys())
+        years = sorted(per_inst_year.get(iid, {}).keys())
         if not years:
             return (0.0, 0.0, 0.0, 0.0)
-        e = sum(per_inst_year_pillar[iid][y].get("Environmental", 0.0) for y in years) / len(years)
-        s = sum(per_inst_year_pillar[iid][y].get("Social", 0.0) for y in years) / len(years)
-        g = sum(per_inst_year_pillar[iid][y].get("Governance", 0.0) for y in years) / len(years)
-        comp = sum(per_inst_year_composite[iid].get(y, 0.0) for y in years) / len(years)
+        e = sum((per_inst_year[iid][y].e_score or 0.0) for y in years) / len(years)
+        s = sum((per_inst_year[iid][y].s_score or 0.0) for y in years) / len(years)
+        g = sum((per_inst_year[iid][y].g_score or 0.0) for y in years) / len(years)
+        comp = sum((per_inst_year[iid][y].composite_score or 0.0) for y in years) / len(years)
         return (round(e, 3), round(s, 3), round(g, 3), round(comp, 3))
 
     # Build rows pre-filter so ranks are computed across the whole cohort.
     all_rows: list[LeaderboardRow] = []
     for iid, inst in per_inst_meta.items():
-        if fy is not None and fy not in per_inst_year_pillar.get(iid, {}):
+        if fy is not None and fy not in per_inst_year.get(iid, {}):
             continue
         e, s, g, comp = _pillar_vec(iid)
         tag, reason = _artifact_tag(inst.slug)
-        years_cov = sorted(per_inst_year_pillar.get(iid, {}).keys())
+        years_cov = sorted(per_inst_year.get(iid, {}).keys())
         all_rows.append(LeaderboardRow(
             institution_id=iid, slug=inst.slug, name=inst.name,
             country=inst.country,
@@ -248,24 +252,13 @@ def get_institution_detail(
     if inst is None:
         raise HTTPException(status_code=404, detail=f"Institution {slug!r} not found")
     tv = _latest_tv(db)
-    # Same Postgres gotcha as get_coverage: `reports.excluded_contents_pages`
-    # is a JSON column with no equality operator, so `SELECT DISTINCT ...
-    # json_col ...` dies with `UndefinedFunction: could not identify an
-    # equality operator for type json`. Push the DISTINCT into a subquery
-    # over the INTEGER CategoryScore.report_id, then filter the main
-    # Report select on `.in_()` so the outer query returns one row per
-    # Report with no DISTINCT needed.
-    scored_report_ids = (
-        db.query(CategoryScore.report_id)
-        .filter(CategoryScore.taxonomy_version_id == tv.id)
-        .distinct()
-    )
     reports = (
         db.query(Report)
         .filter(
             Report.institution_id == inst.id,
+            Report.pipeline_version == PIPELINE_VERSION,
             Report.status == ReportStatus.scored,
-            Report.id.in_(scored_report_ids),
+            Report.e_score.isnot(None),
         )
         .order_by(Report.fiscal_year)
         .all()
@@ -302,6 +295,9 @@ def get_institution_detail(
             processing_review_status=r.processing_review_status or "auto_ok",
             page_count=r.page_count or 0,
             composite_score=round(r.composite_score or 0.0, 3),
+            e_score=round(r.e_score or 0.0, 3),
+            s_score=round(r.s_score or 0.0, 3),
+            g_score=round(r.g_score or 0.0, 3),
             env=pillar_d.get("Environmental", 0.0),
             soc=pillar_d.get("Social", 0.0),
             gov=pillar_d.get("Governance", 0.0),
@@ -341,7 +337,6 @@ def get_institution_detail(
 
 @router.get("/coverage", response_model=CoverageOut)
 def get_coverage(db: Session = Depends(get_db)) -> CoverageOut:
-    tv = _latest_tv(db)
     fys = [2020, 2021, 2022, 2023, 2024, 2025]
     insts = (
         db.query(Institution)
@@ -349,26 +344,16 @@ def get_coverage(db: Session = Depends(get_db)) -> CoverageOut:
         .order_by(Institution.rank)
         .all()
     )
-    # Scored reports for the matrix.
-    #
-    # Previously this was one big JOIN with .distinct() to collapse the
-    # one-row-per-CategoryScore fan-out. That worked on SQLite but blows
-    # up on Postgres because `reports.excluded_contents_pages` is a JSON
-    # column: Postgres has no equality operator for `json` (vs `jsonb`)
-    # so `SELECT DISTINCT ... json_col ...` dies with
-    # `UndefinedFunction: could not identify an equality operator for
-    # type json`. Fix by pushing the dedupe into a subquery over the
-    # INTEGER report_id, which Postgres has no trouble with.
-    scored_report_ids = (
-        db.query(CategoryScore.report_id)
-        .filter(CategoryScore.taxonomy_version_id == tv.id)
-        .distinct()
-    )
+    # Scored reports for the matrix — current pipeline version only so each
+    # (institution, fiscal_year) appears exactly once.
     scored_rows = (
         db.query(Report, Institution, SourceDocument)
         .join(Institution, Institution.id == Report.institution_id)
         .outerjoin(SourceDocument, SourceDocument.id == Report.source_document_id)
-        .filter(Report.id.in_(scored_report_ids))
+        .filter(
+            Report.pipeline_version == PIPELINE_VERSION,
+            Report.status == ReportStatus.scored,
+        )
         .all()
     )
     scored_by_key: dict[tuple[int, int], tuple[Report, SourceDocument | None]] = {}
@@ -492,7 +477,10 @@ def get_evidence(
         .join(Category, Category.id == Term.category_id)
         .join(Report, Report.id == MatchEvidence.report_id)
         .join(Institution, Institution.id == Report.institution_id)
-        .filter(MatchEvidence.taxonomy_version_id == tv.id)
+        .filter(
+            MatchEvidence.taxonomy_version_id == tv.id,
+            MatchEvidence.pipeline_version == PIPELINE_VERSION,
+        )
     )
     if institution_slug:
         q = q.filter(Institution.slug == institution_slug)

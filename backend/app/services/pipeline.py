@@ -24,11 +24,11 @@ from app.models.report import Report, ReportStatus
 from app.models.score import CategoryScore, MatchEvidence
 from app.models.taxonomy import Category, TaxonomyVersion, Term
 from app.services.matcher import TaxonomyMatcher
-from app.services.pdf_extraction import count_words, extract_pdf_pages
+from app.services.pdf_extraction import count_latin_words_in_text, count_words, extract_pdf_pages
 from app.services.scoring import score_report_categories
 from app.services.storage import read_pdf_bytes
 from app.services.taxonomy_hash import compute_taxonomy_hash
-from app.services.text_processing import segment_sentences
+from app.services.text_processing import filter_sentences, segment_sentences
 from app.services.text_quality import apply_text_quality, estimate_ocr_fraction
 from app.services.verity_config import VerityConfig, load_verity_config
 
@@ -36,7 +36,7 @@ from app.services.verity_config import VerityConfig, load_verity_config
 # CategoryScore / MatchEvidence row so historical scores stay linked to the
 # code path that produced them. 0.3.0 adds the Session 5 text-quality
 # switches (header/footer removal, contents detection, FS boundary).
-PIPELINE_VERSION = "0.4.1"
+PIPELINE_VERSION = "0.4.2"
 
 
 # --------------------------------------------------------------------------- #
@@ -201,7 +201,11 @@ def _run_pipeline_cpu(
 
     # Segment
     t = time.monotonic()
-    sentences = segment_sentences(pages_for_match)
+    raw_sentences = segment_sentences(pages_for_match)
+    # v0.4.2 sentence quality filter: keep only well-formed sentences so that
+    # headings, table labels and footer fragments are excluded from both the
+    # numerator (matches) and the denominator (word count).
+    sentences = filter_sentences(raw_sentences)
     result.segment_seconds = time.monotonic() - t
 
     # Match. We run longest-mode (what we score) and, if enabled, a shadow
@@ -221,9 +225,11 @@ def _run_pipeline_cpu(
         all_matches = _match_with_mode(longest_matcher, sentences, "all")
         result.all_mode_extra_matches = max(0, len(all_matches) - len(longest))
 
-    # v4 denominator: Latin words on the pages the matcher actually searched
-    # (post-cleaning: FS excluded, ToC excluded, heavily-Arabic pages dropped).
-    narrative_wc = count_words(pages_for_match).latin
+    # v4 denominator: Latin words in the kept (filtered) sentences only.
+    # Numerator and denominator cover the same text, as required by the method.
+    narrative_wc = count_latin_words_in_text(
+        " ".join(s.text for s in sentences)
+    )
     result.narrative_word_count = narrative_wc
 
     # Per-category scores (evidence rows). Denominator is narrative_wc so

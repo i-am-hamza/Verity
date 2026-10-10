@@ -119,7 +119,7 @@ function PillarRadar({ inst }: { inst: InstitutionDetail }) {
       const row: Record<string, string | number> = { pillar };
       for (const r of chosen) {
         row[String(r.fiscal_year)] =
-          pillar === "Environmental" ? r.env : pillar === "Social" ? r.soc : r.gov;
+          pillar === "Environmental" ? r.e_score : pillar === "Social" ? r.s_score : r.g_score;
       }
       return row;
     });
@@ -166,7 +166,7 @@ function PillarRadar({ inst }: { inst: InstitutionDetail }) {
         </ResponsiveContainer>
       </div>
       <figcaption className="mt-1 text-[11px] text-text-faint">
-        Weighted density per 1,000 Latin words · solid = year A, dashed = year B.
+        0-10 rank-normalised score · solid = year A, dashed = year B.
       </figcaption>
     </div>
   );
@@ -208,9 +208,9 @@ function PillarTrend({ inst }: { inst: InstitutionDetail }) {
   const ref = useRef<HTMLDivElement>(null);
   const data = inst.reports.map((r) => ({
     fy: r.fiscal_year,
-    Environmental: r.env,
-    Social: r.soc,
-    Governance: r.gov,
+    Environmental: r.e_score,
+    Social: r.s_score,
+    Governance: r.g_score,
   }));
   return (
     <div ref={ref} className="rounded-md border border-border bg-surface p-4">
@@ -223,7 +223,7 @@ function PillarTrend({ inst }: { inst: InstitutionDetail }) {
           <LineChart data={data} margin={{ left: 0, right: 20, top: 10, bottom: 0 }}>
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis dataKey="fy" />
-            <YAxis label={{ value: "density /1000 words", angle: -90, position: "insideLeft" }} />
+            <YAxis domain={[0, 10]} label={{ value: "score 0-10", angle: -90, position: "insideLeft" }} />
             <Tooltip />
             <Legend />
             <Line
@@ -253,8 +253,7 @@ function PillarTrend({ inst }: { inst: InstitutionDetail }) {
         </ResponsiveContainer>
       </div>
       <figcaption className="mt-1 text-[11px] text-text-faint">
-        Pillar colour pairs with a line-style marker so the chart remains readable
-        in grayscale.
+        0-10 rank-normalised scores · pillar colour pairs with a line-style marker so the chart remains readable in grayscale.
       </figcaption>
     </div>
   );
@@ -317,10 +316,13 @@ function ReportList({ inst }: { inst: InstitutionDetail }) {
         review_status: r.review_status,
         processing_review_status: r.processing_review_status,
         page_count: r.page_count,
-        composite: r.composite_score,
-        env: r.env,
-        soc: r.soc,
-        gov: r.gov,
+        composite_score: r.composite_score,
+        e_score: r.e_score,
+        s_score: r.s_score,
+        g_score: r.g_score,
+        env_density: r.env,
+        soc_density: r.soc,
+        gov_density: r.gov,
       })),
       `${inst.slug}-reports.csv`,
     );

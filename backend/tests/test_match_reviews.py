@@ -37,6 +37,7 @@ def api_client(tmp_path, monkeypatch):
     from app.models.report import Report, ReportStatus
     from app.models.score import MatchEvidence
     from app.models.taxonomy import Category, TaxonomyVersion, Term
+    from app.services.pipeline import PIPELINE_VERSION
 
     inst = Institution(name="Testco", country="Qatar", sector="banking",
                        slug="testco", is_financial=True, active=True)
@@ -53,7 +54,7 @@ def api_client(tmp_path, monkeypatch):
     rpt = Report(institution_id=inst.id, fiscal_year=2023,
                  file_path="/dev/null", status=ReportStatus.scored,
                  page_count=10, taxonomy_version=tv.hash,
-                 pipeline_version="0.3.0")
+                 pipeline_version=PIPELINE_VERSION)
     db.add(rpt)
     db.flush()
     # 4 evidence rows for the same term so we can review some + leave some.
@@ -61,7 +62,7 @@ def api_client(tmp_path, monkeypatch):
     for pg in (3, 5, 7, 9):
         me = MatchEvidence(report_id=rpt.id, term_id=term.id,
                            page_number=pg, sentence_text="Governance stuff.",
-                           taxonomy_version_id=tv.id, pipeline_version="0.3.0")
+                           taxonomy_version_id=tv.id, pipeline_version=PIPELINE_VERSION)
         db.add(me)
         db.flush()
         ev_ids.append(me.id)

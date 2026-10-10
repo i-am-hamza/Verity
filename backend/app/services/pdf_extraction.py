@@ -99,6 +99,11 @@ def extract_pdf_pages(source: str | Path | bytes) -> list[PageText]:
     return pages
 
 
+def count_latin_words_in_text(text: str) -> int:
+    """Count Latin tokens in a plain string (same rule as count_words)."""
+    return sum(1 for token in text.split() if _LATIN_LETTER.search(token))
+
+
 def count_words(pages: list[PageText]) -> WordCounts:
     """Split every page on whitespace, then bucket tokens by script.
 

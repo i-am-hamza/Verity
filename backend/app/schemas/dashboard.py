@@ -53,6 +53,11 @@ class ReportRow(BaseModel):
     processing_review_status: str
     page_count: int
     composite_score: float
+    # 0-10 rank-normalised scores (headline numbers).
+    e_score: float
+    s_score: float
+    g_score: float
+    # Raw weighted densities (per 1,000 words) for the Details table.
     env: float
     soc: float
     gov: float
