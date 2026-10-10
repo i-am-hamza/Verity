@@ -98,15 +98,24 @@ def _meta(db: Session) -> LeaderboardMeta:
         .distinct()
         .count()
     )
+    # Count unique company-years (deduplicate: --force can create multiple rows
+    # for the same source document under the same pipeline version).
+    from sqlalchemy import func as sqlfunc
+    _base_q = db.query(Report).filter(
+        Report.pipeline_version == PIPELINE_VERSION,
+        Report.status == ReportStatus.scored,
+        Report.e_score.isnot(None),
+    )
     scored_reports = (
-        db.query(Report.id)
+        db.query(sqlfunc.count(sqlfunc.distinct(Report.source_document_id)))
         .filter(
             Report.pipeline_version == PIPELINE_VERSION,
             Report.status == ReportStatus.scored,
             Report.e_score.isnot(None),
+            Report.source_document_id.isnot(None),
         )
-        .count()
-    )
+        .scalar() or 0
+    ) + _base_q.filter(Report.source_document_id.is_(None)).count()
     return LeaderboardMeta(
         taxonomy_version=tv.hash,
         pipeline_version=PIPELINE_VERSION,
