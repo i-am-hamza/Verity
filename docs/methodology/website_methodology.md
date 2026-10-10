@@ -35,7 +35,7 @@ Verity looks for a fixed list of ESG terms drawn from the **GRI Standards** and 
 | Banking terms | 9 | Scored separately, for the 19 financial companies only (for example *financial inclusion*, *responsible lending*, *stress testing*) |
 | General ESG terms | 5 | Counted separately and kept out of all three scores (*ESG*, *sustainability*, *GRI*, *sustainable development*, *CSR*) |
 
-**How new terms were added.** Thirteen terms were added in the current version, such as *air quality*, *process safety* and *food safety*, to cover topics that matter for industrial companies. Each candidate had to pass two tests set in advance:
+**How new terms were added.** Fourteen terms were added in the current version (thirteen in the three pillars and stress testing in the banking terms), such as *air quality*, *process safety* and *food safety*, to cover topics that matter for industrial companies. Each candidate had to pass two tests set in advance:
 
 1. It appears in at least **10%** of reports from the industries where its topic matters.
 2. At least **14 of 20** randomly chosen sentences containing it are genuinely about that ESG topic, as judged by the researcher.
