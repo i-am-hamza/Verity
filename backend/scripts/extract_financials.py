@@ -437,22 +437,44 @@ class PDFFinancialExtractor:
         # Non-ASCII apostrophes (Windows smart-quotes, U+FFFD decoding artefacts)
         # mean a literal `'` char-class won't match. Use \W* to absorb any
         # non-word character(s) between "auditors" and "report".
-        _INDEP = re.compile(r"^independent\s*$", re.IGNORECASE)
+        # Split-line variant: "Independent Auditors' Report" printed as 2 or 3
+        # separate lines. Saudi/GCC PDFs commonly use the 3-line form:
+        #   "Independent" / "Auditors'" / "Report"
+        # Only search from the 30% mark to skip TOC entries.
+        _INDEP = re.compile(r"^(?:the\s+)?independent\s*$", re.IGNORECASE)
+        _AUD   = re.compile(r"auditor", re.IGNORECASE)
+        _RPT   = re.compile(r"\breport\b", re.IGNORECASE)
         _ARPT  = re.compile(r"^auditors?\W*report\s*$", re.IGNORECASE)
         split_start = len(self._lines) * 30 // 100
         for i in range(split_start, len(self._lines)):
             line = self._lines[i][1]
             if _INDEP.match(line):
-                for j in range(i + 1, min(i + 4, len(self._lines))):
-                    if _ARPT.match(self._lines[j][1]):
-                        return i
+                found_aud_j = -1
+                for j in range(i + 1, min(i + 8, len(self._lines))):
+                    wl = self._lines[j][1]
+                    if len(wl) > 120:  # long line: not a split heading
+                        break
+                    if _AUD.search(wl):
+                        if _RPT.search(wl):
+                            return i  # 2-line: "Independent" / "Auditors' Report"
+                        found_aud_j = j
+                    elif found_aud_j >= 0 and _RPT.search(wl):
+                        return i  # 3-line: "Independent" / "Auditors'" / "Report"
             if _ARPT.match(line):
                 for j in range(max(split_start, i - 3), i):
                     if _INDEP.match(self._lines[j][1]):
                         return j
 
+        # Extended fallback: external auditors' report (Qatar/Bahrain formats) and
+        # "Financial Statements" section header seen in many GCC PDFs.
         skip = max(0, len(self._lines) // 10)
-        hit = self._find_first(_FS_MARKERS, start=skip)
+        _extended_markers = _FS_MARKERS + [
+            r"external\s+auditors?\W*report",
+            r"report\s+of\s+(?:the\s+)?external\s+auditors?",
+            r"^financial\s+statements\s*$",
+            r"^(?:the\s+)?financial\s+statements\b",
+        ]
+        hit = self._find_first(_extended_markers, start=skip)
         return hit[0] if hit else 0
 
     def _find_income_statement_start(self) -> int:
@@ -495,6 +517,27 @@ class PDFFinancialExtractor:
             for j in range(start, min(start + window, len(self._lines)))
         ]
         return "  |  ".join(parts)
+
+    def _page_range_to_line_range(
+        self,
+        page_min: int,
+        page_max: int,
+        start_floor: int = 0,
+    ) -> tuple[int, Optional[int]]:
+        """Return (start_idx, stop_idx) into self._lines for pages [page_min, page_max].
+
+        start_floor is a minimum index (e.g. self._fs_start) to never start before.
+        stop_idx is None when the range covers the rest of the document.
+        """
+        start_idx: Optional[int] = None
+        stop_idx: Optional[int] = None
+        for i, (pg, _) in enumerate(self._lines):
+            if start_idx is None and pg >= page_min:
+                start_idx = max(start_floor, i)
+            if stop_idx is None and start_idx is not None and pg > page_max:
+                stop_idx = i
+                break
+        return (start_idx if start_idx is not None else start_floor, stop_idx)
 
     # ---- fallback: pymupdf table extraction ---------------------------------
 
@@ -805,12 +848,36 @@ class PDFFinancialExtractor:
         r.total_assets = self._extract_ev(
             _PATTERNS["total_assets"], min_abs=1_000, start=fs
         )
-        r.total_liabilities = self._extract_ev(
-            _PATTERNS["total_liabilities"], min_abs=1_000, start=fs
-        )
-        r.total_equity = self._extract_ev(
-            _PATTERNS["total_equity"], min_abs=1_000, start=fs
-        )
+        # Constrain TL and TE to within ±20 pages of TA so that notes-section
+        # lines (30-80 pages away) are not picked ahead of the BS page.
+        if r.total_assets and r.total_assets.page:
+            ta_pg = r.total_assets.page
+            bs_start, bs_stop = self._page_range_to_line_range(
+                ta_pg - 3, ta_pg + 20, start_floor=fs
+            )
+            r.total_liabilities = self._extract_ev(
+                _PATTERNS["total_liabilities"], min_abs=1_000,
+                start=bs_start, stop=bs_stop,
+            )
+            r.total_equity = self._extract_ev(
+                _PATTERNS["total_equity"], min_abs=1_000,
+                start=bs_start, stop=bs_stop,
+            )
+            if r.total_liabilities is None:
+                r.total_liabilities = self._extract_ev(
+                    _PATTERNS["total_liabilities"], min_abs=1_000, start=fs
+                )
+            if r.total_equity is None:
+                r.total_equity = self._extract_ev(
+                    _PATTERNS["total_equity"], min_abs=1_000, start=fs
+                )
+        else:
+            r.total_liabilities = self._extract_ev(
+                _PATTERNS["total_liabilities"], min_abs=1_000, start=fs
+            )
+            r.total_equity = self._extract_ev(
+                _PATTERNS["total_equity"], min_abs=1_000, start=fs
+            )
 
         # equity_attributable: try total-prefixed labels first.
         r.equity_attributable = self._extract_ev(
@@ -925,9 +992,25 @@ class PDFFinancialExtractor:
         r.net_profit = self._extract_ev(
             _PATTERNS["net_profit"], min_abs=100, start=is_start
         )
-        r.net_profit_attributable = self._extract_ev(
-            _PATTERNS["net_profit_attributable"], min_abs=100, start=is_start
-        )
+        # Constrain NPA to within 25 pages of NP to avoid notes-section picks
+        # (abu-dhabi-national-energy type: NPA found 137 pages after NP).
+        if r.net_profit and r.net_profit.page:
+            np_pg = r.net_profit.page
+            npa_start, npa_stop = self._page_range_to_line_range(
+                np_pg - 5, np_pg + 25, start_floor=is_start
+            )
+            r.net_profit_attributable = self._extract_ev(
+                _PATTERNS["net_profit_attributable"], min_abs=100,
+                start=npa_start, stop=npa_stop,
+            )
+            if r.net_profit_attributable is None:
+                r.net_profit_attributable = self._extract_ev(
+                    _PATTERNS["net_profit_attributable"], min_abs=100, start=is_start
+                )
+        else:
+            r.net_profit_attributable = self._extract_ev(
+                _PATTERNS["net_profit_attributable"], min_abs=100, start=is_start
+            )
         # Fallback: if no explicit NPA attribution line found (e.g. 100%-parent
         # companies or Islamic banks that don't split by NCI), use NP as NPA.
         if (r.net_profit_attributable is None or r.net_profit_attributable.value is None):
@@ -946,6 +1029,18 @@ class PDFFinancialExtractor:
         r.basic_eps = self._extract_ev(
             _PATTERNS["basic_eps"], min_abs=0.0, window=6, start=self._is_start
         )
+        # Sanity: |EPS| > 500 suggests a non-EPS number was captured (e.g.
+        # a share count appearing in the same context window). Retry picking
+        # the second number in the label's context — the actual EPS is often
+        # the smaller value on the same row, displaced by a prior-year column.
+        if (r.basic_eps and r.basic_eps.value is not None
+                and abs(r.basic_eps.value) > 500):
+            alt = self._extract_ev(
+                _PATTERNS["basic_eps"], min_abs=0.0, window=6,
+                start=self._is_start, skip=1, max_tries=4,
+            )
+            if alt and alt.value is not None and abs(alt.value) <= 500:
+                r.basic_eps = alt
         # Primary shares: issued/outstanding from share capital note (FS section).
         # Use min_abs=1_000 to skip par-value numbers (e.g. SAR 10 per share).
         r.shares_outstanding = self._extract_ev(
