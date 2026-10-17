@@ -148,12 +148,28 @@ class FinancialRow:
     flags: list[str] = field(default_factory=list)
     ocr_heavy: bool = False
 
-    leverage: Optional[float] = None
-    roa: Optional[float] = None
-    roe: Optional[float] = None
+    # Non-bank debt components (each with page + label)
+    st_borrowings: Optional[ExtractedValue] = None       # short-term / current borrowings
+    lt_borrowings: Optional[ExtractedValue] = None       # long-term / non-current borrowings
+    sukuk_bonds_notes: Optional[ExtractedValue] = None   # sukuk, bonds, notes payable
+    lease_liabilities_nb: Optional[ExtractedValue] = None  # IFRS 16 lease liabilities
+    # Bank debt components
+    due_to_banks_fi: Optional[ExtractedValue] = None     # due to banks & financial institutions
+    sukuk_issued_bank: Optional[ExtractedValue] = None   # sukuk / debt securities issued by bank
+    subordinated_debt_bank: Optional[ExtractedValue] = None  # tier-2 / subordinated notes
+
+    total_debt: Optional[float] = None
+    total_debt_status: str = "not_found"  # "extracted" | "zero" | "not_found"
+    eps_in_fils_baisa: bool = False
+
+    leverage: Optional[float] = None      # primary: total_debt / equity_attributable
+    leverage_alt: Optional[float] = None  # secondary: total_liabilities / total_assets
+    roa: Optional[float] = None           # NP/TA × 100 (%)
+    roe: Optional[float] = None           # NPA/eq_ord × 100 (%)
     roe_eps_based: bool = False  # True = RoE uses eps_numerator / equity_ordinary
     equity_ordinary: Optional[float] = None  # EA - AT1 (RoE denominator)
-    net_profit_margin: Optional[float] = None
+    net_profit_margin: Optional[float] = None   # primary: NP/rev×100 non-banks; NP/gross_inc×100 banks
+    net_margin_alt: Optional[float] = None      # NP/total_oper_income×100 banks; same as primary non-banks
     firm_age: Optional[int] = None
     listing_age: Optional[int] = None
 
@@ -334,6 +350,61 @@ _PATTERNS: dict[str, list[str]] = {
         r"shares?\s+(?:were\s+)?admitted\s+to\s+(?:trading|listing)\s+on",
         r"(?:initial\s+public\s+offering|IPO)\s+(?:was\s+)?(?:completed|conducted|launched)\s+in",
     ],
+    # ---- Non-bank debt components (balance sheet) --------------------------------
+    "st_borrowings": [
+        r"^short[\s-]?term\s+(?:bank\s+)?(?:loans?\s+and\s+)?borrowings?\s*$",
+        r"^bank\s+(?:loans?\s+and\s+)?borrowings?\s*$",
+        r"^overdrafts?\s+(?:and\s+short[\s-]?term\s+loans?)?\s*$",
+        r"^current\s+portion\s+of\s+(?:long[\s-]?term\s+)?(?:loans?|borrowings?|financing)\s*$",
+        r"^due\s+to\s+banks?\s*$",
+        r"^bank\s+overdrafts?\s*$",
+        r"^short[\s-]?term\s+financing\s+facilities?\s*$",
+    ],
+    "lt_borrowings": [
+        r"^long[\s-]?term\s+(?:bank\s+)?(?:loans?\s+and\s+)?borrowings?\s*$",
+        r"^long[\s-]?term\s+(?:term\s+)?(?:loans?|financing)\s+facilities?\s*$",
+        r"^non[\s-]?current\s+(?:portion\s+of\s+)?(?:loans?\s+and\s+)?borrowings?\s*$",
+        r"^term\s+(?:loans?\s+and\s+)?financing\s+facilities?\s*$",
+        r"^murabaha\s+financing\s+(?:facilities?|payables?)\s*$",
+        r"^long[\s-]?term\s+debt\s*$",
+    ],
+    "sukuk_bonds_notes": [
+        r"^sukuk\s+(?:financings?|payable|issued|bonds?)\s*$",
+        r"^bonds?\s+payable\s*$",
+        r"^bonds?\s+and\s+sukuk\s*$",
+        r"^sukuk\s*$",
+        r"^notes?\s+payable\s*$",
+        r"^(?:listed\s+)?(?:islamic\s+)?bonds?\s*$",
+        r"^sukuk\s+(?:certificates?\s+)?payable\s*$",
+    ],
+    "lease_liabilities_nb": [
+        r"^lease\s+liabilities?\s*$",
+        r"^right[\s-]?of[\s-]?use\s+liabilities?\s*$",
+        r"^finance\s+(?:and\s+operating\s+)?lease\s+(?:obligations?|liabilities?)\s*$",
+        r"^(?:total\s+)?lease\s+liabilities?\s*$",
+        r"^operating\s+lease\s+liabilities?\s*$",
+        r"^ifrs\s+16\s+lease\s+liabilities?\s*$",
+    ],
+    # ---- Bank debt components (balance sheet) ------------------------------------
+    "due_to_banks_fi": [
+        r"^due\s+to\s+banks?\s+and\s+(?:other\s+)?financial\s+institutions?\s*$",
+        r"^due\s+to\s+(?:financial\s+institutions?|banks?)\s*$",
+        r"^deposits?\s+from\s+(?:banks?|financial\s+institutions?)\s*$",
+        r"^borrowings?\s+from\s+(?:banks?|financial\s+institutions?)\s*$",
+        r"^inter[\s-]?bank\s+(?:deposits?|borrowings?|liabilities?)\s*$",
+    ],
+    "sukuk_issued_bank": [
+        r"^sukuk\s+(?:certificates?\s+)?issued\s*$",
+        r"^debt\s+securities?\s+issued\s*$",
+        r"^(?:medium[\s-]?term\s+)?notes?\s+(?:programme\s+)?issued\s*$",
+        r"^bonds?\s+issued\s*$",
+        r"^sukuk\s+financing\s+programs?\s*$",
+    ],
+    "subordinated_debt_bank": [
+        r"^subordinated\s+(?:debt|loans?|bonds?|notes?|liabilities?)\s*$",
+        r"^subordinated\s+term\s+(?:finance|loans?)\s*$",
+        r"^tier\s+2\s+(?:capital\s+)?(?:instruments?|notes?|bonds?)\s*$",
+    ],
 }
 
 # Markers that signal the start of the AUDITED financial statements section.
@@ -383,6 +454,23 @@ _LIGATURE_MAP = str.maketrans({
     "ﬅ": "st",
     "ﬆ": "st",
 })
+
+# EPS sub-unit detection: Kuwait/Bahrain fils = 1/1000 main; Oman baisa = 1/1000 main.
+_FILS_BAISA_RE = re.compile(
+    r"\b(?:fils?|baisa|baiza|bahraini\s+fils?)\b", re.IGNORECASE
+)
+_FILS_BAISA_CURRENCIES = {"KWD", "BHD", "OMR"}
+
+# Lightweight scanner for small fils/baisa values (e.g. "44.0", "43.6", "50").
+# _AMOUNT_RE requires 2+ decimal digits or 5+ integer digits and misses these.
+_FILS_SCAN_RE = re.compile(
+    r"(?<![.\d,])"
+    r"(\()?"
+    r"(\d+(?:[.,]\d+)?)"
+    r"(\))?"
+    r"(?![.,\d])",
+    re.UNICODE,
+)
 
 
 # ---- extractor --------------------------------------------------------------
@@ -656,6 +744,91 @@ class PDFFinancialExtractor:
             context=f"coord-row: {label_txt} | {raw_num}",
             confidence="medium" if self.result.ocr_heavy else "high",
             note="coordinate extraction",
+        )
+
+    def _ev_from_coords_fils(
+        self, page_no: int, patterns: list[str]
+    ) -> Optional[ExtractedValue]:
+        """Coordinate-based EPS extraction for fils/baisa currencies.
+
+        Identical to _ev_from_coords but scans each same-row span with
+        _FILS_SCAN_RE (which matches single-decimal values like "44.0") and
+        picks the first span whose value is in the fils/baisa plausible range
+        (0.001 < abs(v) < 1000), preferring values with an explicit decimal
+        point (skipping bare integers that are likely note references).
+        """
+        if not self._pdf_bytes:
+            return None
+        import pymupdf
+
+        doc = pymupdf.open(stream=self._pdf_bytes, filetype="pdf")
+        if page_no < 1 or page_no > len(doc):
+            return None
+        page = doc[page_no - 1]
+        try:
+            raw = page.get_text("dict")
+        except Exception:
+            return None
+
+        spans: list[tuple[str, float, float, float, float]] = []
+        for block in raw.get("blocks", []):
+            if block.get("type") != 0:
+                continue
+            for line in block.get("lines", []):
+                for span in line.get("spans", []):
+                    txt = span.get("text", "").strip().translate(_LIGATURE_MAP)
+                    if txt:
+                        bbox = span["bbox"]
+                        spans.append((txt, bbox[0], bbox[1], bbox[2], bbox[3]))
+
+        label_span: Optional[tuple[str, float, float, float, float]] = None
+        for txt, x0, y0, x1, y1 in spans:
+            for pat in patterns:
+                if re.search(pat, txt, re.IGNORECASE):
+                    label_span = (txt, x0, y0, x1, y1)
+                    break
+            if label_span:
+                break
+
+        if label_span is None:
+            return None
+
+        _, lx0, ly0, lx1, ly1 = label_span
+        label_y_mid = (ly0 + ly1) / 2
+        row_tolerance = max((ly1 - ly0) * 1.2, 4.0)
+
+        # Collect all numeric spans on the same row, sorted left to right.
+        row_candidates: list[tuple[float, str, float, bool]] = []  # x0, raw_text, val, has_dot
+        for txt, x0, y0, x1, y1 in spans:
+            if abs((y0 + y1) / 2 - label_y_mid) <= row_tolerance and x0 > lx1 - 5:
+                for m in _FILS_SCAN_RE.finditer(txt):
+                    v = _parse_number(m.group(0))
+                    if v is not None and 0.001 < abs(v) < 1000:
+                        row_candidates.append((x0, m.group(0), v, "." in m.group(0)))
+        if not row_candidates:
+            return None
+
+        row_candidates.sort(key=lambda c: c[0])
+        # Prefer a candidate with an explicit decimal point.
+        for _, raw_num, v, has_dot in row_candidates:
+            if has_dot:
+                return ExtractedValue(
+                    label_as_printed=label_span[0],
+                    value=v,
+                    page=page_no,
+                    context=f"coord-fils: {label_span[0]} | {raw_num}",
+                    confidence="medium" if self.result.ocr_heavy else "high",
+                    note="coordinate fils extraction",
+                )
+        # No decimal found: take the second candidate (skip likely note reference).
+        _, raw_num, v, _ = row_candidates[min(1, len(row_candidates) - 1)]
+        return ExtractedValue(
+            label_as_printed=label_span[0],
+            value=v,
+            page=page_no,
+            context=f"coord-fils: {label_span[0]} | {raw_num}",
+            confidence="medium" if self.result.ocr_heavy else "high",
+            note="coordinate fils extraction (no decimal)",
         )
 
     # ---- main extraction helper (with retry loop) ---------------------------
@@ -992,21 +1165,46 @@ class PDFFinancialExtractor:
         r.net_profit = self._extract_ev(
             _PATTERNS["net_profit"], min_abs=100, start=is_start
         )
-        # Constrain NPA to within 25 pages of NP to avoid notes-section picks
-        # (abu-dhabi-national-energy type: NPA found 137 pages after NP).
+        # Constrain NPA to the income statement section: tight range (same page ±5)
+        # first so the IS attribution is preferred over the BS equity section
+        # (Jazeera Airways FY2023-2024: "shareholders of the parent" appeared in the
+        # equity section within 25 pages and was wrongly picked).
+        np_val = r.net_profit.value if r.net_profit else None
         if r.net_profit and r.net_profit.page:
             np_pg = r.net_profit.page
-            npa_start, npa_stop = self._page_range_to_line_range(
-                np_pg - 5, np_pg + 25, start_floor=is_start
+            # Tight pass: IS attribution should be on the same page or within 5 pages.
+            npa_start_t, npa_stop_t = self._page_range_to_line_range(
+                np_pg - 3, np_pg + 5, start_floor=is_start
             )
             r.net_profit_attributable = self._extract_ev(
                 _PATTERNS["net_profit_attributable"], min_abs=100,
-                start=npa_start, stop=npa_stop,
+                start=npa_start_t, stop=npa_stop_t,
             )
+            # Wider fallback (up to +15 pages) using only explicit combined-label patterns
+            # (patterns 0-4) to avoid matching the equity section "shareholders of the parent".
+            if r.net_profit_attributable is None:
+                npa_start_w, npa_stop_w = self._page_range_to_line_range(
+                    np_pg - 5, np_pg + 15, start_floor=is_start
+                )
+                r.net_profit_attributable = self._extract_ev(
+                    _PATTERNS["net_profit_attributable"][:5], min_abs=100,
+                    start=npa_start_w, stop=npa_stop_w,
+                )
+            # Broadest fallback from IS start.
             if r.net_profit_attributable is None:
                 r.net_profit_attributable = self._extract_ev(
                     _PATTERNS["net_profit_attributable"], min_abs=100, start=is_start
                 )
+            # Reject any NPA that exceeds NP by more than 5% — this catches cases
+            # where the equity section "shareholders of parent" label was matched
+            # instead of the IS attribution row.
+            npa_val = (
+                r.net_profit_attributable.value
+                if r.net_profit_attributable else None
+            )
+            if (np_val is not None and npa_val is not None
+                    and abs(npa_val) > abs(np_val) * 1.05):
+                r.net_profit_attributable = None  # will fall through to NPA=NP below
         else:
             r.net_profit_attributable = self._extract_ev(
                 _PATTERNS["net_profit_attributable"], min_abs=100, start=is_start
@@ -1023,6 +1221,59 @@ class PDFFinancialExtractor:
                     confidence="low",
                     note="assumed 100% parent NP (no NCI attribution row found)",
                 )
+
+    def _find_fils_eps_value(self, line_idx: int) -> Optional[float]:
+        """Scan 20 lines from the EPS label for the actual fils/baisa value.
+
+        EPS calculation notes list: large profit → large share count → small EPS.
+        We find the first number in the fils/baisa range (0.001, 999) that appears
+        AFTER at least one large number (the profit numerator), so profit-like numbers
+        are skipped and the actual EPS figure is returned.
+        Uses _FILS_SCAN_RE to also catch single-decimal values like "44.0" that
+        _AMOUNT_RE misses (requires 2+ decimal digits).
+        """
+        ctx = self._context_str(line_idx, window=20)
+        seen_large = False
+        for m in _FILS_SCAN_RE.finditer(ctx):
+            v = _parse_number(m.group(0))
+            if v is None:
+                continue
+            if abs(v) >= 1000:
+                seen_large = True
+            elif 0.001 < abs(v) < 1000 and seen_large:
+                return v
+        # Fallback: return first small number even without a preceding large one.
+        for m in _FILS_SCAN_RE.finditer(ctx):
+            v = _parse_number(m.group(0))
+            if v is not None and 0.001 < abs(v) < 1000:
+                return v
+        return None
+
+    @staticmethod
+    def _fils_value_from_ctx_str(ctx: str) -> Optional[float]:
+        """Pick a plausible fils/baisa EPS from a short context string.
+
+        Annual-report format: "<label> | <note_ref_int> | <eps_fils> | <prior_eps_fils>"
+        Note references are typically bare integers (e.g. 30); EPS values often carry a
+        decimal point (e.g. 44.0).  Strategy:
+          1. Prefer the first number that has an explicit decimal point in the text.
+          2. Fall back: if all are integers, skip the first (likely note ref) when there
+             are multiple candidates, otherwise return the sole candidate.
+        Uses _FILS_SCAN_RE (not _AMOUNT_RE) so single-decimal values like "44.0" are found.
+        """
+        candidates: list[tuple[float, bool]] = []  # (parsed_value, has_decimal_in_text)
+        for m in _FILS_SCAN_RE.finditer(ctx):
+            v = _parse_number(m.group(0))
+            if v is not None and 0.001 < abs(v) < 1000:
+                candidates.append((v, "." in m.group(0)))
+        if not candidates:
+            return None
+        for v, has_dec in candidates:
+            if has_dec:
+                return v
+        # No decimal point found — skip the first candidate (likely note reference)
+        # and return the second if available, otherwise return the first.
+        return candidates[1][0] if len(candidates) >= 2 else candidates[0][0]
 
     def _extract_per_share(self) -> None:
         r = self.result
@@ -1041,6 +1292,95 @@ class PDFFinancialExtractor:
             )
             if alt and alt.value is not None and abs(alt.value) <= 500:
                 r.basic_eps = alt
+
+        # Fils / baisa conversion: Kuwait fils = 1/1000 KWD; Bahrain fils = 1/1000 BHD;
+        # Oman baisa = 1/1000 OMR. GCC reports commonly label EPS as "X fils" but may
+        # also bury the sub-unit keyword in the surrounding note text.
+        # Also triggers when value=None but label carries a fils/baisa marker — in that
+        # case we attempt recovery regardless of the initial extraction result.
+        if r.basic_eps and r.currency in _FILS_BAISA_CURRENCIES:
+            label = r.basic_eps.label_as_printed or ""
+            ctx_short = r.basic_eps.context or ""
+            # Build eps_line_idx: prefer the EPS page for accuracy; fall back to
+            # _find_first which may land on an unrelated earlier pattern match.
+            eps_line_idx = self._is_start
+            if r.basic_eps.page:
+                pg_s, pg_e = self._page_range_to_line_range(
+                    r.basic_eps.page, r.basic_eps.page, start_floor=self._is_start
+                )
+                hit_pg = self._find_first(_PATTERNS["basic_eps"], start=pg_s, stop=pg_e)
+                if hit_pg:
+                    eps_line_idx = hit_pg[0]
+                else:
+                    hit = self._find_first(_PATTERNS["basic_eps"], start=self._is_start)
+                    if hit:
+                        eps_line_idx = hit[0]
+            else:
+                hit = self._find_first(_PATTERNS["basic_eps"], start=self._is_start)
+                if hit:
+                    eps_line_idx = hit[0]
+            ctx_wide = self._context_str(eps_line_idx, window=20)
+            is_fils = bool(
+                _FILS_BAISA_RE.search(label)
+                or _FILS_BAISA_RE.search(ctx_short)
+                or _FILS_BAISA_RE.search(ctx_wide)
+            )
+            if is_fils:
+                val = r.basic_eps.value
+                if val is None or abs(val) > 999:
+                    # Value missing or too large — likely captured the profit numerator.
+                    # Try 1: scan ctx_short directly (it's the 6-line window captured by
+                    #         _extract_ev, so it's closest to the actual EPS label line).
+                    recovered = self._fils_value_from_ctx_str(ctx_short)
+                    # Try 2: coordinate extraction with fils-aware scanner on the EPS page.
+                    if recovered is None and r.basic_eps.page:
+                        ev_fils = self._ev_from_coords_fils(
+                            r.basic_eps.page, _PATTERNS["basic_eps"]
+                        )
+                        if ev_fils and ev_fils.value is not None:
+                            recovered = ev_fils.value
+                    # Try 3: wider 20-line window pinned to the correct EPS page.
+                    if recovered is None:
+                        recovered = self._find_fils_eps_value(eps_line_idx)
+                    if recovered is not None:
+                        orig_note = f"orig={val:.0f}" if val is not None else "orig=None"
+                        r.basic_eps = ExtractedValue(
+                            label_as_printed=label,
+                            value=round(recovered / 1000, 6),
+                            page=r.basic_eps.page,
+                            context=ctx_wide[:200],
+                            confidence="medium",
+                            note=(
+                                f"fils/baisa→{r.currency}: recovered "
+                                f"({orig_note}, fils={recovered:.3f})"
+                            ),
+                        )
+                        r.eps_in_fils_baisa = True
+                    else:
+                        orig_note = f"{val:.0f}" if val is not None else "None"
+                        r.basic_eps = ExtractedValue(
+                            label_as_printed=label,
+                            value=None,
+                            page=r.basic_eps.page,
+                            context=ctx_wide[:200],
+                            confidence="low",
+                            note=(
+                                f"fils/baisa: value {orig_note}; "
+                                f"no valid fils found in context"
+                            ),
+                        )
+                elif 0 < abs(val) <= 999:
+                    # Value is already a plausible fils/baisa number; convert to main unit.
+                    r.basic_eps = ExtractedValue(
+                        label_as_printed=label,
+                        value=round(val / 1000, 6),
+                        page=r.basic_eps.page,
+                        context=ctx_short,
+                        confidence=r.basic_eps.confidence,
+                        note=f"fils/baisa→{r.currency}: ÷1000 (was {val:.3f})",
+                    )
+                    r.eps_in_fils_baisa = True
+
         # Primary shares: issued/outstanding from share capital note (FS section).
         # Use min_abs=1_000 to skip par-value numbers (e.g. SAR 10 per share).
         r.shares_outstanding = self._extract_ev(
@@ -1096,6 +1436,86 @@ class PDFFinancialExtractor:
         r.market_cap = self._extract_ev(
             _PATTERNS["market_cap"], min_abs=1_000, start=0
         )
+
+    def _extract_debt_components(self) -> None:
+        """Extract individual debt components from the balance sheet.
+
+        Non-banks: short-term borrowings, long-term borrowings, sukuk/bonds/notes,
+        lease liabilities.
+        Banks: due to banks/FIs, sukuk issued, subordinated debt.
+        Customer deposits are NOT debt; they are excluded.
+
+        Sets total_debt (sum of found components) and total_debt_status.
+        Searches within TA page ±20 to stay in the balance sheet section.
+        """
+        r = self.result
+        fs = self._fs_start
+        ta_pg = r.total_assets.page if r.total_assets and r.total_assets.page else None
+
+        if ta_pg:
+            bs_start, bs_stop = self._page_range_to_line_range(
+                ta_pg - 3, ta_pg + 20, start_floor=fs
+            )
+        else:
+            bs_start, bs_stop = fs, None
+
+        components: list[float] = []
+        found_any = False
+
+        if r.is_bank:
+            r.due_to_banks_fi = self._extract_ev(
+                _PATTERNS["due_to_banks_fi"], min_abs=0, start=bs_start, stop=bs_stop
+            )
+            r.sukuk_issued_bank = self._extract_ev(
+                _PATTERNS["sukuk_issued_bank"], min_abs=0, start=bs_start, stop=bs_stop
+            )
+            r.subordinated_debt_bank = self._extract_ev(
+                _PATTERNS["subordinated_debt_bank"], min_abs=0, start=bs_start, stop=bs_stop
+            )
+            for ev in (r.due_to_banks_fi, r.sukuk_issued_bank, r.subordinated_debt_bank):
+                if ev is not None:
+                    found_any = True
+                    if ev.value is not None and ev.value > 0:
+                        components.append(ev.value)
+        else:
+            r.st_borrowings = self._extract_ev(
+                _PATTERNS["st_borrowings"], min_abs=0, start=bs_start, stop=bs_stop
+            )
+            r.lt_borrowings = self._extract_ev(
+                _PATTERNS["lt_borrowings"], min_abs=0, start=bs_start, stop=bs_stop
+            )
+            r.sukuk_bonds_notes = self._extract_ev(
+                _PATTERNS["sukuk_bonds_notes"], min_abs=0, start=bs_start, stop=bs_stop
+            )
+            r.lease_liabilities_nb = self._extract_ev(
+                _PATTERNS["lease_liabilities_nb"], min_abs=0, start=bs_start, stop=bs_stop
+            )
+            for ev in (r.st_borrowings, r.lt_borrowings, r.sukuk_bonds_notes, r.lease_liabilities_nb):
+                if ev is not None:
+                    found_any = True
+                    if ev.value is not None and ev.value > 0:
+                        components.append(ev.value)
+
+        # Also consider total_borrowings already extracted in _extract_supplementary.
+        # If no components found but total_borrowings is, use it as the total directly.
+        tb = r.total_borrowings.value if r.total_borrowings and r.total_borrowings.value else None
+
+        if components:
+            r.total_debt = round(sum(components), 0)
+            r.total_debt_status = "extracted"
+        elif tb is not None and tb > 0:
+            r.total_debt = tb
+            r.total_debt_status = "extracted"
+        elif found_any:
+            # Patterns matched but all values were zero → explicitly zero borrowings.
+            r.total_debt = 0.0
+            r.total_debt_status = "zero"
+        elif tb == 0.0:
+            r.total_debt = 0.0
+            r.total_debt_status = "zero"
+        else:
+            r.total_debt = None
+            r.total_debt_status = "not_found"
 
     def _extract_history(self) -> None:
         r = self.result
@@ -1169,6 +1589,13 @@ class PDFFinancialExtractor:
                         f"  ({src}/shares)"
                     )
 
+        # Leverage: flag when equity attributable is zero or negative.
+        ea_lev = v(r.equity_attributable) or v(r.total_equity)
+        if ea_lev is not None and ea_lev <= 0 and r.total_debt is not None:
+            flags.append(
+                f"LEVERAGE_NEGATIVE_EQUITY: EA={ea_lev:,.0f}  leverage undefined"
+            )
+
         if r.ocr_heavy:
             flags.append("OCR_HEAVY: values may be low confidence")
 
@@ -1184,24 +1611,46 @@ class PDFFinancialExtractor:
         def v(ev: Optional[ExtractedValue]) -> Optional[float]:
             return ev.value if ev and ev.value is not None else None
 
-        ta   = v(r.total_assets)
-        tl   = v(r.total_liabilities)
-        te   = v(r.total_equity)
-        ea   = v(r.equity_attributable)
-        rev  = v(r.revenue)
-        np_  = v(r.net_profit)
-        npa  = v(r.net_profit_attributable)
-        at1  = v(r.at1_equity) or 0.0
+        ta      = v(r.total_assets)
+        tl      = v(r.total_liabilities)
+        te      = v(r.total_equity)
+        ea      = v(r.equity_attributable)
+        rev     = v(r.revenue)
+        np_     = v(r.net_profit)
+        npa     = v(r.net_profit_attributable)
+        at1     = v(r.at1_equity) or 0.0
         eps_num = v(r.eps_numerator)
+        gib     = v(r.gross_income_bank)  # gross income before funding costs (banks)
 
+        # Leverage (primary): total_debt / equity_attributable.
+        # leverage_alt: total_liabilities / total_assets (old formula, kept as secondary).
+        ea_lev = ea if ea is not None else te
+        if r.total_debt is not None and ea_lev is not None and ea_lev > 0:
+            r.leverage = round(r.total_debt / ea_lev, 4)
+        elif r.total_debt == 0.0:
+            r.leverage = 0.0
         if tl is not None and ta and ta != 0:
-            r.leverage = round(tl / ta, 4)
-        if np_ is not None and ta and ta != 0:
-            r.roa = round(np_ / ta, 4)
-        if np_ is not None and rev and rev != 0:
-            r.net_profit_margin = round(np_ / rev, 4)
+            r.leverage_alt = round(tl / ta, 4)
 
-        # RoE: primary uses eps_numerator / (equity_attributable - AT1).
+        # RoA: NP / TA × 100 (%).
+        if np_ is not None and ta and ta != 0:
+            r.roa = round(np_ / ta * 100, 4)
+
+        # Net margin (× 100):
+        # Non-banks: NP / revenue.
+        # Banks: NP / gross_income_bank (financing+fees+other, before funding costs).
+        #        net_margin_alt = NP / total_operating_income (old bank formula).
+        if r.is_bank:
+            if np_ is not None and gib and gib != 0:
+                r.net_profit_margin = round(np_ / gib * 100, 4)
+            if np_ is not None and rev and rev != 0:
+                r.net_margin_alt = round(np_ / rev * 100, 4)
+        else:
+            if np_ is not None and rev and rev != 0:
+                r.net_profit_margin = round(np_ / rev * 100, 4)
+            r.net_margin_alt = r.net_profit_margin
+
+        # RoE (× 100): primary uses eps_numerator / (equity_attributable - AT1).
         # Fallback uses npa / equity_attributable when eps_numerator not found.
         eq_base = ea if ea is not None else te
         if eq_base:
@@ -1212,10 +1661,10 @@ class PDFFinancialExtractor:
             r.equity_ordinary = None
 
         if eps_num is not None and eq_ord and eq_ord > 0:
-            r.roe = round(eps_num / eq_ord, 4)
+            r.roe = round(eps_num / eq_ord * 100, 4)
             r.roe_eps_based = True
         elif npa is not None and eq_ord and eq_ord > 0:
-            r.roe = round(npa / eq_ord, 4)
+            r.roe = round(npa / eq_ord * 100, 4)
             r.roe_eps_based = False
             if at1 > 0:
                 r.flags.append(
@@ -1238,6 +1687,7 @@ class PDFFinancialExtractor:
         self._extract_income_statement()
         self._extract_per_share()
         self._extract_supplementary()
+        self._extract_debt_components()
         self._extract_history()
         self._check_flags()
         self._compute_ratios()
@@ -1307,10 +1757,10 @@ def _fmt_ev(label: str, ev: Optional[ExtractedValue]) -> str:
 
 def _fmt_ratio(label: str, val: Optional[float], pct: bool = False) -> str:
     if val is None:
-        return f"  {label:<25}  n/a"
+        return f"  {label:<28}  n/a"
     if pct:
-        return f"  {label:<25}  {val * 100:>8.2f}%"
-    return f"  {label:<25}  {val:>10.4f}"
+        return f"  {label:<28}  {val:>8.2f}%"
+    return f"  {label:<28}  {val:>10.4f}"
 
 
 def print_pilot_result(row: FinancialRow) -> None:
@@ -1344,19 +1794,32 @@ def print_pilot_result(row: FinancialRow) -> None:
     print()
 
     print("  -- Per share & shares " + "-" * 57)
-    print(_fmt_ev("Basic EPS (as reported)", row.basic_eps))
+    fils_note = "  [fils/baisa converted]" if row.eps_in_fils_baisa else ""
+    print(_fmt_ev("Basic EPS (main currency)", row.basic_eps) + fils_note)
     print(_fmt_ev("Shares issued (cap note)", row.shares_outstanding))
     print(_fmt_ev("Shares wtd-avg (EPS note)", row.shares_eps_note))
     print()
 
-    print("  -- Supplementary " + "-" * 62)
-    print(_fmt_ev("Total borrowings", row.total_borrowings))
+    print("  -- Debt components " + "-" * 60)
+    print(f"  {'Total debt':<30}  {row.total_debt:>20,.0f}  [{row.total_debt_status}]"
+          if row.total_debt is not None else
+          f"  {'Total debt':<30}  {'not extracted':>20}  [{row.total_debt_status}]")
+    if row.is_bank:
+        print(_fmt_ev("Due to banks & FIs", row.due_to_banks_fi))
+        print(_fmt_ev("Sukuk issued (bank)", row.sukuk_issued_bank))
+        print(_fmt_ev("Subordinated debt", row.subordinated_debt_bank))
+    else:
+        print(_fmt_ev("Short-term borrowings", row.st_borrowings))
+        print(_fmt_ev("Long-term borrowings", row.lt_borrowings))
+        print(_fmt_ev("Sukuk / bonds / notes", row.sukuk_bonds_notes))
+        print(_fmt_ev("Lease liabilities", row.lease_liabilities_nb))
+    print(_fmt_ev("Total borrowings (check)", row.total_borrowings))
     print(_fmt_ev("AT1 / Tier-1 sukuk (equity)", row.at1_equity))
-    print(_fmt_ev("Share price year-end", row.share_price_year_end))
-    print(_fmt_ev("Market cap", row.market_cap))
     print()
 
-    print("  -- Corporate history " + "-" * 58)
+    print("  -- Market data & history " + "-" * 54)
+    print(_fmt_ev("Share price year-end", row.share_price_year_end))
+    print(_fmt_ev("Market cap", row.market_cap))
     print(_fmt_ev("Year of incorporation", row.year_of_incorporation))
     print(_fmt_ev("Year of listing", row.year_of_listing))
     print()
@@ -1364,12 +1827,14 @@ def print_pilot_result(row: FinancialRow) -> None:
     roe_method = "(eps_num/eq_ord)" if row.roe_eps_based else "(NPA/eq_ord)"
     eq_ord_str = f"{row.equity_ordinary:,.0f}" if row.equity_ordinary else "n/a"
     print("  -- Ratios " + "-" * 69)
-    print(_fmt_ratio("Leverage (TL/TA)", row.leverage))
-    print(_fmt_ratio("RoA (NP/TA)", row.roa, pct=True))
-    print(f"  {'RoE '+roe_method:<25}  "
-          + (f"{row.roe * 100:>8.2f}%" if row.roe is not None else "    n/a"))
-    print(f"  {'Equity ordinary':<25}  {eq_ord_str:>12}")
-    print(_fmt_ratio("Net profit margin", row.net_profit_margin, pct=True))
+    print(_fmt_ratio("Leverage (debt/EA)", row.leverage))
+    print(_fmt_ratio("Leverage alt (TL/TA)", row.leverage_alt))
+    print(_fmt_ratio("RoA (NP/TA %)", row.roa, pct=True))
+    print(f"  {'RoE % '+roe_method:<28}  "
+          + (f"{row.roe:>8.2f}%" if row.roe is not None else "     n/a"))
+    print(f"  {'Equity ordinary':<28}  {eq_ord_str:>12}")
+    print(_fmt_ratio("Net margin % (primary)", row.net_profit_margin, pct=True))
+    print(_fmt_ratio("Net margin alt %", row.net_margin_alt, pct=True))
     print(_fmt_ratio("Firm age (FY - incorp.)", row.firm_age))
     print(_fmt_ratio("Listing age (FY - listing)", row.listing_age))
     print()
@@ -1414,13 +1879,19 @@ def row_to_dict(row: FinancialRow) -> dict:
         "currency_page": row.currency_page,
         "total_liabilities_computed": row.total_liabilities_computed,
         "ocr_heavy": row.ocr_heavy,
-        # Computed ratios
-        "leverage": row.leverage,
-        "roa": row.roa,
-        "roe": row.roe,
+        "eps_in_fils_baisa": row.eps_in_fils_baisa,
+        # Debt summary
+        "total_debt": row.total_debt,
+        "total_debt_status": row.total_debt_status,
+        # Ratios (RoA/RoE/margins are in %, leverage is ratio)
+        "leverage": row.leverage,           # total_debt / equity_attributable
+        "leverage_alt": row.leverage_alt,   # total_liabilities / total_assets
+        "roa": row.roa,                     # NP/TA × 100
+        "roe": row.roe,                     # NPA/eq_ord × 100
         "roe_eps_based": row.roe_eps_based,
         "equity_ordinary": row.equity_ordinary,
-        "net_profit_margin": row.net_profit_margin,
+        "net_profit_margin": row.net_profit_margin,  # primary (see is_bank)
+        "net_margin_alt": row.net_margin_alt,        # NP/total_oper_income×100 banks
         "firm_age": row.firm_age,
         "listing_age": row.listing_age,
         "flags": "; ".join(row.flags) if row.flags else None,
@@ -1436,9 +1907,18 @@ def row_to_dict(row: FinancialRow) -> dict:
         ("net_profit_attributable",  row.net_profit_attributable),
         ("eps_numerator",            row.eps_numerator),
         ("basic_eps",                row.basic_eps),
-        ("shares_outstanding",       row.shares_outstanding),   # share capital note
-        ("shares_eps_note",          row.shares_eps_note),      # EPS note wtd-avg
+        ("shares_outstanding",       row.shares_outstanding),
+        ("shares_eps_note",          row.shares_eps_note),
         ("total_borrowings",         row.total_borrowings),
+        # Debt components (non-banks)
+        ("st_borrowings",            row.st_borrowings),
+        ("lt_borrowings",            row.lt_borrowings),
+        ("sukuk_bonds_notes",        row.sukuk_bonds_notes),
+        ("lease_liabilities_nb",     row.lease_liabilities_nb),
+        # Debt components (banks)
+        ("due_to_banks_fi",          row.due_to_banks_fi),
+        ("sukuk_issued_bank",        row.sukuk_issued_bank),
+        ("subordinated_debt_bank",   row.subordinated_debt_bank),
         ("at1_equity",               row.at1_equity),
         ("share_price_year_end",     row.share_price_year_end),
         ("market_cap",               row.market_cap),
@@ -1518,23 +1998,33 @@ def write_xlsx_from_csv(csv_path: Path, xlsx_path: Path) -> None:
     import csv
 
     _NUMERIC_COLS = {
-        "fiscal_year", "currency_page", "leverage", "roa", "roe",
-        "equity_ordinary", "net_profit_margin", "firm_age", "listing_age",
+        "fiscal_year", "currency_page", "leverage", "leverage_alt", "roa", "roe",
+        "equity_ordinary", "net_profit_margin", "net_margin_alt", "firm_age", "listing_age",
+        "total_debt",
         "total_assets_value", "total_liabilities_value", "total_equity_value",
         "equity_attributable_value", "revenue_value", "gross_income_bank_value",
         "net_profit_value", "net_profit_attributable_value", "eps_numerator_value",
         "basic_eps_value", "shares_outstanding_value", "shares_eps_note_value",
-        "total_borrowings_value", "at1_equity_value", "share_price_year_end_value",
+        "total_borrowings_value",
+        "st_borrowings_value", "lt_borrowings_value", "sukuk_bonds_notes_value",
+        "lease_liabilities_nb_value",
+        "due_to_banks_fi_value", "sukuk_issued_bank_value", "subordinated_debt_bank_value",
+        "at1_equity_value", "share_price_year_end_value",
         "market_cap_value", "year_of_incorporation_value", "year_of_listing_value",
         "total_assets_page", "total_liabilities_page", "total_equity_page",
         "equity_attributable_page", "revenue_page", "gross_income_bank_page",
         "net_profit_page", "net_profit_attributable_page", "eps_numerator_page",
         "basic_eps_page", "shares_outstanding_page", "shares_eps_note_page",
-        "total_borrowings_page", "at1_equity_page", "share_price_year_end_page",
+        "total_borrowings_page",
+        "st_borrowings_page", "lt_borrowings_page", "sukuk_bonds_notes_page",
+        "lease_liabilities_nb_page",
+        "due_to_banks_fi_page", "sukuk_issued_bank_page", "subordinated_debt_bank_page",
+        "at1_equity_page", "share_price_year_end_page",
         "market_cap_page", "year_of_incorporation_page", "year_of_listing_page",
     }
     _BOOL_COLS = {
         "is_bank", "total_liabilities_computed", "ocr_heavy", "roe_eps_based",
+        "eps_in_fils_baisa",
     }
 
     def _coerce(col: str, raw: str) -> object:
@@ -1563,6 +2053,49 @@ def write_xlsx_from_csv(csv_path: Path, xlsx_path: Path) -> None:
     _write_xlsx(records, xlsx_path)
 
 
+# ---- no-FS company-year listing ---------------------------------------------
+
+
+def list_no_fs(csv_path: Path) -> None:
+    """Print and return all company-years with FS_BOUNDARY_NOT_FOUND, with page count."""
+    import csv as _csv
+    from sqlalchemy import select
+
+    db = SessionLocal()
+    try:
+        rows_db = db.execute(
+            select(
+                Institution.slug,
+                Institution.name,
+                SourceDocument.fiscal_year,
+                SourceDocument.page_count,
+            )
+            .join(SourceDocument, SourceDocument.institution_id == Institution.id)
+            .where(Institution.active.is_(True))
+            .where(SourceDocument.superseded_by_id.is_(None))
+        ).all()
+    finally:
+        db.close()
+
+    page_map = {(slug, fy): (name, pg) for slug, name, fy, pg in rows_db}
+
+    with open(csv_path, newline="", encoding="utf-8") as fh:
+        reader = _csv.DictReader(fh)
+        no_fs = [
+            r for r in reader
+            if "FS_BOUNDARY_NOT_FOUND" in (r.get("flags") or "")
+        ]
+
+    print(f"\n{'Company':<55} {'FY':<6} {'Pages'}")
+    print("-" * 70)
+    for r in sorted(no_fs, key=lambda x: (x["slug"], x["fiscal_year"])):
+        slug, fy = r["slug"], int(r["fiscal_year"])
+        name, pages = page_map.get((slug, fy), ("?", None))
+        pages_str = str(pages) if pages else "?"
+        print(f"  {name:<53} {fy:<6} {pages_str}")
+    print(f"\nTotal: {len(no_fs)} company-years with no financial statements in the PDF.\n")
+
+
 # ---- main -------------------------------------------------------------------
 
 PILOT_CASES = [
@@ -1581,6 +2114,8 @@ def main() -> int:
     ap.add_argument("--all",   action="store_true")
     ap.add_argument("--write-xlsx", action="store_true",
                     help="Write xlsx from the existing CSV without re-running extraction")
+    ap.add_argument("--no-fs", action="store_true",
+                    help="List company-years with no FS in PDF (from existing CSV)")
     ap.add_argument("--slug")
     ap.add_argument("--fy", type=int)
     args = ap.parse_args()
@@ -1589,6 +2124,11 @@ def main() -> int:
         csv_path  = REPO_ROOT / "docs" / "exports" / "financials_extracted.csv"
         xlsx_path = REPO_ROOT / "docs" / "exports" / "financials_extracted.xlsx"
         write_xlsx_from_csv(csv_path, xlsx_path)
+        return 0
+
+    if args.no_fs:
+        csv_path = REPO_ROOT / "docs" / "exports" / "financials_extracted.csv"
+        list_no_fs(csv_path)
         return 0
 
     manifest = _load_manifest()

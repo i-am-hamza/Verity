@@ -33,21 +33,38 @@ _EV_FIELDS = [
     "total_equity",
     "equity_attributable",
     "revenue",
+    "gross_income_bank",
     "net_profit",
     "net_profit_attributable",
     "eps_numerator",
     "basic_eps",
     "shares_outstanding",
     "shares_eps_note",
+    # Debt components
+    "st_borrowings",
+    "lt_borrowings",
+    "sukuk_bonds_notes",
+    "lease_liabilities_nb",
+    "due_to_banks_fi",
+    "sukuk_issued_bank",
+    "subordinated_debt_bank",
+    "total_borrowings",
 ]
 
-_RATIO_FIELDS = ["leverage", "roa", "roe", "net_profit_margin", "equity_ordinary"]
+_RATIO_FIELDS = [
+    "total_debt", "total_debt_status",
+    "leverage", "leverage_alt",
+    "roa", "roe", "net_profit_margin", "net_margin_alt",
+    "equity_ordinary",
+    "eps_in_fils_baisa",
+]
 
 _FLAG_PREFIXES = [
     "BS_MISMATCH",
     "NP_ATTR_GT_TOTAL",
     "EPS_MISMATCH",
     "ROE_NPA_FALLBACK",
+    "LEVERAGE_NEGATIVE_EQUITY",
     "FS_BOUNDARY_NOT_FOUND",
     "OCR_HEAVY",
 ]
@@ -133,12 +150,13 @@ def main() -> int:
 
     # ---- colour scale for flag_types column ----------------------------------
     FLAG_FILL = {
-        "BS_MISMATCH":          PatternFill("solid", fgColor="FFD700"),
-        "NP_ATTR_GT_TOTAL":     PatternFill("solid", fgColor="FFA500"),
-        "EPS_MISMATCH":         PatternFill("solid", fgColor="FF6B6B"),
-        "ROE_NPA_FALLBACK":     PatternFill("solid", fgColor="C8E6C9"),
-        "FS_BOUNDARY_NOT_FOUND":PatternFill("solid", fgColor="E0E0E0"),
-        "OCR_HEAVY":            PatternFill("solid", fgColor="B0BEC5"),
+        "BS_MISMATCH":              PatternFill("solid", fgColor="FFD700"),
+        "NP_ATTR_GT_TOTAL":         PatternFill("solid", fgColor="FFA500"),
+        "EPS_MISMATCH":             PatternFill("solid", fgColor="FF6B6B"),
+        "ROE_NPA_FALLBACK":         PatternFill("solid", fgColor="C8E6C9"),
+        "LEVERAGE_NEGATIVE_EQUITY": PatternFill("solid", fgColor="FF9999"),
+        "FS_BOUNDARY_NOT_FOUND":    PatternFill("solid", fgColor="E0E0E0"),
+        "OCR_HEAVY":                PatternFill("solid", fgColor="B0BEC5"),
     }
     ft_col_idx = cols.index("flag_types") + 1
 
