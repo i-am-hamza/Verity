@@ -311,6 +311,11 @@ _PATTERNS: dict[str, list[str]] = {
         r"^sukuk\s+(?:financings?|payable|issued)\s*$",
         r"^term\s+(?:loans?\s+and\s+)?financing\s+facilities?\s*$",
         r"^bonds?\s+(?:and\s+sukuk)?\s*$",
+        # Islamic / GCC aggregated labels
+        r"^total\s+(?:bank\s+)?(?:facilities?|financing)\s*$",
+        r"^total\s+(?:murabaha|tawarruq|wakala|islamic)\s+(?:financing\s+)?(?:facilities?|payables?|loans?)\s*$",
+        r"^total\s+loans?\s+and\s+(?:bank\s+)?facilities?\s*$",
+        r"^loans?\s+and\s+(?:bank\s+)?facilities?\s*$",
     ],
     # Share price at year-end (stated in the report's market data section).
     "share_price": [
@@ -359,6 +364,15 @@ _PATTERNS: dict[str, list[str]] = {
         r"^due\s+to\s+banks?\s*$",
         r"^bank\s+overdrafts?\s*$",
         r"^short[\s-]?term\s+financing\s+facilities?\s*$",
+        # Islamic / GCC labels
+        r"^(?:short[\s-]?term\s+)?(?:murabaha|tawarruq|wakala)\s+(?:financing\s+)?(?:facilities?|payables?)\s*$",
+        r"^current\s+(?:portion\s+of\s+)?(?:murabaha|tawarruq|wakala|islamic)\s+(?:financing|facilities?|payables?)\s*$",
+        r"^bank\s+facilities?\s*$",
+        r"^banking\s+facilities?\s*$",
+        r"^loans?\s+and\s+banking\s+facilities?\s*$",
+        r"^credit\s+facilities?\s*$",
+        r"^revolving\s+credit\s+(?:facilities?|lines?)\s*$",
+        r"^short[\s-]?term\s+loans?\s*$",
     ],
     "lt_borrowings": [
         r"^long[\s-]?term\s+(?:bank\s+)?(?:loans?\s+and\s+)?borrowings?\s*$",
@@ -367,6 +381,16 @@ _PATTERNS: dict[str, list[str]] = {
         r"^term\s+(?:loans?\s+and\s+)?financing\s+facilities?\s*$",
         r"^murabaha\s+financing\s+(?:facilities?|payables?)\s*$",
         r"^long[\s-]?term\s+debt\s*$",
+        # Islamic / GCC labels
+        r"^(?:long[\s-]?term\s+|non[\s-]?current\s+)?(?:murabaha|tawarruq|wakala)\s+(?:financing\s+)?(?:facilities?|payables?)\s*$",
+        r"^(?:long[\s-]?term\s+|non[\s-]?current\s+)?islamic\s+(?:financing|facilities?|loans?)\s*$",
+        r"^islamic\s+(?:term\s+)?(?:financing|facilities?)\s*$",
+        r"^(?:SIDF|sidf)\s+(?:loans?|financing)\s*$",
+        r"^syndicated\s+(?:facilities?|loans?|financing)\s*$",
+        r"^bilateral\s+(?:facilities?|loans?|financing)\s*$",
+        r"^medium[\s-]?term\s+(?:loans?|facilities?|financing)\s*$",
+        r"^long[\s-]?term\s+loans?\s*$",
+        r"^term\s+loans?\s*$",
     ],
     "sukuk_bonds_notes": [
         r"^sukuk\s+(?:financings?|payable|issued|bonds?)\s*$",
@@ -376,6 +400,8 @@ _PATTERNS: dict[str, list[str]] = {
         r"^notes?\s+payable\s*$",
         r"^(?:listed\s+)?(?:islamic\s+)?bonds?\s*$",
         r"^sukuk\s+(?:certificates?\s+)?payable\s*$",
+        r"^Islamic\s+sukuk\s*$",
+        r"^trust\s+(?:certificates?|notes?)\s*$",
     ],
     "lease_liabilities_nb": [
         r"^lease\s+liabilities?\s*$",
@@ -389,9 +415,16 @@ _PATTERNS: dict[str, list[str]] = {
     "due_to_banks_fi": [
         r"^due\s+to\s+banks?\s+and\s+(?:other\s+)?financial\s+institutions?\s*$",
         r"^due\s+to\s+(?:financial\s+institutions?|banks?)\s*$",
+        # Saudi / Islamic banks: SAMA appears before "banks" in the label
+        r"^due\s+to\s+SAMA,?\s+banks?\s+and\s+(?:other\s+)?financial\s+institutions?\s*$",
+        r"^due\s+to\s+(?:SAMA\s+and\s+)?banks?\s+and\s+(?:other\s+)?financial\s+institutions?\s*$",
+        r"^amounts?\s+due\s+to\s+banks?\s+and\s+(?:other\s+)?financial\s+institutions?\s*$",
         r"^deposits?\s+from\s+(?:banks?|financial\s+institutions?)\s*$",
         r"^borrowings?\s+from\s+(?:banks?|financial\s+institutions?)\s*$",
         r"^inter[\s-]?bank\s+(?:deposits?|borrowings?|liabilities?)\s*$",
+        r"^placements?\s+from\s+banks?\s+and\s+(?:other\s+)?financial\s+institutions?\s*$",
+        r"^money\s+market\s+deposits?\s*$",
+        r"^due\s+to\s+banks?\s*$",
     ],
     "sukuk_issued_bank": [
         r"^sukuk\s+(?:certificates?\s+)?issued\s*$",
@@ -399,11 +432,14 @@ _PATTERNS: dict[str, list[str]] = {
         r"^(?:medium[\s-]?term\s+)?notes?\s+(?:programme\s+)?issued\s*$",
         r"^bonds?\s+issued\s*$",
         r"^sukuk\s+financing\s+programs?\s*$",
+        r"^tier\s+2\s+sukuk\s*$",
+        r"^(?:issued\s+)?sukuk\s+(?:and\s+bonds?)?\s*$",
     ],
     "subordinated_debt_bank": [
         r"^subordinated\s+(?:debt|loans?|bonds?|notes?|liabilities?)\s*$",
         r"^subordinated\s+term\s+(?:finance|loans?)\s*$",
-        r"^tier\s+2\s+(?:capital\s+)?(?:instruments?|notes?|bonds?)\s*$",
+        r"^tier\s+2\s+(?:capital\s+)?(?:instruments?|notes?|bonds?|sukuk)\s*$",
+        r"^tier\s+2\s+sukuk\s+(?:certificates?|notes?|capital)?\s*$",
     ],
 }
 
@@ -1036,6 +1072,34 @@ class PDFFinancialExtractor:
                 _PATTERNS["total_equity"], min_abs=1_000,
                 start=bs_start, stop=bs_stop,
             )
+            # Validate: if neither TL nor TE were found in the TA ±20-page window
+            # the "Total Assets" hit is likely from a financial summary / highlights
+            # table in the Board Report (GCC annual reports often embed a 5-year
+            # summary before the actual FS pages). Retry with the next TA occurrence.
+            if r.total_liabilities is None and r.total_equity is None:
+                ta_retry = self._extract_ev(
+                    _PATTERNS["total_assets"], min_abs=1_000, start=bs_start + 1
+                )
+                if ta_retry and ta_retry.page and ta_retry.page != ta_pg:
+                    ta_pg_r = ta_retry.page
+                    bs_start_r, bs_stop_r = self._page_range_to_line_range(
+                        ta_pg_r - 3, ta_pg_r + 20, start_floor=fs
+                    )
+                    tl_r = self._extract_ev(
+                        _PATTERNS["total_liabilities"], min_abs=1_000,
+                        start=bs_start_r, stop=bs_stop_r,
+                    )
+                    te_r = self._extract_ev(
+                        _PATTERNS["total_equity"], min_abs=1_000,
+                        start=bs_start_r, stop=bs_stop_r,
+                    )
+                    if tl_r is not None or te_r is not None:
+                        r.total_assets = ta_retry
+                        ta_pg = ta_pg_r
+                        bs_start, bs_stop = bs_start_r, bs_stop_r
+                        r.total_liabilities = tl_r
+                        r.total_equity = te_r
+
             if r.total_liabilities is None:
                 r.total_liabilities = self._extract_ev(
                     _PATTERNS["total_liabilities"], min_abs=1_000, start=fs
@@ -1447,6 +1511,8 @@ class PDFFinancialExtractor:
 
         Sets total_debt (sum of found components) and total_debt_status.
         Searches within TA page ±20 to stay in the balance sheet section.
+        If no components found in the ±20 window, falls back to a wider ±40-page
+        search (handles banks whose Board-Report summary is before the actual FS).
         """
         r = self.result
         fs = self._fs_start
@@ -1459,42 +1525,55 @@ class PDFFinancialExtractor:
         else:
             bs_start, bs_stop = fs, None
 
-        components: list[float] = []
-        found_any = False
+        def _search_components(start: int, stop: Optional[int]) -> tuple[list[float], bool]:
+            comps: list[float] = []
+            found = False
+            if r.is_bank:
+                r.due_to_banks_fi = self._extract_ev(
+                    _PATTERNS["due_to_banks_fi"], min_abs=0, start=start, stop=stop
+                )
+                r.sukuk_issued_bank = self._extract_ev(
+                    _PATTERNS["sukuk_issued_bank"], min_abs=0, start=start, stop=stop
+                )
+                r.subordinated_debt_bank = self._extract_ev(
+                    _PATTERNS["subordinated_debt_bank"], min_abs=0, start=start, stop=stop
+                )
+                for ev in (r.due_to_banks_fi, r.sukuk_issued_bank, r.subordinated_debt_bank):
+                    if ev is not None:
+                        found = True
+                        if ev.value is not None and ev.value > 0:
+                            comps.append(ev.value)
+            else:
+                r.st_borrowings = self._extract_ev(
+                    _PATTERNS["st_borrowings"], min_abs=0, start=start, stop=stop
+                )
+                r.lt_borrowings = self._extract_ev(
+                    _PATTERNS["lt_borrowings"], min_abs=0, start=start, stop=stop
+                )
+                r.sukuk_bonds_notes = self._extract_ev(
+                    _PATTERNS["sukuk_bonds_notes"], min_abs=0, start=start, stop=stop
+                )
+                r.lease_liabilities_nb = self._extract_ev(
+                    _PATTERNS["lease_liabilities_nb"], min_abs=0, start=start, stop=stop
+                )
+                for ev in (r.st_borrowings, r.lt_borrowings,
+                           r.sukuk_bonds_notes, r.lease_liabilities_nb):
+                    if ev is not None:
+                        found = True
+                        if ev.value is not None and ev.value > 0:
+                            comps.append(ev.value)
+            return comps, found
 
-        if r.is_bank:
-            r.due_to_banks_fi = self._extract_ev(
-                _PATTERNS["due_to_banks_fi"], min_abs=0, start=bs_start, stop=bs_stop
+        components, found_any = _search_components(bs_start, bs_stop)
+
+        # Wider fallback (±40 pages) for documents where the FS summary table
+        # precedes the actual consolidated statement of financial position.
+        if not components and not found_any and ta_pg:
+            bs_start_w, bs_stop_w = self._page_range_to_line_range(
+                ta_pg - 5, ta_pg + 40, start_floor=fs
             )
-            r.sukuk_issued_bank = self._extract_ev(
-                _PATTERNS["sukuk_issued_bank"], min_abs=0, start=bs_start, stop=bs_stop
-            )
-            r.subordinated_debt_bank = self._extract_ev(
-                _PATTERNS["subordinated_debt_bank"], min_abs=0, start=bs_start, stop=bs_stop
-            )
-            for ev in (r.due_to_banks_fi, r.sukuk_issued_bank, r.subordinated_debt_bank):
-                if ev is not None:
-                    found_any = True
-                    if ev.value is not None and ev.value > 0:
-                        components.append(ev.value)
-        else:
-            r.st_borrowings = self._extract_ev(
-                _PATTERNS["st_borrowings"], min_abs=0, start=bs_start, stop=bs_stop
-            )
-            r.lt_borrowings = self._extract_ev(
-                _PATTERNS["lt_borrowings"], min_abs=0, start=bs_start, stop=bs_stop
-            )
-            r.sukuk_bonds_notes = self._extract_ev(
-                _PATTERNS["sukuk_bonds_notes"], min_abs=0, start=bs_start, stop=bs_stop
-            )
-            r.lease_liabilities_nb = self._extract_ev(
-                _PATTERNS["lease_liabilities_nb"], min_abs=0, start=bs_start, stop=bs_stop
-            )
-            for ev in (r.st_borrowings, r.lt_borrowings, r.sukuk_bonds_notes, r.lease_liabilities_nb):
-                if ev is not None:
-                    found_any = True
-                    if ev.value is not None and ev.value > 0:
-                        components.append(ev.value)
+            if bs_stop_w != bs_stop:
+                components, found_any = _search_components(bs_start_w, bs_stop_w)
 
         # Also consider total_borrowings already extracted in _extract_supplementary.
         # If no components found but total_borrowings is, use it as the total directly.
@@ -1514,8 +1593,20 @@ class PDFFinancialExtractor:
             r.total_debt = 0.0
             r.total_debt_status = "zero"
         else:
-            r.total_debt = None
-            r.total_debt_status = "not_found"
+            # If TA, TL and TE are all extracted and the balance sheet balances
+            # (within 2%), the balance sheet search was valid — no debt line items
+            # means the company genuinely has no financial borrowings.
+            ta_v = r.total_assets.value if r.total_assets else None
+            tl_v = r.total_liabilities.value if r.total_liabilities else None
+            te_v = r.total_equity.value if r.total_equity else None
+            if (ta_v and tl_v is not None and te_v is not None
+                    and ta_v > 0
+                    and abs(tl_v + te_v - ta_v) / ta_v <= 0.02):
+                r.total_debt = 0.0
+                r.total_debt_status = "zero"
+            else:
+                r.total_debt = None
+                r.total_debt_status = "not_found"
 
     def _extract_history(self) -> None:
         r = self.result
