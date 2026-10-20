@@ -1,3 +1,48 @@
+# Term Acceptance — Taxonomy v5 (Examiner Additions)
+
+_Added at examiner's request, verified by the examiner  |  Date: 2026-10-20_
+_Rule: appears in at least 10% of relevant reports AND at least 14 of 20 genuine sentences_
+
+16 new term concepts (variants on one line = one concept).
+Frequencies reported from Verity's own v5 corpus after rescoring; "relevant" = industries
+where the term's SASB category is material (all 390 if SASB category = none).
+
+| Concept | SASB category | Pillar | Decision |
+|---|---|---|:---:|
+| `climate policy` | GHG Emissions | E | ✅ ADDED |
+| `pollution` | Ecological Impacts | E | ✅ ADDED |
+| `resource use` | Materials Sourcing & Efficiency | E | ✅ ADDED |
+| `innovation` | none | E | ✅ ADDED |
+| `employee engagement` | Employee Engagement, Diversity & Inclusion | S | ✅ ADDED |
+| `employee ownership` / `employee share ownership` | Employee Engagement, Diversity & Inclusion | S | ✅ ADDED |
+| `pension benefits` | Labor Practices | S | ✅ ADDED |
+| `end of service` / `end-of-service` | Labor Practices | S | ✅ ADDED |
+| `poverty` | Human Rights & Community Relations | S | ✅ ADDED |
+| `customer needs` / `customers' needs` / `client needs` / `clients' needs` | Customer Welfare | S | ✅ ADDED |
+| `feedback` | none | S | ✅ ADDED |
+| `digital services` | Access & Affordability | S | ✅ ADDED |
+| `board meeting(s)` / `meetings of directors` / `meetings of the board` | none | G | ✅ ADDED |
+| `dividend policy` | none | G | ✅ ADDED |
+| `stakeholder engagement` | none | G | ✅ ADDED |
+| `incentive plan(s)` | none | G | ✅ ADDED |
+
+Notes:
+- Terms with SASB category "none" are never material: weight = 1.0 everywhere.
+- Variant phrases sharing one concept row are implemented as separate DB rows.
+- `end-of-service` uses exact (case-insensitive) matching (lemma_based=False) to avoid
+  spaCy's ambiguous tokenization of hyphenated compounds.
+- `customers' needs` and `clients' needs` use exact matching (lemma_based=False) because
+  the apostrophe disrupts spaCy's lemma patterns; the canonical `customer needs` and
+  `client needs` (lemma_based=True) cover the non-apostrophe forms.
+- `board meeting` (lemma_based=True) covers both "board meeting" and "board meetings";
+  `incentive plan` (lemma_based=True) covers "incentive plan" and "incentive plans" —
+  no separate plural row needed.
+- Overlap with v4: `meetings of the board` (new, 4 tokens) vs `board of directors` (v4,
+  3 tokens) overlap in "meetings of the board of directors". Longest-match-wins resolves
+  it (new phrase takes priority). Both are Governance/None — no pillar or SASB impact.
+
+---
+
 # Term Acceptance — Phase 2 Coding Review
 
 _Coded by: researcher  |  Coding sheet: `docs/term-evidence/coding_sheet_recode.xlsx`_

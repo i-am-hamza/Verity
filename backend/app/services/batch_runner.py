@@ -19,6 +19,7 @@ Design:
 """
 from __future__ import annotations
 
+import contextlib
 import logging
 import os
 import time
@@ -246,7 +247,10 @@ def run_batch(
             )
         except Exception as exc:
             # Persistence errors shouldn't take the whole batch down.
+            # Rollback so the session is clean for subsequent workers.
             log.error("persist failed for sd_id=%s: %s", result.source_document_id, exc)
+            with contextlib.suppress(Exception):
+                db.rollback()
             summary.errors += 1
             return
         if result.status == "scored":
