@@ -139,7 +139,7 @@ class Report(Base):
     composite_3pillar: Mapped[float | None] = mapped_column(Float, nullable=True)
     composite_general_no_new3: Mapped[float | None] = mapped_column(Float, nullable=True)
 
-    # Financial add-on terms: only populated for the 19 financial companies.
+    # Financial add-on terms: only populated for the 20 financial companies.
     addon_density: Mapped[float | None] = mapped_column(Float, nullable=True)
     addon_rank: Mapped[float | None] = mapped_column(Float, nullable=True)
 

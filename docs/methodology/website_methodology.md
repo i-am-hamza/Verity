@@ -10,7 +10,7 @@ It measures **disclosure, not performance**. A sentence admitting a weakness cou
 
 - **65 companies** across six markets: Saudi Arabia (27), United Arab Emirates (12), Qatar (9), Kuwait (7), Oman (6) and Bahrain (4).
 - **Six years each**, FY2020 to FY2025, giving **390 annual reports**: exactly one per company and year.
-- **19 financial companies** (18 commercial banks and one investment company) and **46 non-financial companies**.
+- **20 financial companies** (19 commercial banks and one investment company) and **45 non-financial companies**. Saudi Industrial Investment Group was replaced by Bank Aljazira (ticker 1020) because SIIG has no revenue line, making net margin calculations impossible.
 - Only the **English version** of each company's annual or integrated report is used. Every report was checked by the research team for the right company and the right fiscal year.
 - Five of the 65 companies were added to broaden the sample. Results with and without them are almost identical.
 
@@ -33,7 +33,7 @@ Verity looks for a fixed list of ESG terms drawn from the **GRI Standards** and 
 | Social | 22 | Counts towards the Social score (27 search phrases: some concepts have multiple spellings, e.g. *customer needs / customers' needs / client needs*) |
 | Governance | 34 | Counts towards the Governance score (36 search phrases: two abbreviation pairs, *ICOFR* and *ITGC*, each counted as one concept) |
 | General ESG terms | 8 | Counts towards the General score (*ESG*, *sustainability*, *GRI*, *sustainable development*, *CSR*, *innovation*, *feedback*, *digital services*) |
-| Banking terms | 9 | Scored separately, for the 19 financial companies only (for example *financial inclusion*, *responsible lending*, *stress testing*) |
+| Banking terms | 9 | Scored separately, for the 20 financial companies only (for example *financial inclusion*, *responsible lending*, *stress testing*) |
 
 **How new terms were added.** Terms were added in two rounds. First, fourteen terms were added based on an analysis of the full corpus (thirteen in the three pillars and stress testing in the banking terms), such as *air quality*, *process safety* and *food safety*, to cover topics that matter for industrial companies. Second, sixteen further terms were added at the examiner's request and verified by the examiner against the same acceptance tests, covering topics such as *climate policy*, *employee engagement*, *board meetings* and *stakeholder engagement*. Each candidate had to pass two tests set in advance:
 
