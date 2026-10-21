@@ -90,7 +90,9 @@ def _meta(db: Session) -> LeaderboardMeta:
     active = db.query(Institution).filter(Institution.active).count()
     scored_insts = (
         db.query(Report.institution_id)
+        .join(Institution, Institution.id == Report.institution_id)
         .filter(
+            Institution.active.is_(True),
             Report.pipeline_version == PIPELINE_VERSION,
             Report.status == ReportStatus.scored,
             Report.e_score.isnot(None),
@@ -100,15 +102,23 @@ def _meta(db: Session) -> LeaderboardMeta:
     )
     # Count unique company-years (deduplicate: --force can create multiple rows
     # for the same source document under the same pipeline version).
+    # Only count active institutions so replaced/inactive companies are excluded.
     from sqlalchemy import func as sqlfunc
-    _base_q = db.query(Report).filter(
-        Report.pipeline_version == PIPELINE_VERSION,
-        Report.status == ReportStatus.scored,
-        Report.e_score.isnot(None),
+    _base_q = (
+        db.query(Report)
+        .join(Institution, Institution.id == Report.institution_id)
+        .filter(
+            Institution.active.is_(True),
+            Report.pipeline_version == PIPELINE_VERSION,
+            Report.status == ReportStatus.scored,
+            Report.e_score.isnot(None),
+        )
     )
     scored_reports = (
         db.query(sqlfunc.count(sqlfunc.distinct(Report.source_document_id)))
+        .join(Institution, Institution.id == Report.institution_id)
         .filter(
+            Institution.active.is_(True),
             Report.pipeline_version == PIPELINE_VERSION,
             Report.status == ReportStatus.scored,
             Report.e_score.isnot(None),
