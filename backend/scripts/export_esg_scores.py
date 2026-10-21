@@ -609,6 +609,7 @@ def main() -> int:
             "avg_e": _avg("e_score"),
             "avg_s": _avg("s_score"),
             "avg_g": _avg("g_score"),
+            "avg_general": _avg("general_score"),
             "avg_composite": _avg("composite_score"),
             "n_years": len(rpts),
             "iid": iid,
@@ -709,7 +710,7 @@ def main() -> int:
         ("Sheets",),
         ("Scores by year   — one row per company-year",),
         ("Company averages — six-year averages, ranked 1–65",),
-        ("Robustness       — main composite vs four variants + correlations",),
+        ("Robustness       — main composite vs seven variants + correlations",),
         ("Column guide     — definition and unit of every column",),
     ]
     for line in meta_lines:
@@ -762,7 +763,7 @@ def main() -> int:
     avg_headers = [
         "Rank", "Company", "Ticker", "Country", "SASB sector", "SASB industry", "Financial",
         "Avg Environmental (0-100)", "Avg Social (0-100)", "Avg Governance (0-100)",
-        "Avg Composite (0-100)", "Years scored",
+        "Avg General (0-100)", "Avg Composite (0-100)", "Years scored",
     ]
     ws_avg.append(avg_headers)
     _style_header(ws_avg)
@@ -773,13 +774,14 @@ def main() -> int:
         ws_avg.append([
             cr["rank"], cr["company"], cr["ticker"], cr["country"],
             cr["sasb_sector"], cr["sasb_industry"], cr["financial"],
-            cr["avg_e"], cr["avg_s"], cr["avg_g"], cr["avg_composite"], cr["n_years"],
+            cr["avg_e"], cr["avg_s"], cr["avg_g"], cr["avg_general"],
+            cr["avg_composite"], cr["n_years"],
         ])
 
     _auto_width(ws_avg)
     _band_rows(ws_avg)
     n_avg = ws_avg.max_row
-    for col_idx in range(8, 12):  # Avg E/S/G/Composite (cols 8–11)
+    for col_idx in range(8, 13):  # Avg E/S/G/General/Composite (cols 8–12)
         _score_color_scale(ws_avg, get_column_letter(col_idx), 2, n_avg)
 
     # ---- Sheet 4: Robustness ----
