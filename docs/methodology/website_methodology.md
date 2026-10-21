@@ -29,8 +29,8 @@ Verity looks for a fixed list of ESG terms drawn from the **GRI Standards** and 
 
 | Group | Terms | How it is used |
 |---|---|---|
-| Environmental | 22 | Counts towards the Environmental score |
-| Social | 26 | Counts towards the Social score |
+| Environmental | 24 | Counts towards the Environmental score |
+| Social | 27 | Counts towards the Social score |
 | Governance | 36 | Counts towards the Governance score |
 | General ESG terms | 8 | Counts towards the General score (*ESG*, *sustainability*, *GRI*, *sustainable development*, *CSR*, *innovation*, *feedback*, *digital services*) |
 | Banking terms | 9 | Scored separately, for the 19 financial companies only (for example *financial inclusion*, *responsible lending*, *stress testing*) |

@@ -272,15 +272,18 @@ def main() -> int:
         ev_by_report[ev.report_id].append(ev)
 
     def _recompute_composites(material_w: float) -> list[float | None]:
-        e_dens, s_dens, g_dens = [], [], []
+        # Vary material weighting for E/S/G only; General terms have no SASB
+        # category so they always get DEFAULT_WEIGHT regardless of material_w.
+        e_dens, s_dens, g_dens, gen_dens = [], [], [], []
         for r in ranked:
             inst = inst_map.get(r.institution_id)
             wc = r.narrative_word_count
             if not wc or not inst:
-                e_dens.append(None); s_dens.append(None); g_dens.append(None)
+                e_dens.append(None); s_dens.append(None)
+                g_dens.append(None); gen_dens.append(None)
                 continue
             mat = material_categories_for(inst.sasb_industry)
-            e_raw = s_raw = g_raw = 0.0
+            e_raw = s_raw = g_raw = gen_raw = 0.0
             for ev in ev_by_report.get(r.id, []):
                 tid = ev.term_id
                 if term_group.get(tid, "") != "core":
@@ -296,21 +299,33 @@ def main() -> int:
                     s_raw += w
                 elif pillar == "Governance":
                     g_raw += w
+                elif pillar == "General":
+                    # General terms have no SASB category; always DEFAULT_WEIGHT
+                    gen_raw += DEFAULT_WEIGHT
             k = 1000.0 / wc
-            e_dens.append(e_raw * k); s_dens.append(s_raw * k); g_dens.append(g_raw * k)
+            e_dens.append(e_raw * k); s_dens.append(s_raw * k)
+            g_dens.append(g_raw * k); gen_dens.append(gen_raw * k)
         e_sc = _rank_scores(e_dens)
         s_sc = _rank_scores(s_dens)
         g_sc = _rank_scores(g_dens)
-        return [(e + s + g) / 3.0 if e is not None and s is not None and g is not None else None
-                for e, s, g in zip(e_sc, s_sc, g_sc, strict=True)]
+        gen_sc = _rank_scores(gen_dens)
+        return [
+            (e + s + g + gen) / 4.0
+            if e is not None and s is not None and g is not None and gen is not None
+            else None
+            for e, s, g, gen in zip(e_sc, s_sc, g_sc, gen_sc, strict=True)
+        ]
 
     def _sector_adjusted_composites() -> list[float | None]:
+        # Adjust each density by its SASB-sector mean, then rank-score and
+        # average all four components (E, S, G, General) — same as main composite.
         sectors = [INDUSTRY_TO_SECTOR.get(
             (inst_map.get(r.institution_id) or type("", (), {"sasb_industry": ""})()).sasb_industry or "", "Unknown"
         ) for r in ranked]
         se: dict[str, list[float]] = defaultdict(list)
         ss: dict[str, list[float]] = defaultdict(list)
         sg: dict[str, list[float]] = defaultdict(list)
+        sgen: dict[str, list[float]] = defaultdict(list)
         for r, sec in zip(ranked, sectors, strict=True):
             if r.e_density is not None:
                 se[sec].append(r.e_density)
@@ -318,31 +333,53 @@ def main() -> int:
                 ss[sec].append(r.s_density)
             if r.g_density is not None:
                 sg[sec].append(r.g_density)
-        se_avg = {s: sum(v)/len(v) for s, v in se.items()}
-        ss_avg = {s: sum(v)/len(v) for s, v in ss.items()}
-        sg_avg = {s: sum(v)/len(v) for s, v in sg.items()}
-        adj_e: list[float | None] = []
-        adj_s: list[float | None] = []
-        adj_g: list[float | None] = []
+            if r.general_density is not None:
+                sgen[sec].append(r.general_density)
+        se_avg   = {s: sum(v)/len(v) for s, v in se.items()}
+        ss_avg   = {s: sum(v)/len(v) for s, v in ss.items()}
+        sg_avg   = {s: sum(v)/len(v) for s, v in sg.items()}
+        sgen_avg = {s: sum(v)/len(v) for s, v in sgen.items()}
+        adj_e:   list[float | None] = []
+        adj_s:   list[float | None] = []
+        adj_g:   list[float | None] = []
+        adj_gen: list[float | None] = []
         for r, sec in zip(ranked, sectors, strict=True):
-            ea = se_avg.get(sec, 0.0); sa = ss_avg.get(sec, 0.0); ga = sg_avg.get(sec, 0.0)
-            adj_e.append((r.e_density - ea) / ea if r.e_density is not None and ea > 0 else None)
-            adj_s.append((r.s_density - sa) / sa if r.s_density is not None and sa > 0 else None)
-            adj_g.append((r.g_density - ga) / ga if r.g_density is not None and ga > 0 else None)
-        e_sc = _rank_scores(adj_e); s_sc = _rank_scores(adj_s); g_sc = _rank_scores(adj_g)
-        return [(e + s + g) / 3.0 if e is not None and s is not None and g is not None else None
-                for e, s, g in zip(e_sc, s_sc, g_sc, strict=True)]
+            ea  = se_avg.get(sec,   0.0)
+            sa  = ss_avg.get(sec,   0.0)
+            ga  = sg_avg.get(sec,   0.0)
+            gna = sgen_avg.get(sec, 0.0)
+            adj_e.append(  (r.e_density       - ea)  / ea  if r.e_density       is not None and ea  > 0 else None)
+            adj_s.append(  (r.s_density       - sa)  / sa  if r.s_density       is not None and sa  > 0 else None)
+            adj_g.append(  (r.g_density       - ga)  / ga  if r.g_density       is not None and ga  > 0 else None)
+            adj_gen.append((r.general_density  - gna) / gna if r.general_density is not None and gna > 0 else None)
+        e_sc   = _rank_scores(adj_e)
+        s_sc   = _rank_scores(adj_s)
+        g_sc   = _rank_scores(adj_g)
+        gen_sc = _rank_scores(adj_gen)
+        return [
+            (e + s + g + gen) / 4.0
+            if e is not None and s is not None and g is not None and gen is not None
+            else None
+            for e, s, g, gen in zip(e_sc, s_sc, g_sc, gen_sc, strict=True)
+        ]
 
     def _without5_composites() -> list[float | None]:
+        # Re-rank within the 60-company sub-sample; compare on those 60 only.
+        # Uses the same four-component composite as the main score.
         keep = [(i, r) for i, r in enumerate(ranked)
                 if inst_map.get(r.institution_id) and
                 inst_map[r.institution_id].slug not in ADDED_5_SLUGS]
         sub = [r for _, r in keep]
-        sub_e = _rank_scores([r.e_density for r in sub])
-        sub_s = _rank_scores([r.s_density for r in sub])
-        sub_g = _rank_scores([r.g_density for r in sub])
-        sub_c = [(e + s + g) / 3.0 if e is not None and s is not None and g is not None else None
-                 for e, s, g in zip(sub_e, sub_s, sub_g, strict=True)]
+        sub_e   = _rank_scores([r.e_density       for r in sub])
+        sub_s   = _rank_scores([r.s_density       for r in sub])
+        sub_g   = _rank_scores([r.g_density       for r in sub])
+        sub_gen = _rank_scores([r.general_density  for r in sub])
+        sub_c = [
+            (e + s + g + gen) / 4.0
+            if e is not None and s is not None and g is not None and gen is not None
+            else None
+            for e, s, g, gen in zip(sub_e, sub_s, sub_g, sub_gen, strict=True)
+        ]
         result: list[float | None] = [None] * len(ranked)
         for (orig_i, _), c in zip(keep, sub_c, strict=True):
             result[orig_i] = c
@@ -376,28 +413,127 @@ def main() -> int:
     avg_sec    = _by_inst_avg(comp_sec)
     avg_w5     = _by_inst_avg(comp_w5)
 
-    def _rho(ref: dict[int, float], alt: dict[int, float]) -> float:
+    def _rho_inst(ref: dict[int, float], alt: dict[int, float]) -> float:
+        """Company-level (averaged) Spearman."""
         common = sorted(set(ref) & set(alt))
         if len(common) < 2:
             return float("nan")
         return _spearman([ref[i] for i in common], [alt[i] for i in common])
 
-    rho_3pil    = _rho(main_avg, avg_3pil)
-    rho_no_new3 = _rho(main_avg, avg_no_new3)
-    rho_125 = _rho(main_avg, avg_125)
-    rho_unw = _rho(main_avg, avg_unw)
-    rho_200 = _rho(main_avg, avg_200)
-    rho_sec = _rho(main_avg, avg_sec)
-    rho_w5  = _rho(main_avg, avg_w5)
+    def _rho_cy(ref_list: list[float | None], alt_list: list[float | None]) -> float:
+        """Company-year Spearman over matching non-None pairs."""
+        pairs = [(a, b) for a, b in zip(ref_list, alt_list, strict=True)
+                 if a is not None and b is not None]
+        if len(pairs) < 2:
+            return float("nan")
+        return _spearman([p[0] for p in pairs], [p[1] for p in pairs])
 
-    print(f"Robustness correlations (Spearman rho, company-level averages):")
-    print(f"  3-pillar vs main           : {rho_3pil:.4f}")
-    print(f"  no-new-3 General vs main   : {rho_no_new3:.4f}")
-    print(f"  unweighted vs main         : {rho_unw:.4f}")
-    print(f"  w=1.25 vs main             : {rho_125:.4f}")
-    print(f"  w=2.0 vs main              : {rho_200:.4f}")
-    print(f"  sector-adj vs main         : {rho_sec:.4f}")
-    print(f"  without-5 vs main          : {rho_w5:.4f}")
+    rho_3pil    = _rho_inst(main_avg, avg_3pil)
+    rho_no_new3 = _rho_inst(main_avg, avg_no_new3)
+    rho_125 = _rho_inst(main_avg, avg_125)
+    rho_unw = _rho_inst(main_avg, avg_unw)
+    rho_200 = _rho_inst(main_avg, avg_200)
+    rho_sec = _rho_inst(main_avg, avg_sec)
+    rho_w5  = _rho_inst(main_avg, avg_w5)
+
+    rho_cy_3pil    = _rho_cy(main_comp, comp_3pil)
+    rho_cy_no_new3 = _rho_cy(main_comp, comp_no_new3)
+    rho_cy_125     = _rho_cy(main_comp, comp_125)
+    rho_cy_unw     = _rho_cy(main_comp, comp_unw)
+    rho_cy_200     = _rho_cy(main_comp, comp_200)
+    rho_cy_sec     = _rho_cy(main_comp, comp_sec)
+    rho_cy_w5      = _rho_cy(main_comp, comp_w5)
+
+    # ------------------------------------------------------------------ #
+    # v4 (pipeline 0.4.2) comparison
+    # ------------------------------------------------------------------ #
+    V4_PIPELINE = "0.4.2"
+    v4_raw = (
+        db.query(Report)
+        .join(Institution, Institution.id == Report.institution_id)
+        .filter(
+            Report.status == ReportStatus.scored,
+            Report.pipeline_version == V4_PIPELINE,
+            Institution.active,
+        )
+        .order_by(Institution.name, Report.fiscal_year, Report.id)
+        .all()
+    )
+    seen_v4: dict[tuple, int] = {}
+    v4_dedup: list[Report] = []
+    for r in v4_raw:
+        key = (r.source_document_id, V4_PIPELINE) if r.source_document_id else (r.institution_id, r.fiscal_year, V4_PIPELINE)
+        if key in seen_v4:
+            v4_dedup[seen_v4[key]] = r
+        else:
+            seen_v4[key] = len(v4_dedup)
+            v4_dedup.append(r)
+
+    v6_key_map: dict[tuple[int, int], Report] = {(r.institution_id, r.fiscal_year): r for r in ranked}
+    v4_key_map: dict[tuple[int, int], Report] = {(r.institution_id, r.fiscal_year): r for r in v4_dedup}
+    paired_keys = sorted(set(v6_key_map) & set(v4_key_map))
+    v6_paired   = [v6_key_map[k] for k in paired_keys]
+    v4_paired   = [v4_key_map[k] for k in paired_keys]
+
+    rho_cy_v4_comp = _rho_cy([r.composite_score for r in v6_paired], [r.composite_score for r in v4_paired])
+    rho_cy_v4_e    = _rho_cy([r.e_score for r in v6_paired], [r.e_score for r in v4_paired])
+    rho_cy_v4_s    = _rho_cy([r.s_score for r in v6_paired], [r.s_score for r in v4_paired])
+    rho_cy_v4_g    = _rho_cy([r.g_score for r in v6_paired], [r.g_score for r in v4_paired])
+
+    def _inst_avg(reports: list[Report], field: str) -> dict[int, float]:
+        d: dict[int, list[float]] = defaultdict(list)
+        for r in reports:
+            v = getattr(r, field, None)
+            if v is not None:
+                d[r.institution_id].append(v)
+        return {iid: sum(vs) / len(vs) for iid, vs in d.items()}
+
+    v4_comp_avg = _inst_avg(v4_dedup, "composite_score")
+    v4_e_avg    = _inst_avg(v4_dedup, "e_score")
+    v4_s_avg    = _inst_avg(v4_dedup, "s_score")
+    v4_g_avg    = _inst_avg(v4_dedup, "g_score")
+
+    rho_inst_v4_comp = _rho_inst(main_avg,                     v4_comp_avg)
+    rho_inst_v4_e    = _rho_inst(_inst_avg(ranked, "e_score"),  v4_e_avg)
+    rho_inst_v4_s    = _rho_inst(_inst_avg(ranked, "s_score"),  v4_s_avg)
+    rho_inst_v4_g    = _rho_inst(_inst_avg(ranked, "g_score"),  v4_g_avg)
+
+    # Top-10 rank movers vs v4
+    def _rank_dict(avg_map: dict[int, float]) -> dict[int, int]:
+        srtd = sorted(avg_map.items(), key=lambda x: x[1], reverse=True)
+        return {iid: i + 1 for i, (iid, _) in enumerate(srtd)}
+
+    v6_ranks = _rank_dict(main_avg)
+    v4_ranks = _rank_dict(v4_comp_avg)
+    common_iids = sorted(set(v6_ranks) & set(v4_ranks))
+    rank_deltas = sorted(
+        [(abs(v6_ranks[i] - v4_ranks[i]), v6_ranks[i], v4_ranks[i], i) for i in common_iids],
+        reverse=True,
+    )
+
+    print(f"\nRobustness correlations (Spearman rho, 4-component composite):")
+    print(f"  {'Variant':<42} {'company':>8} {'cy':>8}  note")
+    print(f"  {'-'*42} {'-'*8} {'-'*8}")
+    print(f"  {'3-pillar (E/S/G only) vs main':<42} {rho_3pil:>8.4f} {rho_cy_3pil:>8.4f}")
+    print(f"  {'no-new-3 General vs main':<42} {rho_no_new3:>8.4f} {rho_cy_no_new3:>8.4f}")
+    print(f"  {'unweighted (w=1.0) vs main':<42} {rho_unw:>8.4f} {rho_cy_unw:>8.4f}  mat weight only")
+    print(f"  {'w=1.25 vs main':<42} {rho_125:>8.4f} {rho_cy_125:>8.4f}  mat weight only")
+    print(f"  {'w=2.0 vs main':<42} {rho_200:>8.4f} {rho_cy_200:>8.4f}  mat weight only")
+    print(f"  {'sector-adjusted vs main':<42} {rho_sec:>8.4f} {rho_cy_sec:>8.4f}")
+    print(f"  {'without-5 companies vs main':<42} {rho_w5:>8.4f} {rho_cy_w5:>8.4f}  60 company sub-sample")
+
+    print(f"\nv6 vs v4 (pipeline 0.4.2) Spearman rho:")
+    print(f"  {'':<18} {'company':>8} {f'cy (n={len(paired_keys)})':>14}")
+    print(f"  {'Composite':<18} {rho_inst_v4_comp:>8.4f} {rho_cy_v4_comp:>12.4f}")
+    print(f"  {'Environmental':<18} {rho_inst_v4_e:>8.4f} {rho_cy_v4_e:>12.4f}")
+    print(f"  {'Social':<18} {rho_inst_v4_s:>8.4f} {rho_cy_v4_s:>12.4f}")
+    print(f"  {'Governance':<18} {rho_inst_v4_g:>8.4f} {rho_cy_v4_g:>12.4f}")
+
+    print(f"\nTop 10 composite rank movers v4 -> v6 (company-level):")
+    for delta, r6, r4, iid in rank_deltas[:10]:
+        name = inst_map[iid].name if iid in inst_map else str(iid)
+        direction = "up" if r6 < r4 else "down"
+        print(f"  {name:<45} v4={r4:>3d} v6={r6:>3d}  ({direction} {delta})")
 
     # ------------------------------------------------------------------ #
     # Build per-report row data
@@ -668,16 +804,26 @@ def main() -> int:
     # Correlation table below
     n_rob = ws_rob.max_row
     ws_rob.append([])
-    ws_rob.append(["Spearman correlations (company-level averages):"])
-    ws_rob.append(["3-pillar (no General) vs main",         round(rho_3pil, 4)])
-    ws_rob.append(["No-new-3 General vs main",              round(rho_no_new3, 4)])
-    ws_rob.append(["Unweighted (1.0) vs main (1.5)",        round(rho_unw, 4)])
-    ws_rob.append(["w=1.25 vs main (1.5)",                  round(rho_125, 4)])
-    ws_rob.append(["w=2.0 vs main (1.5)",                   round(rho_200, 4)])
-    ws_rob.append(["Sector-adjusted vs main",               round(rho_sec, 4)])
-    ws_rob.append(["Without 5 added companies vs main",     round(rho_w5, 4)])
+    ws_rob.append(["Spearman correlations (4-component composite: E, S, G, General each 0-100)", "", "company", "company-year"])
+    ws_rob.append(["3-pillar (E/S/G only, no General) vs main",    "", round(rho_3pil, 4),    round(rho_cy_3pil, 4)])
+    ws_rob.append(["No-new-3 General vs main",                     "", round(rho_no_new3, 4), round(rho_cy_no_new3, 4)])
+    ws_rob.append(["Unweighted (w=1.0) vs main (mat w=1.5)",       "", round(rho_unw, 4),     round(rho_cy_unw, 4)])
+    ws_rob.append(["w=1.25 vs main (mat w=1.5)",                   "", round(rho_125, 4),     round(rho_cy_125, 4)])
+    ws_rob.append(["w=2.0 vs main (mat w=1.5)",                    "", round(rho_200, 4),     round(rho_cy_200, 4)])
+    ws_rob.append(["Sector-adjusted vs main",                      "", round(rho_sec, 4),     round(rho_cy_sec, 4)])
+    ws_rob.append(["Without 5 added companies vs main (60 co.)",   "", round(rho_w5, 4),      round(rho_cy_w5, 4)])
+    ws_rob.append([])
+    ws_rob.append(["v6 vs v4 (pipeline 0.4.2) Spearman rho",      "", "company", f"company-year (n={len(paired_keys)})"])
+    ws_rob.append(["Composite v6 vs v4",    "", round(rho_inst_v4_comp, 4), round(rho_cy_v4_comp, 4)])
+    ws_rob.append(["Environmental v6 vs v4", "", round(rho_inst_v4_e, 4),  round(rho_cy_v4_e, 4)])
+    ws_rob.append(["Social v6 vs v4",        "", round(rho_inst_v4_s, 4),  round(rho_cy_v4_s, 4)])
+    ws_rob.append(["Governance v6 vs v4",    "", round(rho_inst_v4_g, 4),  round(rho_cy_v4_g, 4)])
 
+    # Bold the two section headers
     for row in ws_rob.iter_rows(min_row=n_rob + 2, max_row=n_rob + 2):
+        for cell in row:
+            cell.font = Font(bold=True)
+    for row in ws_rob.iter_rows(min_row=n_rob + 11, max_row=n_rob + 11):
         for cell in row:
             cell.font = Font(bold=True)
 
