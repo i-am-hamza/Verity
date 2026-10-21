@@ -71,6 +71,7 @@ class BatchSummary:
     skipped_type_filter: int = 0
     skipped_source_review: int = 0
     total_candidates: int = 0
+    missing_after_run: int = 0  # completeness guard: SDs processed but left with no Report
     timings_seconds: list[float] | None = None
     wall_clock_seconds: float = 0.0
 
@@ -121,6 +122,11 @@ def _select_candidates(
     # Preserve the two-value return API for existing callers.
     skipped_review += skipped_superseded
     return cands, skipped_type, skipped_review
+
+
+def _missing_sd_ids(processed: set[int], found: set[int]) -> set[int]:
+    """Return source_document_ids that were processed but have no Report row."""
+    return processed - found
 
 
 def _auto_worker_count(configured: int) -> int:
@@ -322,6 +328,32 @@ def run_batch(
     run.note = (f"scored={summary.scored} needs_review={summary.needs_review} "
                 f"errors={summary.errors}")
     db.commit()
+
+    # Completeness guard: every SD we attempted must have a Report row.
+    # A transient persist failure leaves no trace; this catches it loudly.
+    from app.models.report import Report as _Report
+    processed_ids = {sd.id for sd in to_run}
+    if processed_ids:
+        found_ids = {
+            r[0]
+            for r in db.query(_Report.source_document_id)
+            .filter(
+                _Report.source_document_id.in_(list(processed_ids)),
+                _Report.pipeline_version == PIPELINE_VERSION,
+            )
+            .all()
+            if r[0] is not None
+        }
+        missing = _missing_sd_ids(processed_ids, found_ids)
+        if missing:
+            print("\n!!! COMPLETENESS GUARD FAILED !!!")
+            for sd_id in sorted(missing):
+                _iid, fy_, _path, slug, _is_fin, _rtype, _ocr_ov = sd_meta[sd_id]
+                print(f"  NO REPORT: {slug} FY{fy_} (source_document_id={sd_id})")
+            print("!!! Re-run with --force to retry missing reports !!!\n")
+            summary.missing_after_run = len(missing)
+            summary.errors += len(missing)
+
     return summary
 
 
@@ -335,6 +367,8 @@ def print_summary(summary: BatchSummary) -> None:
     print(f"scored                          : {summary.scored}")
     print(f"needs_review (heavily scanned)  : {summary.needs_review}")
     print(f"errors                          : {summary.errors}")
+    if summary.missing_after_run:
+        print(f"COMPLETENESS GUARD FAILURES    : {summary.missing_after_run} (re-run with --force)")
     if summary.timings_seconds:
         ts = sorted(summary.timings_seconds)
         n = len(ts)
@@ -345,7 +379,7 @@ def print_summary(summary: BatchSummary) -> None:
               f"{ts[0]:.1f} / {med:.1f} / {p95:.1f} / {ts[-1]:.1f}")
 
 
-__all__ = ["BatchSummary", "print_summary", "run_batch"]
+__all__ = ["BatchSummary", "_missing_sd_ids", "print_summary", "run_batch"]
 
 
 _ = SourceType  # keep import referenced; needed to force enum registration
