@@ -128,7 +128,7 @@ COLUMN_GUIDE = [
     ("Country", "Country of primary listing", ""),
     ("SASB sector", "SASB macro-sector (11 categories)", ""),
     ("SASB industry", "SASB industry (77 categories)", ""),
-    ("Financial", "Yes = one of the 19 financial companies; No = non-financial", ""),
+    ("Financial", "Yes = one of the 20 financial companies; No = non-financial", ""),
     ("Fiscal year", "Fiscal year of the annual report", "YYYY"),
     ("Report type", "annual or integrated", ""),
     ("Environmental (0-100)", "Rank-normalised Environmental pillar score", "0–100"),
