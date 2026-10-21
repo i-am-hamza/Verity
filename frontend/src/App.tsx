@@ -36,6 +36,9 @@ const TaxonomyPage = lazy(() =>
 const MethodologyPage = lazy(() =>
   import("./pages/Methodology").then((m) => ({ default: m.MethodologyPage })),
 );
+const EsgFinancialsPage = lazy(() =>
+  import("./pages/EsgFinancials").then((m) => ({ default: m.EsgFinancialsPage })),
+);
 
 export function App() {
   return (
@@ -102,6 +105,14 @@ export function App() {
           element={
             <Suspense fallback={<Loading label="Loading methodology…" />}>
               <MethodologyPage />
+            </Suspense>
+          }
+        />
+        <Route
+          path="esg-financials"
+          element={
+            <Suspense fallback={<Loading label="Loading ESG & Financials…" />}>
+              <EsgFinancialsPage />
             </Suspense>
           }
         />

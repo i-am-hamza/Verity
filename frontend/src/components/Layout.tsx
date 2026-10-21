@@ -13,6 +13,7 @@ const nav = [
   { to: "/benchmark", label: "Benchmark" },
   { to: "/taxonomy", label: "Taxonomy" },
   { to: "/methodology", label: "Methodology" },
+  { to: "/esg-financials", label: "ESG & Financials" },
 ];
 
 export function Layout() {
