@@ -19,6 +19,7 @@ type SortKey =
   | "env"
   | "soc"
   | "gov"
+  | "gen"
   | "name"
   | "country"
   | "years_count";
@@ -120,6 +121,7 @@ export function OverviewPage() {
         env: r.env,
         soc: r.soc,
         gov: r.gov,
+        gen: r.gen,
         years_covered: r.years_covered.join(";"),
         data_quality_flag: r.data_quality_flag,
       })),
@@ -300,11 +302,12 @@ function LeaderboardTable({
                 </div>
               </div>
             </div>
-            <dl className="mt-3 grid grid-cols-3 gap-2 text-xs">
+            <dl className="mt-3 grid grid-cols-4 gap-2 text-xs">
               {([
                 ["E", r.env, "env"],
                 ["S", r.soc, "soc"],
                 ["G", r.gov, "gov"],
+                ["Gen", r.gen, "gen"],
               ] as const).map(([label, value, pillar]) => (
                 <div
                   key={label}
@@ -317,7 +320,7 @@ function LeaderboardTable({
                     >
                       <span
                         className={`block h-full bg-${pillar}`}
-                        style={{ width: `${Math.min(100, (value / 10) * 100)}%` }}
+                        style={{ width: `${Math.min(100, (value / 100) * 100)}%` }}
                       />
                     </span>
                     <span className="w-10 text-right text-text">
@@ -364,6 +367,9 @@ function LeaderboardTable({
             <th scope="col" className="px-3 py-2 text-right">
               {headerCell("G", "gov", "right")}
             </th>
+            <th scope="col" className="px-3 py-2 text-right">
+              {headerCell("Gen", "gen", "right")}
+            </th>
             <th scope="col" className="px-3 py-2 text-left">
               {headerCell("Years", "years_count", "left")}
             </th>
@@ -402,6 +408,7 @@ function LeaderboardTable({
               <PillarCell value={r.env} pillar="env" />
               <PillarCell value={r.soc} pillar="soc" />
               <PillarCell value={r.gov} pillar="gov" />
+              <PillarCell value={r.gen} pillar="gen" />
               <td className="px-3 py-2 text-left text-text-muted">
                 {r.years_covered.length}
                 <span className="text-text-faint"> / 6</span>
@@ -418,10 +425,9 @@ function LeaderboardTable({
   );
 }
 
-function PillarCell({ value, pillar }: { value: number; pillar: "env" | "soc" | "gov" }) {
-  // All three pillars sized against the same visual max for cross-row
-  // comparability. 10 is a safe ceiling given tonight's composite range (0-8).
-  const max = 10;
+function PillarCell({ value, pillar }: { value: number; pillar: "env" | "soc" | "gov" | "gen" }) {
+  // All four pillars sized against the same visual max (0-100 scale).
+  const max = 100;
   const pct = Math.min(100, (value / max) * 100);
   return (
     <td className="px-3 py-2 text-right align-middle">

@@ -92,7 +92,7 @@ def test_rank_scores_two_values_ascending():
     assert result[0] is not None
     assert result[1] is not None
     assert result[0] < result[1], "lower density should score lower"
-    assert result[1] == 10.0, "highest density should score 10"
+    assert result[1] == 100.0, "highest density should score 100"
     assert result[0] == 0.0, "lowest density should score 0"
 
 
@@ -109,16 +109,16 @@ def test_rank_scores_ties_get_average():
     result = _rank_scores([1.0, 1.0, 2.0])
     assert result is not None
     assert result[0] == result[1], "ties must share the same score"
-    assert result[2] == 10.0
-    # Tied pair: avg rank = (1+2)/2 = 1.5; score = 10*(1.5-1)/(3-1) = 2.5
-    assert result[0] == 2.5
+    assert result[2] == 100.0
+    # Tied pair: avg rank = (1+2)/2 = 1.5; score = 100*(1.5-1)/(3-1) = 25.0
+    assert result[0] == 25.0
 
 
 def test_rank_scores_all_equal_get_zero():
     result = _rank_scores([3.0, 3.0, 3.0])
     assert result is not None
-    # All tied at rank 2; score = 10*(2-1)/(3-1) = 5.0
-    assert all(r == 5.0 for r in result if r is not None)
+    # All tied at rank 2; score = 100*(2-1)/(3-1) = 50.0
+    assert all(r == 50.0 for r in result if r is not None)
 
 
 def test_rank_scores_monotone_range():
@@ -126,7 +126,7 @@ def test_rank_scores_monotone_range():
     result = _rank_scores(vals)
     assert result is not None
     assert result[0] == 0.0
-    assert result[-1] == 10.0
+    assert result[-1] == 100.0
     for a, b in itertools.pairwise(result):
         assert a is not None and b is not None
         assert a < b

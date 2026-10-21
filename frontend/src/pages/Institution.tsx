@@ -114,12 +114,15 @@ function PillarRadar({ inst }: { inst: InstitutionDetail }) {
   const data = useMemo(() => {
     const years = [fyA, fyB].filter((y): y is number => y !== "");
     const chosen = inst.reports.filter((r) => years.includes(r.fiscal_year));
-    const pillars = ["Environmental", "Social", "Governance"] as const;
+    const pillars = ["Environmental", "Social", "Governance", "General"] as const;
     return pillars.map((pillar) => {
       const row: Record<string, string | number> = { pillar };
       for (const r of chosen) {
         row[String(r.fiscal_year)] =
-          pillar === "Environmental" ? r.e_score : pillar === "Social" ? r.s_score : r.g_score;
+          pillar === "Environmental" ? r.e_score
+          : pillar === "Social" ? r.s_score
+          : pillar === "Governance" ? r.g_score
+          : r.general_score;
       }
       return row;
     });
@@ -166,7 +169,7 @@ function PillarRadar({ inst }: { inst: InstitutionDetail }) {
         </ResponsiveContainer>
       </div>
       <figcaption className="mt-1 text-[11px] text-text-faint">
-        0-10 rank-normalised score · solid = year A, dashed = year B.
+        0-100 rank-normalised score · solid = year A, dashed = year B.
       </figcaption>
     </div>
   );
@@ -211,6 +214,7 @@ function PillarTrend({ inst }: { inst: InstitutionDetail }) {
     Environmental: r.e_score,
     Social: r.s_score,
     Governance: r.g_score,
+    General: r.general_score,
   }));
   return (
     <div ref={ref} className="rounded-md border border-border bg-surface p-4">
@@ -223,7 +227,7 @@ function PillarTrend({ inst }: { inst: InstitutionDetail }) {
           <LineChart data={data} margin={{ left: 0, right: 20, top: 10, bottom: 0 }}>
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis dataKey="fy" />
-            <YAxis domain={[0, 10]} label={{ value: "score 0-10", angle: -90, position: "insideLeft" }} />
+            <YAxis domain={[0, 100]} label={{ value: "score 0-100", angle: -90, position: "insideLeft" }} />
             <Tooltip />
             <Legend />
             <Line
@@ -249,11 +253,19 @@ function PillarTrend({ inst }: { inst: InstitutionDetail }) {
               strokeDasharray="6 3"
               dot={{ r: 3 }}
             />
+            <Line
+              type="monotone"
+              dataKey="General"
+              stroke="rgb(var(--text-muted))"
+              strokeWidth={2}
+              strokeDasharray="2 2"
+              dot={{ r: 3 }}
+            />
           </LineChart>
         </ResponsiveContainer>
       </div>
       <figcaption className="mt-1 text-[11px] text-text-faint">
-        0-10 rank-normalised scores · pillar colour pairs with a line-style marker so the chart remains readable in grayscale.
+        0-100 rank-normalised scores · pillar colour pairs with a line-style marker so the chart remains readable in grayscale.
       </figcaption>
     </div>
   );
@@ -320,9 +332,11 @@ function ReportList({ inst }: { inst: InstitutionDetail }) {
         e_score: r.e_score,
         s_score: r.s_score,
         g_score: r.g_score,
+        general_score: r.general_score,
         env_density: r.env,
         soc_density: r.soc,
         gov_density: r.gov,
+        gen_density: r.gen_density,
       })),
       `${inst.slug}-reports.csv`,
     );

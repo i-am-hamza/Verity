@@ -119,7 +119,25 @@ class Report(Base):
 
     # Generic terms (ESG, sustainability, GRI, sustainable development, CSR):
     # counted separately, excluded from pillars and composite.
+    # Populated only for pipeline <= 0.5.0; superseded by general_density in v6.
     generic_density: Mapped[float | None] = mapped_column(Float, nullable=True)
+
+    # v6 scoring fields -------------------------------------------------------
+    # General component density: weighted matches for the General pillar (8 terms:
+    # ESG/sustainability/GRI/sustainable development/CSR/innovation/feedback/digital
+    # services) per 1,000 narrative words. Null for pipeline < 0.6.0 reports.
+    general_density: Mapped[float | None] = mapped_column(Float, nullable=True)
+
+    # 0-100 rank scores (set by compute_ranks.py after the full run).
+    # general_score: General pillar; e/s/g_score repurposed to 0-100 in pipeline 0.6.0.
+    general_score: Mapped[float | None] = mapped_column(Float, nullable=True)
+
+    # Robustness composites (set by compute_ranks.py):
+    # composite_3pillar: average(e_score, s_score, g_score) — no General component.
+    # composite_general_no_new3: composite where General density excludes the three
+    # examiner-requested terms (innovation/feedback/digital services).
+    composite_3pillar: Mapped[float | None] = mapped_column(Float, nullable=True)
+    composite_general_no_new3: Mapped[float | None] = mapped_column(Float, nullable=True)
 
     # Financial add-on terms: only populated for the 19 financial companies.
     addon_density: Mapped[float | None] = mapped_column(Float, nullable=True)

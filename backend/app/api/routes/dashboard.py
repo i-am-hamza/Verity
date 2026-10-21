@@ -129,7 +129,7 @@ def _meta(db: Session) -> LeaderboardMeta:
 def _report_pillar_densities(
     db: Session, report_id: int, tv_id: int
 ) -> dict[str, float]:
-    out: dict[str, float] = {"Environmental": 0.0, "Social": 0.0, "Governance": 0.0}
+    out: dict[str, float] = {"Environmental": 0.0, "Social": 0.0, "Governance": 0.0, "General": 0.0}
     rows = (
         db.query(CategoryScore, Category)
         .join(Category, Category.id == CategoryScore.category_id)
@@ -176,34 +176,36 @@ def get_leaderboard(
         per_inst_meta[inst.id] = inst
         per_inst_year[inst.id][report.fiscal_year] = report
 
-    def _pillar_vec(iid: int) -> tuple[float, float, float, float]:
-        """Return (env, soc, gov, composite) as 0-10 scores based on `fy` filter."""
+    def _pillar_vec(iid: int) -> tuple[float, float, float, float, float]:
+        """Return (env, soc, gov, gen, composite) as 0-100 scores based on `fy` filter."""
         if fy is not None:
             r = per_inst_year.get(iid, {}).get(fy)
             if r is None:
-                return (0.0, 0.0, 0.0, 0.0)
+                return (0.0, 0.0, 0.0, 0.0, 0.0)
             return (
                 round(r.e_score or 0.0, 3),
                 round(r.s_score or 0.0, 3),
                 round(r.g_score or 0.0, 3),
+                round(r.general_score or 0.0, 3),
                 round(r.composite_score or 0.0, 3),
             )
         # mean across years
         years = sorted(per_inst_year.get(iid, {}).keys())
         if not years:
-            return (0.0, 0.0, 0.0, 0.0)
+            return (0.0, 0.0, 0.0, 0.0, 0.0)
         e = sum((per_inst_year[iid][y].e_score or 0.0) for y in years) / len(years)
         s = sum((per_inst_year[iid][y].s_score or 0.0) for y in years) / len(years)
         g = sum((per_inst_year[iid][y].g_score or 0.0) for y in years) / len(years)
+        gen = sum((per_inst_year[iid][y].general_score or 0.0) for y in years) / len(years)
         comp = sum((per_inst_year[iid][y].composite_score or 0.0) for y in years) / len(years)
-        return (round(e, 3), round(s, 3), round(g, 3), round(comp, 3))
+        return (round(e, 3), round(s, 3), round(g, 3), round(gen, 3), round(comp, 3))
 
     # Build rows pre-filter so ranks are computed across the whole cohort.
     all_rows: list[LeaderboardRow] = []
     for iid, inst in per_inst_meta.items():
         if fy is not None and fy not in per_inst_year.get(iid, {}):
             continue
-        e, s, g, comp = _pillar_vec(iid)
+        e, s, g, gen, comp = _pillar_vec(iid)
         tag, reason = _artifact_tag(inst.slug)
         years_cov = sorted(per_inst_year.get(iid, {}).keys())
         all_rows.append(LeaderboardRow(
@@ -212,7 +214,7 @@ def get_leaderboard(
             sector="financial" if inst.is_financial else "non-financial",
             industry=inst.industry,
             rank_overall=0, rank_within_sector=0,
-            mean_composite=comp, env=e, soc=s, gov=g,
+            mean_composite=comp, env=e, soc=s, gov=g, gen=gen,
             years_covered=years_cov,
             data_quality_flag=tag, data_quality_reason=reason,
         ))
@@ -307,9 +309,11 @@ def get_institution_detail(
             e_score=round(r.e_score or 0.0, 3),
             s_score=round(r.s_score or 0.0, 3),
             g_score=round(r.g_score or 0.0, 3),
+            general_score=round(r.general_score or 0.0, 3),
             env=pillar_d.get("Environmental", 0.0),
             soc=pillar_d.get("Social", 0.0),
             gov=pillar_d.get("Governance", 0.0),
+            gen_density=pillar_d.get("General", 0.0),
         ))
         # Category breakdown per year
         cs_rows = (

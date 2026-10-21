@@ -131,16 +131,19 @@ COLUMN_GUIDE = [
     ("Financial", "Yes = one of the 19 financial companies; No = non-financial", ""),
     ("Fiscal year", "Fiscal year of the annual report", "YYYY"),
     ("Report type", "annual or integrated", ""),
-    ("Environmental (0-10)", "Rank-normalised Environmental pillar score", "0–10"),
-    ("Social (0-10)", "Rank-normalised Social pillar score", "0–10"),
-    ("Governance (0-10)", "Rank-normalised Governance pillar score", "0–10"),
-    ("Composite (0-10)", "Mean of the three pillar scores", "0–10"),
+    ("Environmental (0-100)", "Rank-normalised Environmental pillar score", "0–100"),
+    ("Social (0-100)", "Rank-normalised Social pillar score", "0–100"),
+    ("Governance (0-100)", "Rank-normalised Governance pillar score", "0–100"),
+    ("General (0-100)", "Rank-normalised General ESG component score (8 terms)", "0–100"),
+    ("Composite (0-100)", "Mean of E, S, G and General scores", "0–100"),
+    ("Composite 3-pillar (0-100)", "Robustness: mean of E, S, G only (no General component)", "0–100"),
+    ("Composite no-new3 (0-100)", "Robustness: General from 5 original terms only (no innovation/feedback/digital services)", "0–100"),
     ("E density", "Weighted Environmental term matches per 1,000 narrative words", "per 1,000 words"),
     ("S density", "Weighted Social term matches per 1,000 narrative words", "per 1,000 words"),
     ("G density", "Weighted Governance term matches per 1,000 narrative words", "per 1,000 words"),
-    ("General ESG density", "General ESG terms (ESG, sustainability, GRI, …) per 1,000 words", "per 1,000 words"),
+    ("General ESG density", "General ESG terms (ESG, sustainability, GRI, innovation, feedback, digital services, …) per 1,000 words", "per 1,000 words"),
     ("Banking add-on density", "Financial-sector add-on terms per 1,000 words (financial companies only)", "per 1,000 words"),
-    ("Banking add-on score", "Rank-normalised banking add-on score (financial companies only)", "0–10"),
+    ("Banking add-on score", "Rank-normalised banking add-on score (financial companies only)", "0–100"),
     ("Words analysed", "Latin-script words on narrative pages used as scoring denominator", "words"),
     ("Total words", "Total Latin-script words in the full report", "words"),
     ("Share of text analysed", "Words analysed / Total words", "0–1"),
@@ -345,6 +348,10 @@ def main() -> int:
             result[orig_i] = c
         return result
 
+    # Robustness: composite_3pillar and composite_general_no_new3 from DB
+    comp_3pil = [r.composite_3pillar for r in ranked]
+    comp_no_new3 = [r.composite_general_no_new3 for r in ranked]
+
     main_comp = [r.composite_score for r in ranked]
     comp_125 = _recompute_composites(1.25)
     comp_unw = _recompute_composites(1.0)
@@ -361,6 +368,8 @@ def main() -> int:
         return {iid: sum(vs)/len(vs) for iid, vs in d.items()}
 
     main_avg   = _by_inst_avg(main_comp)
+    avg_3pil   = _by_inst_avg(comp_3pil)
+    avg_no_new3 = _by_inst_avg(comp_no_new3)
     avg_125    = _by_inst_avg(comp_125)
     avg_unw    = _by_inst_avg(comp_unw)
     avg_200    = _by_inst_avg(comp_200)
@@ -373,6 +382,8 @@ def main() -> int:
             return float("nan")
         return _spearman([ref[i] for i in common], [alt[i] for i in common])
 
+    rho_3pil    = _rho(main_avg, avg_3pil)
+    rho_no_new3 = _rho(main_avg, avg_no_new3)
     rho_125 = _rho(main_avg, avg_125)
     rho_unw = _rho(main_avg, avg_unw)
     rho_200 = _rho(main_avg, avg_200)
@@ -380,11 +391,13 @@ def main() -> int:
     rho_w5  = _rho(main_avg, avg_w5)
 
     print(f"Robustness correlations (Spearman rho, company-level averages):")
-    print(f"  unweighted vs main  : {rho_unw:.4f}")
-    print(f"  w=1.25 vs main      : {rho_125:.4f}")
-    print(f"  w=2.0 vs main       : {rho_200:.4f}")
-    print(f"  sector-adj vs main  : {rho_sec:.4f}")
-    print(f"  without-5 vs main   : {rho_w5:.4f}")
+    print(f"  3-pillar vs main           : {rho_3pil:.4f}")
+    print(f"  no-new-3 General vs main   : {rho_no_new3:.4f}")
+    print(f"  unweighted vs main         : {rho_unw:.4f}")
+    print(f"  w=1.25 vs main             : {rho_125:.4f}")
+    print(f"  w=2.0 vs main              : {rho_200:.4f}")
+    print(f"  sector-adj vs main         : {rho_sec:.4f}")
+    print(f"  without-5 vs main          : {rho_w5:.4f}")
 
     # ------------------------------------------------------------------ #
     # Build per-report row data
@@ -409,16 +422,19 @@ def main() -> int:
             "financial": "Yes" if inst.is_financial else "No",
             "fiscal_year": r.fiscal_year,
             "report_type": r.report_type or "",
-            "e_score": round(r.e_score, 2) if r.e_score is not None else None,
-            "s_score": round(r.s_score, 2) if r.s_score is not None else None,
-            "g_score": round(r.g_score, 2) if r.g_score is not None else None,
-            "composite": round(r.composite_score, 2) if r.composite_score is not None else None,
+            "e_score": round(r.e_score, 1) if r.e_score is not None else None,
+            "s_score": round(r.s_score, 1) if r.s_score is not None else None,
+            "g_score": round(r.g_score, 1) if r.g_score is not None else None,
+            "general_score": round(r.general_score, 1) if r.general_score is not None else None,
+            "composite": round(r.composite_score, 1) if r.composite_score is not None else None,
+            "composite_3pillar": round(r.composite_3pillar, 1) if r.composite_3pillar is not None else None,
+            "composite_general_no_new3": round(r.composite_general_no_new3, 1) if r.composite_general_no_new3 is not None else None,
             "e_density": round(r.e_density, 3) if r.e_density is not None else None,
             "s_density": round(r.s_density, 3) if r.s_density is not None else None,
             "g_density": round(r.g_density, 3) if r.g_density is not None else None,
-            "generic_density": round(r.generic_density, 3) if r.generic_density is not None else None,
+            "general_density": round(r.general_density, 3) if r.general_density is not None else None,
             "addon_density": round(r.addon_density, 3) if (inst.is_financial and r.addon_density is not None) else None,
-            "addon_score": round(r.addon_rank, 2) if (inst.is_financial and r.addon_rank is not None) else None,
+            "addon_score": round(r.addon_rank, 1) if (inst.is_financial and r.addon_rank is not None) else None,
             "words_analysed": r.narrative_word_count,
             "total_words": r.latin_word_count,
             "share_analysed": round(share, 4) if share is not None else None,
@@ -476,12 +492,14 @@ def main() -> int:
         rob_rows.append({
             "company": cr["company"],
             "rank": cr["rank"],
-            "main_composite": round(main_avg.get(iid, float("nan")), 3),
-            "unweighted": round(avg_unw.get(iid, float("nan")), 3) if iid in avg_unw else None,
-            "w_125": round(avg_125.get(iid, float("nan")), 3) if iid in avg_125 else None,
-            "w_200": round(avg_200.get(iid, float("nan")), 3) if iid in avg_200 else None,
-            "sector_adj": round(avg_sec.get(iid, float("nan")), 3) if iid in avg_sec else None,
-            "without_5": round(avg_w5.get(iid, float("nan")), 3) if iid in avg_w5 else None,
+            "main_composite": round(main_avg.get(iid, float("nan")), 1),
+            "composite_3pillar": round(avg_3pil.get(iid, float("nan")), 1) if iid in avg_3pil else None,
+            "composite_no_new3": round(avg_no_new3.get(iid, float("nan")), 1) if iid in avg_no_new3 else None,
+            "unweighted": round(avg_unw.get(iid, float("nan")), 1) if iid in avg_unw else None,
+            "w_125": round(avg_125.get(iid, float("nan")), 1) if iid in avg_125 else None,
+            "w_200": round(avg_200.get(iid, float("nan")), 1) if iid in avg_200 else None,
+            "sector_adj": round(avg_sec.get(iid, float("nan")), 1) if iid in avg_sec else None,
+            "without_5": round(avg_w5.get(iid, float("nan")), 1) if iid in avg_w5 else None,
         })
 
     # ------------------------------------------------------------------ #
@@ -520,9 +538,9 @@ def main() -> int:
         ws.conditional_formatting.add(
             f"{col_letter}{start_row}:{col_letter}{end_row}",
             ColorScaleRule(
-                start_type="num", start_value=0, start_color="F8696B",
-                mid_type="num",   mid_value=5,   mid_color="FFEB84",
-                end_type="num",   end_value=10,  end_color="63BE7B",
+                start_type="num", start_value=0,   start_color="F8696B",
+                mid_type="num",   mid_value=50,    mid_color="FFEB84",
+                end_type="num",   end_value=100,   end_color="63BE7B",
             ),
         )
 
@@ -541,11 +559,12 @@ def main() -> int:
         ("in their English annual reports from FY2020–FY2025 (390 reports total).",),
         ("Scores are based on weighted keyword matches from GRI and SASB term lists.",),
         ("Terms material to a company's SASB industry are weighted 1.5; others 1.0.",),
-        ("Scores are rank-normalised 0–10 across all 390 reports; 10 = most disclosure.",),
+        ("Scores are rank-normalised 0–100 across all 390 reports; 100 = most disclosure.",),
+        ("Composite = average of Environmental, Social, Governance, and General scores.",),
         ("",),
-        ("How to read a 0–10 score",),
-        ("10 = the report with the most disclosure in this sample for that pillar.",),
-        ("0  = the report with the least.",),
+        ("How to read a 0–100 score",),
+        ("100 = the report with the most disclosure in this sample for that pillar.",),
+        ("0   = the report with the least.",),
         ("Scores show relative position within this sample, not absolute quality.",),
         ("",),
         ("Methodology page: see the Verity web dashboard → Methodology.",),
@@ -569,7 +588,8 @@ def main() -> int:
     year_headers = [
         "Company", "Ticker", "Country", "SASB sector", "SASB industry", "Financial",
         "Fiscal year", "Report type",
-        "Environmental (0-10)", "Social (0-10)", "Governance (0-10)", "Composite (0-10)",
+        "Environmental (0-100)", "Social (0-100)", "Governance (0-100)", "General (0-100)",
+        "Composite (0-100)", "Composite 3-pillar (0-100)", "Composite no-new3 (0-100)",
         "E density", "S density", "G density", "General ESG density",
         "Banking add-on density", "Banking add-on score",
         "Words analysed", "Total words", "Share of text analysed",
@@ -585,8 +605,9 @@ def main() -> int:
             rd["company"], rd["ticker"], rd["country"],
             rd["sasb_sector"], rd["sasb_industry"], rd["financial"],
             rd["fiscal_year"], rd["report_type"],
-            rd["e_score"], rd["s_score"], rd["g_score"], rd["composite"],
-            rd["e_density"], rd["s_density"], rd["g_density"], rd["generic_density"],
+            rd["e_score"], rd["s_score"], rd["g_score"], rd["general_score"],
+            rd["composite"], rd["composite_3pillar"], rd["composite_general_no_new3"],
+            rd["e_density"], rd["s_density"], rd["g_density"], rd["general_density"],
             rd["addon_density"], rd["addon_score"],
             rd["words_analysed"], rd["total_words"], rd["share_analysed"],
             rd["flag"],
@@ -595,16 +616,16 @@ def main() -> int:
     _auto_width(ws_year)
     _band_rows(ws_year)
     n_year = ws_year.max_row
-    # Color scales on 0-10 score columns (I–L = cols 9–12)
-    for col_idx in range(9, 13):
+    # Color scales on 0-100 score columns (I–O = cols 9–15)
+    for col_idx in range(9, 16):
         _score_color_scale(ws_year, get_column_letter(col_idx), 2, n_year)
 
     # ---- Sheet 3: Company averages ----
     ws_avg = wb.create_sheet("Company averages")
     avg_headers = [
         "Rank", "Company", "Ticker", "Country", "SASB sector", "SASB industry", "Financial",
-        "Avg Environmental (0-10)", "Avg Social (0-10)", "Avg Governance (0-10)",
-        "Avg Composite (0-10)", "Years scored",
+        "Avg Environmental (0-100)", "Avg Social (0-100)", "Avg Governance (0-100)",
+        "Avg Composite (0-100)", "Years scored",
     ]
     ws_avg.append(avg_headers)
     _style_header(ws_avg)
@@ -621,14 +642,15 @@ def main() -> int:
     _auto_width(ws_avg)
     _band_rows(ws_avg)
     n_avg = ws_avg.max_row
-    for col_idx in range(8, 12):
+    for col_idx in range(8, 12):  # Avg E/S/G/Composite (cols 8–11)
         _score_color_scale(ws_avg, get_column_letter(col_idx), 2, n_avg)
 
     # ---- Sheet 4: Robustness ----
     ws_rob = wb.create_sheet("Robustness")
     rob_headers = [
         "Rank", "Company",
-        "Main composite (w=1.5)", "Unweighted (w=1.0)", "w=1.25", "w=2.0",
+        "Main composite (0-100)", "3-pillar composite", "No-new-3 composite",
+        "Unweighted (w=1.0)", "w=1.25", "w=2.0",
         "Sector-adjusted", "Without 5 added companies",
     ]
     ws_rob.append(rob_headers)
@@ -638,7 +660,8 @@ def main() -> int:
     for rb in rob_rows:
         ws_rob.append([
             rb["rank"], rb["company"],
-            rb["main_composite"], rb["unweighted"], rb["w_125"], rb["w_200"],
+            rb["main_composite"], rb["composite_3pillar"], rb["composite_no_new3"],
+            rb["unweighted"], rb["w_125"], rb["w_200"],
             rb["sector_adj"], rb["without_5"],
         ])
 
@@ -646,11 +669,13 @@ def main() -> int:
     n_rob = ws_rob.max_row
     ws_rob.append([])
     ws_rob.append(["Spearman correlations (company-level averages):"])
-    ws_rob.append(["Unweighted (1.0) vs main (1.5)", round(rho_unw, 4)])
-    ws_rob.append(["w=1.25 vs main (1.5)",            round(rho_125, 4)])
-    ws_rob.append(["w=2.0 vs main (1.5)",             round(rho_200, 4)])
-    ws_rob.append(["Sector-adjusted vs main",          round(rho_sec, 4)])
-    ws_rob.append(["Without 5 added companies vs main", round(rho_w5, 4)])
+    ws_rob.append(["3-pillar (no General) vs main",         round(rho_3pil, 4)])
+    ws_rob.append(["No-new-3 General vs main",              round(rho_no_new3, 4)])
+    ws_rob.append(["Unweighted (1.0) vs main (1.5)",        round(rho_unw, 4)])
+    ws_rob.append(["w=1.25 vs main (1.5)",                  round(rho_125, 4)])
+    ws_rob.append(["w=2.0 vs main (1.5)",                   round(rho_200, 4)])
+    ws_rob.append(["Sector-adjusted vs main",               round(rho_sec, 4)])
+    ws_rob.append(["Without 5 added companies vs main",     round(rho_w5, 4)])
 
     for row in ws_rob.iter_rows(min_row=n_rob + 2, max_row=n_rob + 2):
         for cell in row:
@@ -681,7 +706,8 @@ def main() -> int:
     csv_headers = [
         "company", "ticker", "country", "sasb_sector", "sasb_industry", "financial",
         "fiscal_year", "report_type",
-        "environmental_score", "social_score", "governance_score", "composite_score",
+        "environmental_score", "social_score", "governance_score", "general_score",
+        "composite_score", "composite_3pillar", "composite_general_no_new3",
         "e_density", "s_density", "g_density", "general_esg_density",
         "banking_addon_density", "banking_addon_score",
         "words_analysed", "total_words", "share_of_text_analysed",
@@ -701,16 +727,19 @@ def main() -> int:
                 "financial": rd["financial"],
                 "fiscal_year": rd["fiscal_year"],
                 "report_type": rd["report_type"],
-                "environmental_score": f"{rd['e_score']:.2f}" if rd["e_score"] is not None else "",
-                "social_score": f"{rd['s_score']:.2f}" if rd["s_score"] is not None else "",
-                "governance_score": f"{rd['g_score']:.2f}" if rd["g_score"] is not None else "",
-                "composite_score": f"{rd['composite']:.2f}" if rd["composite"] is not None else "",
+                "environmental_score": f"{rd['e_score']:.1f}" if rd["e_score"] is not None else "",
+                "social_score": f"{rd['s_score']:.1f}" if rd["s_score"] is not None else "",
+                "governance_score": f"{rd['g_score']:.1f}" if rd["g_score"] is not None else "",
+                "general_score": f"{rd['general_score']:.1f}" if rd["general_score"] is not None else "",
+                "composite_score": f"{rd['composite']:.1f}" if rd["composite"] is not None else "",
+                "composite_3pillar": f"{rd['composite_3pillar']:.1f}" if rd["composite_3pillar"] is not None else "",
+                "composite_general_no_new3": f"{rd['composite_general_no_new3']:.1f}" if rd["composite_general_no_new3"] is not None else "",
                 "e_density": f"{rd['e_density']:.4f}" if rd["e_density"] is not None else "",
                 "s_density": f"{rd['s_density']:.4f}" if rd["s_density"] is not None else "",
                 "g_density": f"{rd['g_density']:.4f}" if rd["g_density"] is not None else "",
-                "general_esg_density": f"{rd['generic_density']:.4f}" if rd["generic_density"] is not None else "",
+                "general_esg_density": f"{rd['general_density']:.4f}" if rd["general_density"] is not None else "",
                 "banking_addon_density": f"{rd['addon_density']:.4f}" if rd["addon_density"] is not None else "",
-                "banking_addon_score": f"{rd['addon_score']:.2f}" if rd["addon_score"] is not None else "",
+                "banking_addon_score": f"{rd['addon_score']:.1f}" if rd["addon_score"] is not None else "",
                 "words_analysed": rd["words_analysed"],
                 "total_words": rd["total_words"],
                 "share_of_text_analysed": f"{rd['share_analysed']:.4f}" if rd["share_analysed"] is not None else "",

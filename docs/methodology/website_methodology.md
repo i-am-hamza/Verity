@@ -29,11 +29,11 @@ Verity looks for a fixed list of ESG terms drawn from the **GRI Standards** and 
 
 | Group | Terms | How it is used |
 |---|---|---|
-| Environmental | 25 | Counts towards the Environmental score |
-| Social | 29 | Counts towards the Social score |
+| Environmental | 22 | Counts towards the Environmental score |
+| Social | 26 | Counts towards the Social score |
 | Governance | 36 | Counts towards the Governance score |
+| General ESG terms | 8 | Counts towards the General score (*ESG*, *sustainability*, *GRI*, *sustainable development*, *CSR*, *innovation*, *feedback*, *digital services*) |
 | Banking terms | 9 | Scored separately, for the 19 financial companies only (for example *financial inclusion*, *responsible lending*, *stress testing*) |
-| General ESG terms | 5 | Counted separately and kept out of all three scores (*ESG*, *sustainability*, *GRI*, *sustainable development*, *CSR*) |
 
 **How new terms were added.** Terms were added in two rounds. First, fourteen terms were added based on an analysis of the full corpus (thirteen in the three pillars and stress testing in the banking terms), such as *air quality*, *process safety* and *food safety*, to cover topics that matter for industrial companies. Second, sixteen further terms were added at the examiner's request and verified by the examiner against the same acceptance tests, covering topics such as *climate policy*, *employee engagement*, *board meetings* and *stakeholder engagement*. Each candidate had to pass two tests set in advance:
 
@@ -52,16 +52,16 @@ The rankings were also calculated with weights of 1.25, 2.0 and no weighting at 
 
 ## 5. How the scores are calculated
 
-1. **Density.** For each report and each pillar: weighted term mentions per 1,000 words of analysed text.
-2. **Score out of 10.** Each pillar's density is converted to a 0–10 score by its rank among all 390 reports, all years together. **10** is the most disclosure in the sample and **0** the least.
-3. **Composite.** The average of the Environmental, Social and Governance scores, also out of 10.
+1. **Density.** For each report and each component (Environmental, Social, Governance, General): weighted term mentions per 1,000 words of analysed text.
+2. **Score out of 100.** Each component's density is converted to a 0–100 score by its rank among all 390 reports, all years together. **100** is the most disclosure in the sample and **0** the least.
+3. **Composite.** The average of the Environmental, Social, Governance and General scores, also out of 100.
 4. **Company score.** The average of a company's six yearly scores.
 
 Because scores are based on rank, they show **where a company stands within this sample**, not against an absolute standard.
 
 ## 6. Checks on the results
 
-- **Robustness.** The rankings were recalculated with different weights, adjusted for each company's sector (following Ferjančič et al., 2024), and without the five added companies. In each case the ranking stays very similar.
+- **Robustness.** The rankings were recalculated in several ways: (a) using a three-pillar composite without the General component; (b) using a General component that includes only the five original generic terms, excluding innovation, feedback and digital services; (c) with different SASB materiality weights (1.0, 1.25, 2.0); (d) adjusted for each company's sector (following Ferjančič et al., 2024); and (e) without the five companies added later. In each case the ranking stays very similar.
 - **Hand checks.** For sample reports, term counts were recounted by hand and reconciled with Verity's counts.
 - **Data-quality flags.** Reports with unusually little analysed text, or unusually high or low scores, are flagged for attention. They are not removed.
 

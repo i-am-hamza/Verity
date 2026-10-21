@@ -36,7 +36,7 @@ from app.services.verity_config import VerityConfig, load_verity_config
 # CategoryScore / MatchEvidence row so historical scores stay linked to the
 # code path that produced them. 0.3.0 adds the Session 5 text-quality
 # switches (header/footer removal, contents detection, FS boundary).
-PIPELINE_VERSION = "0.5.0"
+PIPELINE_VERSION = "0.6.0"
 
 
 # --------------------------------------------------------------------------- #
@@ -102,7 +102,8 @@ class WorkerResult:
     e_density: float | None = None
     s_density: float | None = None
     g_density: float | None = None
-    generic_density: float | None = None
+    generic_density: float | None = None  # legacy: pipeline <= 0.5.0 only
+    general_density: float | None = None  # v6+: General pillar (8 terms)
     addon_density: float | None = None
     report_type: str | None = None
 
@@ -270,14 +271,18 @@ def _run_pipeline_cpu(
                     s_raw += trm.weight
                 elif trm.pillar == "Governance":
                     g_raw += trm.weight
+                elif trm.pillar == "General":
+                    gen_raw += trm.weight
             elif trm.group == "generic":
+                # Backward compat: v5 taxonomy had a "generic" group;
+                # in v6 these terms are group="core" pillar="General".
                 gen_raw += trm.weight
             elif trm.group == "addon":
                 adn_raw += trm.weight
         result.e_density = round(e_raw * k, 6)
         result.s_density = round(s_raw * k, 6)
         result.g_density = round(g_raw * k, 6)
-        result.generic_density = round(gen_raw * k, 6)
+        result.general_density = round(gen_raw * k, 6)
         if is_financial:
             result.addon_density = round(adn_raw * k, 6)
 
@@ -447,6 +452,7 @@ def persist_worker_result(
         s_density=worker_result.s_density,
         g_density=worker_result.g_density,
         generic_density=worker_result.generic_density,
+        general_density=worker_result.general_density,
         addon_density=worker_result.addon_density,
         report_type=worker_result.report_type,
         processing_review_status=worker_result.processing_review_status,

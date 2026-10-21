@@ -43,6 +43,51 @@ Notes:
 
 ---
 
+# Taxonomy v6 — Component Restructuring
+
+_Date: 2026-10-20 | Researcher decision after diagnostic review of v5 term contributions_
+
+## Decision A — All 16 examiner terms retained
+
+All 16 examiner-requested terms from the table above are kept in the taxonomy.
+Sensitivity analysis (§3 of V5_DIAGNOSTICS.md) shows composite Spearman vs v4 ≥ 0.974
+even without `innovation`, `feedback`, and `digital services`, confirming the
+structure is robust.
+
+## Decision B — New GENERAL component (amends Decision 3 from v4 build)
+
+A fourth scoring component is introduced: **General ESG terms**, pillar = "General",
+weight = 1.0, SASB category = none.
+
+Composition (8 terms): ESG, sustainability, GRI, sustainable development, CSR
+(previously counted separately as "generic", now scored), plus innovation,
+feedback, and digital services (moved from E and S respectively).
+
+Rationale: innovation dominated the Environmental pillar (62% of all new-term
+mentions, 96.9% of E-pillar new-term mentions) and is not an environmental
+topic per se. Placing it — along with feedback and digital services — in a
+separate General component prevents it from distorting the E pillar while still
+capturing its contribution to the composite. The five previously-generic terms
+are now scored in the same General bucket rather than being silently excluded.
+
+The Environmental term count falls from 25 → 22;
+the Social term count falls from 29 → 26;
+the General component has 8 terms.
+
+## Decision C — Scoring scale changed to 0-100 (amends Decision 6 from v4 build)
+
+All pillar scores (E, S, G, General) and the composite are now scaled **0–100**
+(same ascending rank formula × 10). One decimal place stored.
+
+Composite (0–100) = average(E, S, G, General) — four equally-weighted components.
+
+Two robustness columns added per company-year:
+- `composite_3pillar`: composite from E, S, G only (no General), 0–100.
+- `composite_general_no_new3`: composite where General is computed from the five
+  original generic terms only (no innovation, feedback, digital services), 0–100.
+
+---
+
 # Term Acceptance — Phase 2 Coding Review
 
 _Coded by: researcher  |  Coding sheet: `docs/term-evidence/coding_sheet_recode.xlsx`_

@@ -765,6 +765,8 @@ export interface components {
             soc: number;
             /** Gov */
             gov: number;
+            /** Gen */
+            gen: number;
             /** Years Covered */
             years_covered: number[];
             /** Data Quality Flag */
@@ -837,18 +839,22 @@ export interface components {
             page_count: number;
             /** Composite Score */
             composite_score: number;
-            /** E Score (0-10 rank-normalised) */
+            /** E Score (0-100 rank-normalised) */
             e_score: number;
-            /** S Score (0-10 rank-normalised) */
+            /** S Score (0-100 rank-normalised) */
             s_score: number;
-            /** G Score (0-10 rank-normalised) */
+            /** G Score (0-100 rank-normalised) */
             g_score: number;
+            /** General Score (0-100 rank-normalised) */
+            general_score: number;
             /** Env (raw weighted density per 1,000 words) */
             env: number;
             /** Soc (raw weighted density per 1,000 words) */
             soc: number;
             /** Gov (raw weighted density per 1,000 words) */
             gov: number;
+            /** Gen density (raw weighted density per 1,000 words) */
+            gen_density: number;
         };
         /** ReportScoreOut */
         ReportScoreOut: {
