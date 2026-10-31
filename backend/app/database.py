@@ -84,6 +84,7 @@ def init_db() -> None:
     """Create all tables. Fine for the pilot; use Alembic migrations once
     the schema stabilizes and you're running against Postgres."""
     from app.models import (  # noqa: F401
+        company_year,
         institution,
         provenance,
         report,

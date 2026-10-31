@@ -19,6 +19,7 @@ from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 
 from app.database import get_db
+from app.models.company_year import CompanyYearData
 from app.models.institution import Institution
 from app.models.provenance import Gap, SourceDocument
 from app.models.report import Report, ReportStatus
@@ -289,6 +290,11 @@ def get_institution_detail(
         for sd in db.query(SourceDocument)
         .filter(SourceDocument.institution_id == inst.id).all()
     }
+    cyd_by_fy: dict[int, CompanyYearData] = {
+        c.fiscal_year: c
+        for c in db.query(CompanyYearData)
+        .filter(CompanyYearData.institution_id == inst.id).all()
+    }
     report_rows: list[ReportRow] = []
     category_breakdown: dict[str, dict[str, float]] = {}
     for r in reports:
@@ -308,6 +314,9 @@ def get_institution_detail(
             retrieved = sd.retrieved_at.isoformat() if sd.retrieved_at else ""
             rs = sd.review_status.value if sd.review_status else "auto_ok"
         _unused_sds_by_sha = sds_by_sha  # legacy lookup kept bound
+        cyd = cyd_by_fy.get(r.fiscal_year)
+        bs = cyd.board_size if cyd else None
+        bs_basis = cyd.board_size_basis.value if cyd else None
         report_rows.append(ReportRow(
             report_id=r.id, fiscal_year=r.fiscal_year,
             source=source, source_url=source_url,
@@ -324,6 +333,11 @@ def get_institution_detail(
             soc=pillar_d.get("Social", 0.0),
             gov=pillar_d.get("Governance", 0.0),
             gen_density=pillar_d.get("General", 0.0),
+            board_size=bs,
+            board_size_basis=bs_basis,
+            board_size_pages=cyd.board_size_pages if cyd else None,
+            age_since_established=cyd.age_since_established if cyd else None,
+            age_since_listed=cyd.age_since_listed if cyd else None,
         ))
         # Category breakdown per year
         cs_rows = (

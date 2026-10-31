@@ -11,7 +11,7 @@ from alembic import context
 from app.config import settings
 from app.database import Base
 from app.models import (  # noqa: F401
-    institution, provenance, report, review, run, score, taxonomy,
+    company_year, institution, provenance, report, review, run, score, taxonomy,
 )
 
 config = context.config

@@ -24,3 +24,8 @@ Words analysed,Latin-script words on narrative pages used as scoring denominator
 Total words,Total Latin-script words in the full report,words
 Share of text analysed,Words analysed / Total words,0–1
 Data-quality flag,Non-empty if the report has a known quality issue,
+Board size,"Number of board seats at fiscal year-end, read from the annual report (researcher). NOT part of the ESG score.",seats
+Board size basis,stated_number_and_list | list | report_date | not_found,
+Board size page,Page number(s) in the annual report where the board composition was read,
+Age since established,Years since the company was established (researcher-supplied). NOT part of the ESG score.,years
+Age since listed,Years since the company was listed (researcher-supplied). NOT part of the ESG score.,years

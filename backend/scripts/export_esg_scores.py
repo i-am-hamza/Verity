@@ -148,6 +148,11 @@ COLUMN_GUIDE = [
     ("Total words", "Total Latin-script words in the full report", "words"),
     ("Share of text analysed", "Words analysed / Total words", "0–1"),
     ("Data-quality flag", "Non-empty if the report has a known quality issue", ""),
+    ("Board size", "Number of board seats at fiscal year-end, read from the annual report (researcher). NOT part of the ESG score.", "seats"),
+    ("Board size basis", "stated_number_and_list | list | report_date | not_found", ""),
+    ("Board size page", "Page number(s) in the annual report where the board composition was read", ""),
+    ("Age since established", "Years since the company was established (researcher-supplied). NOT part of the ESG score.", "years"),
+    ("Age since listed", "Years since the company was listed (researcher-supplied). NOT part of the ESG score.", "years"),
 ]
 
 
@@ -203,6 +208,7 @@ def main() -> int:
     import app.models.score  # noqa: F401
     import app.models.taxonomy  # noqa: F401
     from app.database import SessionLocal
+    from app.models.company_year import CompanyYearData
     from app.models.institution import Institution
     from app.models.report import Report, ReportStatus
     from app.models.score import MatchEvidence
@@ -246,6 +252,10 @@ def main() -> int:
     tv = db.query(TaxonomyVersion).order_by(TaxonomyVersion.id.desc()).first()
     tax_hash = tv.hash if tv else "unknown"
     inst_map = {i.id: i for i in db.query(Institution).filter(Institution.active).all()}
+    cyd_map: dict[tuple[int, int], CompanyYearData] = {
+        (c.institution_id, c.fiscal_year): c
+        for c in db.query(CompanyYearData).all()
+    }
     print(f"Exporting {len(reports)} scored reports  pipeline={PIPELINE_VERSION}  taxonomy={tax_hash[:8]}")
 
     # ------------------------------------------------------------------ #
@@ -549,6 +559,7 @@ def main() -> int:
         )
         share = (r.narrative_word_count / r.latin_word_count
                  if r.latin_word_count else None)
+        cyd = cyd_map.get((inst.id, r.fiscal_year))
         return {
             "company": inst.name,
             "ticker": inst.ticker or "",
@@ -575,6 +586,11 @@ def main() -> int:
             "total_words": r.latin_word_count,
             "share_analysed": round(share, 4) if share is not None else None,
             "flag": flag,
+            "board_size": cyd.board_size if (cyd and cyd.board_size is not None) else "",
+            "board_size_basis": cyd.board_size_basis.value if cyd else "",
+            "board_size_page": cyd.board_size_pages if (cyd and cyd.board_size_pages) else "",
+            "age_since_established": cyd.age_since_established if (cyd and cyd.age_since_established is not None) else "",
+            "age_since_listed": cyd.age_since_listed if (cyd and cyd.age_since_listed is not None) else "",
         }
 
     rows = [_row(r) for r in reports if _row(r)]
@@ -732,6 +748,9 @@ def main() -> int:
         "Banking add-on density", "Banking add-on score",
         "Words analysed", "Total words", "Share of text analysed",
         "Data-quality flag",
+        # Governance + firm ages — NOT part of the ESG score.
+        "Board size", "Board size basis", "Board size page",
+        "Age since established", "Age since listed",
     ]
     ws_year.append(year_headers)
     _style_header(ws_year)
@@ -749,6 +768,9 @@ def main() -> int:
             rd["addon_density"], rd["addon_score"],
             rd["words_analysed"], rd["total_words"], rd["share_analysed"],
             rd["flag"],
+            rd.get("board_size", ""), rd.get("board_size_basis", ""),
+            rd.get("board_size_page", ""),
+            rd.get("age_since_established", ""), rd.get("age_since_listed", ""),
         ])
 
     _auto_width(ws_year)
@@ -861,6 +883,8 @@ def main() -> int:
         "banking_addon_density", "banking_addon_score",
         "words_analysed", "total_words", "share_of_text_analysed",
         "data_quality_flag",
+        "board_size", "board_size_basis", "board_size_page",
+        "age_since_established", "age_since_listed",
     ]
     csv_path = EXPORTS_DIR / "verity_esg_scores.csv"
     with csv_path.open("w", newline="", encoding="utf-8") as fh:
@@ -893,6 +917,11 @@ def main() -> int:
                 "total_words": rd["total_words"],
                 "share_of_text_analysed": f"{rd['share_analysed']:.4f}" if rd["share_analysed"] is not None else "",
                 "data_quality_flag": rd["flag"],
+                "board_size": rd.get("board_size", ""),
+                "board_size_basis": rd.get("board_size_basis", ""),
+                "board_size_page": rd.get("board_size_page", ""),
+                "age_since_established": rd.get("age_since_established", ""),
+                "age_since_listed": rd.get("age_since_listed", ""),
             })
     print(f"Saved: {csv_path}  ({len(rows)} rows)")
 

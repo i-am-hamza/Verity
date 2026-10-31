@@ -475,6 +475,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/dashboard/export/verity_esg_scores.xlsx": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Export Xlsx */
+        get: operations["export_xlsx_dashboard_export_verity_esg_scores_xlsx_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/dashboard/export/verity_esg_scores.csv": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Export Csv */
+        get: operations["export_csv_dashboard_export_verity_esg_scores_csv_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/health": {
         parameters: {
             query?: never;
@@ -839,22 +873,32 @@ export interface components {
             page_count: number;
             /** Composite Score */
             composite_score: number;
-            /** E Score (0-100 rank-normalised) */
+            /** E Score */
             e_score: number;
-            /** S Score (0-100 rank-normalised) */
+            /** S Score */
             s_score: number;
-            /** G Score (0-100 rank-normalised) */
+            /** G Score */
             g_score: number;
-            /** General Score (0-100 rank-normalised) */
+            /** General Score */
             general_score: number;
-            /** Env (raw weighted density per 1,000 words) */
+            /** Env */
             env: number;
-            /** Soc (raw weighted density per 1,000 words) */
+            /** Soc */
             soc: number;
-            /** Gov (raw weighted density per 1,000 words) */
+            /** Gov */
             gov: number;
-            /** Gen density (raw weighted density per 1,000 words) */
+            /** Gen Density */
             gen_density: number;
+            /** Board Size */
+            board_size: number | null;
+            /** Board Size Basis */
+            board_size_basis: string | null;
+            /** Board Size Pages */
+            board_size_pages: string | null;
+            /** Age Since Established */
+            age_since_established: number | null;
+            /** Age Since Listed */
+            age_since_listed: number | null;
         };
         /** ReportScoreOut */
         ReportScoreOut: {
@@ -1821,6 +1865,46 @@ export interface operations {
         };
     };
     export_leaderboard_dashboard_export_leaderboard_csv_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+        };
+    };
+    export_xlsx_dashboard_export_verity_esg_scores_xlsx_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+        };
+    };
+    export_csv_dashboard_export_verity_esg_scores_csv_get: {
         parameters: {
             query?: never;
             header?: never;

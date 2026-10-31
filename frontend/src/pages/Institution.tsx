@@ -337,6 +337,11 @@ function ReportList({ inst }: { inst: InstitutionDetail }) {
         soc_density: r.soc,
         gov_density: r.gov,
         gen_density: r.gen_density,
+        board_size: r.board_size ?? "",
+        board_size_basis: r.board_size_basis ?? "",
+        board_size_page: r.board_size_pages ?? "",
+        age_since_established: r.age_since_established ?? "",
+        age_since_listed: r.age_since_listed ?? "",
       })),
       `${inst.slug}-reports.csv`,
     );
@@ -356,7 +361,7 @@ function ReportList({ inst }: { inst: InstitutionDetail }) {
       {/* Report list: horizontal scroll with the FY column sticky so the
           user never loses which row they're on when swiping sideways. */}
       <div className="mt-3 -mx-4 overflow-x-auto px-4 sm:mx-0 sm:px-0">
-      <table className="min-w-[640px] text-sm tabular [&_th:first-child]:sticky [&_th:first-child]:left-0 [&_th:first-child]:bg-surface [&_td:first-child]:sticky [&_td:first-child]:left-0 [&_td:first-child]:bg-surface">
+      <table className="min-w-[820px] text-sm tabular [&_th:first-child]:sticky [&_th:first-child]:left-0 [&_th:first-child]:bg-surface [&_td:first-child]:sticky [&_td:first-child]:left-0 [&_td:first-child]:bg-surface">
         <thead>
           <tr className="text-xs uppercase tracking-wide text-text-muted">
             <th className="px-2 py-1 text-left">FY</th>
@@ -365,6 +370,9 @@ function ReportList({ inst }: { inst: InstitutionDetail }) {
             <th className="px-2 py-1 text-left">sha256</th>
             <th className="px-2 py-1 text-right">Pages</th>
             <th className="px-2 py-1 text-right">Composite</th>
+            <th className="px-2 py-1 text-right" title="Board size at fiscal year-end — read from the annual report; not part of the ESG score.">Board</th>
+            <th className="px-2 py-1 text-right" title="Years since the company was established — researcher-supplied; not part of the ESG score.">Age est.</th>
+            <th className="px-2 py-1 text-right" title="Years since the company was listed — researcher-supplied; not part of the ESG score.">Age list.</th>
             <th className="px-2 py-1 text-left">Review</th>
             <th className="px-2 py-1 text-right">PDF</th>
           </tr>
@@ -391,6 +399,22 @@ function ReportList({ inst }: { inst: InstitutionDetail }) {
               </td>
               <td className="px-2 py-1 text-right">{r.page_count}</td>
               <td className="px-2 py-1 text-right">{r.composite_score.toFixed(3)}</td>
+              <td
+                className="px-2 py-1 text-right"
+                title={
+                  r.board_size != null
+                    ? `Basis: ${r.board_size_basis ?? "—"}${r.board_size_pages ? `; p${r.board_size_pages}` : ""}`
+                    : "awaiting researcher review"
+                }
+              >
+                {r.board_size != null ? r.board_size : <span className="text-text-faint">—</span>}
+              </td>
+              <td className="px-2 py-1 text-right">
+                {r.age_since_established != null ? r.age_since_established : <span className="text-text-faint">—</span>}
+              </td>
+              <td className="px-2 py-1 text-right">
+                {r.age_since_listed != null ? r.age_since_listed : <span className="text-text-faint">—</span>}
+              </td>
               <td className="px-2 py-1 text-left">
                 <span
                   className={[

@@ -10,6 +10,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.database import Base
 
 if TYPE_CHECKING:
+    from app.models.company_year import CompanyYearData
     from app.models.provenance import CrawlLog, Gap, SourceDocument
     from app.models.report import Report
 
@@ -78,4 +79,7 @@ class Institution(Base):
     )
     crawl_log_entries: Mapped[list[CrawlLog]] = relationship(
         "CrawlLog", back_populates="institution", cascade="all, delete-orphan"
+    )
+    company_year_data: Mapped[list[CompanyYearData]] = relationship(
+        "CompanyYearData", back_populates="institution", cascade="all, delete-orphan"
     )
