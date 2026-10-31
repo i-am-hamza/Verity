@@ -54,3 +54,8 @@ backend/_openapi.json
 frontend/_openapi.json
 coverage/
 *.coverage
+
+# Board-pages text + per-company reader output. Both are materialised from
+# R2 PDFs for the researcher-review loop; neither is source-of-truth.
+data/board_pages/
+data/board_pages_out/
