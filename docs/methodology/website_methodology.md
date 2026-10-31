@@ -65,7 +65,16 @@ Because scores are based on rank, they show **where a company stands within this
 - **Hand checks.** For sample reports, term counts were recounted by hand and reconciled with Verity's counts.
 - **Data-quality flags.** Reports with unusually little analysed text, or unusually high or low scores, are flagged for attention. They are not removed.
 
-## 7. Limitations
+## 7. Governance and firm-age variables (not part of the ESG score)
+
+Alongside the ESG scores, Verity records two kinds of non-score variables for each company-year:
+
+- **Board size** — number of board seats at fiscal year-end, from that year's annual report. Board size was read from the board section of each annual report using an assisted reading process; every value is recorded with page numbers and the directors counted, and was reviewed by the researcher on a random sample and all flagged cases. Secretary, advisors, observers and committee-only members are excluded. A director representing an entity ("QNB, represented by Mr X") counts as one. The named list of actual directors is preferred over any statutory number in the articles ("consists of up to N"); when a stated number and the list disagree, the list is used and the row is flagged.
+- **Age since established** and **age since listed** — supplied by the researcher.
+
+Neither variable is part of the ESG score. Both are exported alongside the scores (Excel and CSV) and shown on each company page so the data can be used by future analyses.
+
+## 8. Limitations
 
 - Verity measures **how much** a company discloses, not how good its ESG performance is or how credible its claims are.
 - Only **English** text is analysed.
