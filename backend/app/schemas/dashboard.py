@@ -68,7 +68,7 @@ class ReportRow(BaseModel):
     # docs/methodology/website_methodology.md). None when the researcher
     # has not yet annotated the board for this company-year.
     board_size: int | None
-    board_size_basis: str | None  # stated_number_and_list | list | report_date | not_found
+    board_size_basis: str | None  # stated_number_and_list | list | report_date | not_found | researcher_review
     board_size_pages: str | None
     age_since_established: int | None
     age_since_listed: int | None

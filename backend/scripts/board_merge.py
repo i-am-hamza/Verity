@@ -59,7 +59,7 @@ CSV_FIELDS = [
 ]
 
 VALID_BASIS = {"list", "stated_number_and_list", "stated_number",
-               "report_date", "not_found"}
+               "report_date", "not_found", "researcher_review"}
 
 
 def _load_csv() -> list[dict[str, str]]:

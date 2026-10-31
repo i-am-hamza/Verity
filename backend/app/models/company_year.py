@@ -25,6 +25,7 @@ class BoardSizeBasis(enum.StrEnum):
     list = "list"
     report_date = "report_date"
     not_found = "not_found"
+    researcher_review = "researcher_review"
 
 
 class BoardSizeConfidence(enum.StrEnum):
