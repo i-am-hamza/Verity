@@ -15,7 +15,7 @@ if TYPE_CHECKING:
 class CategoryScore(Base):
     """The score for one category, on one report, under one taxonomy/pipeline
     version. Reprocessing under a new version APPENDS a new row rather than
-    overwriting — old scores stay traceable (CLAUDE.md, Method)."""
+    overwriting — old scores stay traceable (the project rules, Method)."""
     __tablename__ = "category_scores"
 
     id: Mapped[int] = mapped_column(primary_key=True, index=True)

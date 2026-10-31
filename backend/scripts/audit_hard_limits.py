@@ -1,4 +1,4 @@
-"""Session 7 hard-limits audit — proves the crawler obeyed CLAUDE.md.
+"""Session 7 hard-limits audit — proves the crawler obeyed the project rules.
 
 Reads the crawl_log table + the data acquisition log + the source files
 in app/crawler/ and checks:
@@ -9,7 +9,7 @@ in app/crawler/ and checks:
        the SAME run.
     3. No request to any aggregator that forbids automated download
        (sustainabilityreports.com is the one explicitly excluded in
-       CLAUDE.md and DATA_SOURCING_LOG.md).
+       the project rules and DATA_SOURCING_LOG.md).
     4. User-Agent string in crawl rows (where captured) matches the
        config.make_user_agent() format: VerityResearchBot/<version>
        (academic research; contact: <email from env>).
@@ -114,7 +114,7 @@ def main() -> int:
         # 4: Can only verify the User-Agent format in use TODAY matches
         # the configured pattern. CrawlLog doesn't store per-row UA, so
         # the proof is: config.make_user_agent() produces the honest UA
-        # described in CLAUDE.md rule 5.
+        # described in project rule 5.
         ua = make_user_agent()
         if "VerityResearchBot" not in ua or "contact:" not in ua:
             violations["ua_format"].append(f"configured UA: {ua!r}")

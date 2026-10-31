@@ -5,7 +5,7 @@ quantitative instrument for a PhD. Scores annual and integrated reports
 on how thoroughly each company *discloses* Environmental, Social, and
 Governance topics — it is not a sentiment score and not a performance
 score. The design rationale, hard limits on how the data is collected,
-and project rules are in [CLAUDE.md](CLAUDE.md); the methodology detail
+and project rules are in the project rules; the methodology detail
 and the scoring formula will live in `docs/METHODOLOGY.md` (generated
 from a dedicated prompt that pulls real figures from the live system,
 not drafted by hand).
@@ -113,7 +113,7 @@ npm install
 ### Environment variable (required for the crawler)
 
 Any crawler invocation refuses to start without `VERITY_CONTACT_EMAIL`
-set — CLAUDE.md rule 5 (identify honestly). Add to `backend/.env`:
+set — project rule 5 (identify honestly). Add to `backend/.env`:
 
 ```
 VERITY_CONTACT_EMAIL=you@example.com

@@ -1,6 +1,6 @@
 """Static code audit of app/crawler/.
 
-CLAUDE.md rules 1-3 forbid:
+project rules 1-3 forbid:
   - account creation / login
   - CAPTCHA solving / bot-check evasion
   - IP or UA rotation to dodge a block
@@ -96,12 +96,12 @@ def test_crawler_has_no_forbidden_patterns():
                     rel = path.relative_to(BACKEND)
                     violations.append(f"{rel}:{lineno}  {reason}\n    {line.rstrip()}")
     assert not violations, (
-        "CLAUDE.md rules 1-3 violations in crawler/:\n  "
+        "project rules 1-3 violations in crawler/:\n  "
         + "\n  ".join(violations)
     )
 
 
-# Also assert that CLAUDE.md's "sustainabilityreports.com" exclusion is
+# Also assert that the project rules' "sustainabilityreports.com" exclusion is
 # materialised somewhere in the data layer so a future contributor can't
 # re-enable it without noticing. Kept here rather than in the crawler
 # because the exclusion is a *data* decision (which domains we touch),
@@ -111,5 +111,5 @@ def test_sustainabilityreports_is_recorded_as_excluded():
     text = log.read_text(encoding="utf-8") if log.exists() else ""
     assert "sustainabilityreports.com" in text and "excluded" in text.lower(), (
         "DATA_SOURCING_LOG.md must record the sustainabilityreports.com "
-        "exclusion (CLAUDE.md rule 4). Current log does not mention it."
+        "exclusion (project rule 4). Current log does not mention it."
     )

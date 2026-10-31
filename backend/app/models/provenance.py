@@ -4,7 +4,7 @@ what the crawler tried.
 A Report (see app.models.report.Report) is one PROCESSED source_document,
 scored under one pipeline_version and one taxonomy_version. The
 source_document row is the immutable evidence that the file exists as far
-as the pipeline is concerned (CLAUDE.md, data acquisition rule 6).
+as the pipeline is concerned (the project rules, data acquisition rule 6).
 """
 from __future__ import annotations
 
@@ -39,7 +39,7 @@ class SourceType(enum.StrEnum):
     # `manual` = human-dropped file or human-handed URL.
     # `targeted_search` = DEPRECATED. The stage and its CLI were removed —
     #   every public search endpoint we tried refused the honest UA, and
-    #   CLAUDE.md rules 1/2 forbid credentials and evasion. The enum member
+    #   project rules 1/2 forbid credentials and evasion. The enum member
     #   stays only so the Postgres enum type (added by migration
     #   93a446552d20) doesn't need an irreversible drop. No code paths
     #   emit this value anymore and no SourceDocument rows carry it.

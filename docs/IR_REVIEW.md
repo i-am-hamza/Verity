@@ -1,18 +1,18 @@
 # IR + exchange source review
 
-Current state: **Session 3b** (2026-10-01). Session 3 did WebFetch-based discovery; Session 3b retried everything blocked at that layer with Playwright (Chromium + the VerityResearchBot UA from CLAUDE.md), closed the deferred non-financial exchange work, and resolved ALAFCO's path.
+Current state: **Session 3b** (2026-10-01). Session 3 did WebFetch-based discovery; Session 3b retried everything blocked at that layer with Playwright (Chromium + the VerityResearchBot UA from the project rules), closed the deferred non-financial exchange work, and resolved ALAFCO's path.
 
 ## Statuses
 
 - **verified** — the URL was fetched (Session 3 via WebFetch or Session 3b via Playwright) and the page's content / title / preserved final URL confirmed it was the intended IR or exchange-company page.
-- **unreachable** — the URL was fetched and the site returned a definitive block (403 / 404 / 500 / 523) or redirected to a dead end. For exchange URLs this includes Tadawul (saudiexchange.sa) and Boursa Kuwait `/stock/<id>/profile`, which both 403 even to Playwright + the honest VerityResearchBot UA — Akamai-style bot detection that trips on the UA string. Per CLAUDE.md rule 3 we stop for those domains and move on; they go to Tier 3/4.
+- **unreachable** — the URL was fetched and the site returned a definitive block (403 / 404 / 500 / 523) or redirected to a dead end. For exchange URLs this includes Tadawul (saudiexchange.sa) and Boursa Kuwait `/stock/<id>/profile`, which both 403 even to Playwright + the honest VerityResearchBot UA — Akamai-style bot detection that trips on the UA string. Per project rule 3 we stop for those domains and move on; they go to Tier 3/4.
 - **needs_human** — no verified fetch, no definitive block. Three rows remain here after Session 3b because no live URL has been identified at all (Jarir Marketing; Tamdeen Real Estate; Oman International Development and Investment IR page).
 
 ## What changed from Session 3
 
 - Tadawul (24 slugs) and Boursa Kuwait numeric-id profile URLs (6 slugs) now `exchange_status = unreachable` with Playwright evidence, not `needs_human`.
 - ADX / DFM / QSE / MSX / Bahrain Bourse per-company URLs verified via Playwright — 27 total `exchange_status = verified` rows (up from 10).
-- SNB (`alahli.com`) was Session-3-unreachable due to a cert error — Playwright returned 200 with title "Investor Relations | Saudi National Bank". Session 3's cert error was Claude-tool-specific.
+- SNB (`alahli.com`) was Session-3-unreachable due to a cert error — Playwright returned 200 with title "Investor Relations | Saudi National Bank". Session 3's cert error was fetch-tool-specific.
 - 19 of the 24 deferred `needs_human` IR rows upgraded to `verified`; 6 downgraded to `unreachable` (403/500 or redirect-to-homepage).
 - ALAFCO: both sides `unreachable`, with a dedicated Wayback plan — 5 gap rows now live in the `gaps` table (imported via `seed/import_alafco_gaps.py`) so Session 4's Wayback helper picks them up directly from the DB. `data/alafco_gaps.json` is now a staging artefact.
 

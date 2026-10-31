@@ -9,7 +9,7 @@ URL:
      "body_signature": "...", "error": null, "fetched_at": "..."}
 
 Politeness: at least 2 seconds between consecutive requests to the same
-host (CLAUDE.md data-acquisition rule 5). One in-flight request per domain
+host (the project rules data-acquisition rule 5). One in-flight request per domain
 is implicit — the script is single-threaded.
 
 Verification tolerance: a status of 200/301/302/304 counts as "reachable";
@@ -34,7 +34,7 @@ from playwright.sync_api import sync_playwright
 
 CONTACT = os.environ.get("VERITY_CONTACT_EMAIL")
 if not CONTACT:
-    print("VERITY_CONTACT_EMAIL not set — refusing to run per CLAUDE.md rule 5", file=sys.stderr)
+    print("VERITY_CONTACT_EMAIL not set — refusing to run per project rule 5", file=sys.stderr)
     sys.exit(2)
 
 USER_AGENT = f"VerityResearchBot/0.1 (academic PhD research; contact: {CONTACT})"

@@ -9,7 +9,7 @@ Usage:
     python -m app.cli ingest-approved
     python -m app.cli ingest-manual
 
-All subcommands require VERITY_CONTACT_EMAIL to be set (CLAUDE.md
+All subcommands require VERITY_CONTACT_EMAIL to be set (the project rules
 rule 5). The crawl subcommand gates between waves: it stops after the
 financial wave completes so the human can review before 'other' runs.
 """

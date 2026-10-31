@@ -228,7 +228,7 @@ class Fetcher:
                 resp = page.goto(url, wait_until="domcontentloaded", timeout=25000)
                 final_url = page.url
                 status = resp.status if resp else None
-                # Playwright is READ-only (CLAUDE.md). Give the SPA time to populate.
+                # Playwright is READ-only (the project rules). Give the SPA time to populate.
                 page.wait_for_timeout(4000)
                 html = page.content()
         except Exception as exc:

@@ -4,7 +4,7 @@ Governance (board size) and firm-age metrics are per (institution, fiscal_year),
 not per Report row — a given fiscal year has only one authoritative value even
 when the pipeline rescores the underlying PDF under a new taxonomy. Keeping
 them in their own table also makes clear they are NOT part of the Verity ESG
-score (CLAUDE.md Method).
+score (the project rules Method).
 """
 from __future__ import annotations
 

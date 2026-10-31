@@ -9,7 +9,7 @@ Density of ESG-adjacent *phrases* in the narrative sections of annual
 and integrated reports, weighted by a GRI-/SASB-sourced taxonomy. It is
 a measure of *how much the company talks about ESG topics*, not whether
 the company does them well. The design-level rationale for ignoring
-sentiment is in [CLAUDE.md](../CLAUDE.md) ("Method"): the ESG-disclosure
+sentiment is in the project rules ("Method"): the ESG-disclosure
 literature's recurring finding is that sentiment classifiers imported
 from general finance NLP mis-classify boilerplate at a rate that
 swamps the signal (Loughran and McDonald, 2011).

@@ -54,7 +54,7 @@ services:
       - key: ALLOWED_ORIGINS
         sync: false
 
-      # Published to sites the crawler hits (CLAUDE.md rule 5). The
+      # Published to sites the crawler hits (project rule 5). The
       # crawler is not invoked by the web process in production, but
       # the Settings model refuses to load without this if any crawler
       # module gets imported — safer to set it than discover a 500 at

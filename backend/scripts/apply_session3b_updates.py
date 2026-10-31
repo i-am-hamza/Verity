@@ -43,7 +43,7 @@ TADAWUL_SLUGS = {
 
 TADAWUL_NOTE = (
     "Tadawul (saudiexchange.sa) returned HTTP 403 to Playwright with Chromium + the "
-    "VerityResearchBot UA — Akamai bot detection, UA-based. CLAUDE.md rule 3 "
+    "VerityResearchBot UA — Akamai bot detection, UA-based. project rule 3 "
     "says 'if a site blocks you, stop for that domain, log it, move on' — "
     "Session 4 will not auto-crawl Tadawul. KSA exchange evidence must come from "
     "company IR pages or Tier 3/4 paths."
@@ -104,7 +104,7 @@ VERIFIED_EXCHANGE: dict[str, str] = {
 
 VERIFIED_EXCHANGE_NOTE = (
     "Verified via Playwright (Chromium) with the VerityResearchBot UA from "
-    "CLAUDE.md on 2026-10-01: HTTP 200 and final URL preserved (no redirect to "
+    "the project rules on 2026-10-01: HTTP 200 and final URL preserved (no redirect to "
     "homepage). Company-specific data on these pages is loaded via XHR by the "
     "SPA, so the shared ticker-scroll dominates a plain inner-text grab — the "
     "URL being honoured by the server is what proves the per-company page exists."

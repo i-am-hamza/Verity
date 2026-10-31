@@ -7,7 +7,7 @@ exclude_toc_pages = true
 exclude_repeated_lines = true
 # Declared in Patch A, implemented in Session 5. Skipping the financial
 # statements + notes (independent auditor's report onward) keeps the
-# denominator and matches on narrative disclosure only, per CLAUDE.md
+# denominator and matches on narrative disclosure only, per the project rules
 # Method and Ferjancic et al. (2024).
 exclude_financial_statement_pages = true
 

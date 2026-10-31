@@ -88,7 +88,7 @@ is a bug — if something is broken we fix it. These are intentional
   applies, careful handling of the composite comparison across
   industries.
 - **Negation-aware scoring.** The current pipeline is explicitly
-  polarity-blind (CLAUDE.md Method; Loughran and McDonald 2011).
+  polarity-blind (the project rules Method; Loughran and McDonald 2011).
   Adding negation detection (not sentiment) — "we have NOT established
   a Scope-3 target" scored differently than "we HAVE established" —
   is a separate scope-change that would require a methodological
@@ -97,10 +97,10 @@ is a bug — if something is broken we fix it. These are intentional
 ## Not on the backlog (deliberately)
 
 - Any form of IP, UA, or CAPTCHA-related evasion. Forbidden by
-  CLAUDE.md rules 2-3; blocked by the static test in
+  project rules 2-3; blocked by the static test in
   `backend/tests/test_crawler_hard_limits.py`.
 - Any paid-search API or account-based aggregator. Forbidden by
-  CLAUDE.md rules 1 and 4.
+  project rules 1 and 4.
 - Sentiment scoring. Discussed and rejected at project design time.
   Dictionary methods against financial text produce more noise than
   signal (Loughran and McDonald, 2011); a replacement would require a

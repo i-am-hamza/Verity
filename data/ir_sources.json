@@ -20,7 +20,7 @@
       },
       "exchange": {
         "fetched_at": "2026-10-01",
-        "note": "Tadawul (saudiexchange.sa) returned HTTP 403 to Playwright with Chromium + the VerityResearchBot UA — Akamai bot detection, UA-based. CLAUDE.md rule 3 says 'if a site blocks you, stop for that domain, log it, move on' — Session 4 will not auto-crawl Tadawul. KSA exchange evidence must come from company IR pages or Tier 3/4 paths."
+        "note": "Tadawul (saudiexchange.sa) returned HTTP 403 to Playwright with Chromium + the VerityResearchBot UA — Akamai bot detection, UA-based. project rule 3 says 'if a site blocks you, stop for that domain, log it, move on' — Session 4 will not auto-crawl Tadawul. KSA exchange evidence must come from company IR pages or Tier 3/4 paths."
       }
     },
     "notes": "Bilingual EN/AR; direct PDF anchors, no JS required to reach report URLs."
@@ -43,7 +43,7 @@
       },
       "exchange": {
         "fetched_at": "2026-10-01",
-        "note": "Tadawul (saudiexchange.sa) returned HTTP 403 to Playwright with Chromium + the VerityResearchBot UA — Akamai bot detection, UA-based. CLAUDE.md rule 3 says 'if a site blocks you, stop for that domain, log it, move on' — Session 4 will not auto-crawl Tadawul. KSA exchange evidence must come from company IR pages or Tier 3/4 paths."
+        "note": "Tadawul (saudiexchange.sa) returned HTTP 403 to Playwright with Chromium + the VerityResearchBot UA — Akamai bot detection, UA-based. project rule 3 says 'if a site blocks you, stop for that domain, log it, move on' — Session 4 will not auto-crawl Tadawul. KSA exchange evidence must come from company IR pages or Tier 3/4 paths."
       }
     },
     "notes": "SNB rebranded from NCB; the legacy alahli.com domain is live. Session-1 hint snb.com resolves to Webster Bank USA — bad hint."
@@ -67,7 +67,7 @@
       },
       "exchange": {
         "fetched_at": "2026-10-01",
-        "note": "Tadawul (saudiexchange.sa) returned HTTP 403 to Playwright with Chromium + the VerityResearchBot UA — Akamai bot detection, UA-based. CLAUDE.md rule 3 says 'if a site blocks you, stop for that domain, log it, move on' — Session 4 will not auto-crawl Tadawul. KSA exchange evidence must come from company IR pages or Tier 3/4 paths."
+        "note": "Tadawul (saudiexchange.sa) returned HTTP 403 to Playwright with Chromium + the VerityResearchBot UA — Akamai bot detection, UA-based. project rule 3 says 'if a site blocks you, stop for that domain, log it, move on' — Session 4 will not auto-crawl Tadawul. KSA exchange evidence must come from company IR pages or Tier 3/4 paths."
       }
     },
     "notes": "Year-tab UI is JS-enhanced but PDF anchors are direct."
@@ -89,7 +89,7 @@
       },
       "exchange": {
         "fetched_at": "2026-10-01",
-        "note": "Tadawul (saudiexchange.sa) returned HTTP 403 to Playwright with Chromium + the VerityResearchBot UA — Akamai bot detection, UA-based. CLAUDE.md rule 3 says 'if a site blocks you, stop for that domain, log it, move on' — Session 4 will not auto-crawl Tadawul. KSA exchange evidence must come from company IR pages or Tier 3/4 paths."
+        "note": "Tadawul (saudiexchange.sa) returned HTTP 403 to Playwright with Chromium + the VerityResearchBot UA — Akamai bot detection, UA-based. project rule 3 says 'if a site blocks you, stop for that domain, log it, move on' — Session 4 will not auto-crawl Tadawul. KSA exchange evidence must come from company IR pages or Tier 3/4 paths."
       }
     },
     "notes": ""
@@ -113,7 +113,7 @@
       },
       "exchange": {
         "fetched_at": "2026-10-01",
-        "note": "Tadawul (saudiexchange.sa) returned HTTP 403 to Playwright with Chromium + the VerityResearchBot UA — Akamai bot detection, UA-based. CLAUDE.md rule 3 says 'if a site blocks you, stop for that domain, log it, move on' — Session 4 will not auto-crawl Tadawul. KSA exchange evidence must come from company IR pages or Tier 3/4 paths."
+        "note": "Tadawul (saudiexchange.sa) returned HTTP 403 to Playwright with Chromium + the VerityResearchBot UA — Akamai bot detection, UA-based. project rule 3 says 'if a site blocks you, stop for that domain, log it, move on' — Session 4 will not auto-crawl Tadawul. KSA exchange evidence must come from company IR pages or Tier 3/4 paths."
       }
     },
     "notes": "2005-2009 reports are Arabic-only per the page's own footnote."
@@ -133,7 +133,7 @@
       },
       "exchange": {
         "fetched_at": "2026-10-01",
-        "note": "Tadawul (saudiexchange.sa) returned HTTP 403 to Playwright with Chromium + the VerityResearchBot UA — Akamai bot detection, UA-based. CLAUDE.md rule 3 says 'if a site blocks you, stop for that domain, log it, move on' — Session 4 will not auto-crawl Tadawul. KSA exchange evidence must come from company IR pages or Tier 3/4 paths."
+        "note": "Tadawul (saudiexchange.sa) returned HTTP 403 to Playwright with Chromium + the VerityResearchBot UA — Akamai bot detection, UA-based. project rule 3 says 'if a site blocks you, stop for that domain, log it, move on' — Session 4 will not auto-crawl Tadawul. KSA exchange evidence must come from company IR pages or Tier 3/4 paths."
       }
     },
     "notes": "WAF rejects WebFetch UA; Session 4 crawler with descriptive UA may or may not clear it."
@@ -157,7 +157,7 @@
       },
       "exchange": {
         "fetched_at": "2026-10-01",
-        "note": "Tadawul (saudiexchange.sa) returned HTTP 403 to Playwright with Chromium + the VerityResearchBot UA — Akamai bot detection, UA-based. CLAUDE.md rule 3 says 'if a site blocks you, stop for that domain, log it, move on' — Session 4 will not auto-crawl Tadawul. KSA exchange evidence must come from company IR pages or Tier 3/4 paths."
+        "note": "Tadawul (saudiexchange.sa) returned HTTP 403 to Playwright with Chromium + the VerityResearchBot UA — Akamai bot detection, UA-based. project rule 3 says 'if a site blocks you, stop for that domain, log it, move on' — Session 4 will not auto-crawl Tadawul. KSA exchange evidence must come from company IR pages or Tier 3/4 paths."
       }
     },
     "notes": "Verified at IR-nav level, not at annual-report-list level."
@@ -181,7 +181,7 @@
       },
       "exchange": {
         "fetched_at": "2026-10-01",
-        "note": "Verified via Playwright (Chromium) with the VerityResearchBot UA from CLAUDE.md on 2026-10-01: HTTP 200 and final URL preserved (no redirect to homepage). Company-specific data on these pages is loaded via XHR by the SPA, so the shared ticker-scroll dominates a plain inner-text grab — the URL being honoured by the server is what proves the per-company page exists."
+        "note": "Verified via Playwright (Chromium) with the VerityResearchBot UA from the project rules on 2026-10-01: HTTP 200 and final URL preserved (no redirect to homepage). Company-specific data on these pages is loaded via XHR by the SPA, so the shared ticker-scroll dominates a plain inner-text grab — the URL being honoured by the server is what proves the per-company page exists."
       }
     },
     "notes": "Lists on ADX (ticker FAB)."
@@ -207,7 +207,7 @@
       },
       "exchange": {
         "fetched_at": "2026-10-01",
-        "note": "Verified via Playwright (Chromium) with the VerityResearchBot UA from CLAUDE.md on 2026-10-01: HTTP 200 and final URL preserved (no redirect to homepage). Company-specific data on these pages is loaded via XHR by the SPA, so the shared ticker-scroll dominates a plain inner-text grab — the URL being honoured by the server is what proves the per-company page exists."
+        "note": "Verified via Playwright (Chromium) with the VerityResearchBot UA from the project rules on 2026-10-01: HTTP 200 and final URL preserved (no redirect to homepage). Company-specific data on these pages is loaded via XHR by the SPA, so the shared ticker-scroll dominates a plain inner-text grab — the URL being honoured by the server is what proves the per-company page exists."
       }
     },
     "notes": "ADX ticker ADCB."
@@ -227,11 +227,11 @@
         "sample_report_links": [
           "https://agm.rakbank.ae/2025/"
         ],
-        "note": "PDF links behind a JS-populated year selector; only the 2025 interactive report URL was directly visible in Claude's WebFetch view."
+        "note": "PDF links behind a JS-populated year selector; only the 2025 interactive report URL was directly visible in WebFetch view."
       },
       "exchange": {
         "fetched_at": "2026-10-01",
-        "note": "Verified via Playwright (Chromium) with the VerityResearchBot UA from CLAUDE.md on 2026-10-01: HTTP 200 and final URL preserved (no redirect to homepage). Company-specific data on these pages is loaded via XHR by the SPA, so the shared ticker-scroll dominates a plain inner-text grab — the URL being honoured by the server is what proves the per-company page exists."
+        "note": "Verified via Playwright (Chromium) with the VerityResearchBot UA from the project rules on 2026-10-01: HTTP 200 and final URL preserved (no redirect to homepage). Company-specific data on these pages is loaded via XHR by the SPA, so the shared ticker-scroll dominates a plain inner-text grab — the URL being honoured by the server is what proves the per-company page exists."
       }
     },
     "notes": "JS-heavy; ADX ticker RAKBANK."
@@ -255,7 +255,7 @@
       },
       "exchange": {
         "fetched_at": "2026-10-01",
-        "note": "Verified via Playwright (Chromium) with the VerityResearchBot UA from CLAUDE.md on 2026-10-01: HTTP 200 and final URL preserved (no redirect to homepage). Company-specific data on these pages is loaded via XHR by the SPA, so the shared ticker-scroll dominates a plain inner-text grab — the URL being honoured by the server is what proves the per-company page exists."
+        "note": "Verified via Playwright (Chromium) with the VerityResearchBot UA from the project rules on 2026-10-01: HTTP 200 and final URL preserved (no redirect to homepage). Company-specific data on these pages is loaded via XHR by the SPA, so the shared ticker-scroll dominates a plain inner-text grab — the URL being honoured by the server is what proves the per-company page exists."
       }
     },
     "notes": "Session-2 hint dib.ae/investor-relations 404s; real path is /about-us/investor-relations/financial-information."
@@ -281,7 +281,7 @@
       },
       "exchange": {
         "fetched_at": "2026-10-01",
-        "note": "Verified via Playwright (Chromium) with the VerityResearchBot UA from CLAUDE.md on 2026-10-01: HTTP 200 and final URL preserved (no redirect to homepage). Company-specific data on these pages is loaded via XHR by the SPA, so the shared ticker-scroll dominates a plain inner-text grab — the URL being honoured by the server is what proves the per-company page exists."
+        "note": "Verified via Playwright (Chromium) with the VerityResearchBot UA from the project rules on 2026-10-01: HTTP 200 and final URL preserved (no redirect to homepage). Company-specific data on these pages is loaded via XHR by the SPA, so the shared ticker-scroll dominates a plain inner-text grab — the URL being honoured by the server is what proves the per-company page exists."
       }
     },
     "notes": "DFM ticker DIC."
@@ -306,7 +306,7 @@
       },
       "exchange": {
         "fetched_at": "2026-10-01",
-        "note": "Verified via Playwright (Chromium) with the VerityResearchBot UA from CLAUDE.md on 2026-10-01: HTTP 200 and final URL preserved (no redirect to homepage). Company-specific data on these pages is loaded via XHR by the SPA, so the shared ticker-scroll dominates a plain inner-text grab — the URL being honoured by the server is what proves the per-company page exists."
+        "note": "Verified via Playwright (Chromium) with the VerityResearchBot UA from the project rules on 2026-10-01: HTTP 200 and final URL preserved (no redirect to homepage). Company-specific data on these pages is loaded via XHR by the SPA, so the shared ticker-scroll dominates a plain inner-text grab — the URL being honoured by the server is what proves the per-company page exists."
       }
     },
     "notes": "Session-1 direct-PDF fetch got 403 on WebFetch UA (see docs/DATA_SOURCING_LOG.md)."
@@ -330,7 +330,7 @@
       },
       "exchange": {
         "fetched_at": "2026-10-01",
-        "note": "Verified via Playwright (Chromium) with the VerityResearchBot UA from CLAUDE.md on 2026-10-01: HTTP 200 and final URL preserved (no redirect to homepage). Company-specific data on these pages is loaded via XHR by the SPA, so the shared ticker-scroll dominates a plain inner-text grab — the URL being honoured by the server is what proves the per-company page exists."
+        "note": "Verified via Playwright (Chromium) with the VerityResearchBot UA from the project rules on 2026-10-01: HTTP 200 and final URL preserved (no redirect to homepage). Company-specific data on these pages is loaded via XHR by the SPA, so the shared ticker-scroll dominates a plain inner-text grab — the URL being honoured by the server is what proves the per-company page exists."
       }
     },
     "notes": "Session-2 hint was the FAQ URL; the real annual-reports index is en_QA/InvestorRelations/enAnnualReports."
@@ -447,7 +447,7 @@
       },
       "exchange": {
         "fetched_at": "2026-10-01",
-        "note": "Verified via Playwright (Chromium) with the VerityResearchBot UA from CLAUDE.md on 2026-10-01: HTTP 200 and final URL preserved (no redirect to homepage). Company-specific data on these pages is loaded via XHR by the SPA, so the shared ticker-scroll dominates a plain inner-text grab — the URL being honoured by the server is what proves the per-company page exists."
+        "note": "Verified via Playwright (Chromium) with the VerityResearchBot UA from the project rules on 2026-10-01: HTTP 200 and final URL preserved (no redirect to homepage). Company-specific data on these pages is loaded via XHR by the SPA, so the shared ticker-scroll dominates a plain inner-text grab — the URL being honoured by the server is what proves the per-company page exists."
       }
     },
     "notes": ""
@@ -467,7 +467,7 @@
       },
       "exchange": {
         "fetched_at": "2026-10-01",
-        "note": "Verified via Playwright (Chromium) with the VerityResearchBot UA from CLAUDE.md on 2026-10-01: HTTP 200 and final URL preserved (no redirect to homepage). Company-specific data on these pages is loaded via XHR by the SPA, so the shared ticker-scroll dominates a plain inner-text grab — the URL being honoured by the server is what proves the per-company page exists."
+        "note": "Verified via Playwright (Chromium) with the VerityResearchBot UA from the project rules on 2026-10-01: HTTP 200 and final URL preserved (no redirect to homepage). Company-specific data on these pages is loaded via XHR by the SPA, so the shared ticker-scroll dominates a plain inner-text grab — the URL being honoured by the server is what proves the per-company page exists."
       }
     },
     "notes": "Company also known as Ominvest. MSX profile confirmed; IR page needs human check."
@@ -492,7 +492,7 @@
       },
       "exchange": {
         "fetched_at": "2026-10-01",
-        "note": "Verified via Playwright (Chromium) with the VerityResearchBot UA from CLAUDE.md on 2026-10-01: HTTP 200 and final URL preserved (no redirect to homepage). Company-specific data on these pages is loaded via XHR by the SPA, so the shared ticker-scroll dominates a plain inner-text grab — the URL being honoured by the server is what proves the per-company page exists."
+        "note": "Verified via Playwright (Chromium) with the VerityResearchBot UA from the project rules on 2026-10-01: HTTP 200 and final URL preserved (no redirect to homepage). Company-specific data on these pages is loaded via XHR by the SPA, so the shared ticker-scroll dominates a plain inner-text grab — the URL being honoured by the server is what proves the per-company page exists."
       }
     },
     "notes": ""
@@ -515,7 +515,7 @@
       },
       "exchange": {
         "fetched_at": "2026-10-01",
-        "note": "Verified via Playwright (Chromium) with the VerityResearchBot UA from CLAUDE.md on 2026-10-01: HTTP 200 and final URL preserved (no redirect to homepage). Company-specific data on these pages is loaded via XHR by the SPA, so the shared ticker-scroll dominates a plain inner-text grab — the URL being honoured by the server is what proves the per-company page exists."
+        "note": "Verified via Playwright (Chromium) with the VerityResearchBot UA from the project rules on 2026-10-01: HTTP 200 and final URL preserved (no redirect to homepage). Company-specific data on these pages is loaded via XHR by the SPA, so the shared ticker-scroll dominates a plain inner-text grab — the URL being honoured by the server is what proves the per-company page exists."
       }
     },
     "notes": ""
@@ -537,7 +537,7 @@
       },
       "exchange": {
         "fetched_at": "2026-10-01",
-        "note": "Verified via Playwright (Chromium) with the VerityResearchBot UA from CLAUDE.md on 2026-10-01: HTTP 200 and final URL preserved (no redirect to homepage). Company-specific data on these pages is loaded via XHR by the SPA, so the shared ticker-scroll dominates a plain inner-text grab — the URL being honoured by the server is what proves the per-company page exists."
+        "note": "Verified via Playwright (Chromium) with the VerityResearchBot UA from the project rules on 2026-10-01: HTTP 200 and final URL preserved (no redirect to homepage). Company-specific data on these pages is loaded via XHR by the SPA, so the shared ticker-scroll dominates a plain inner-text grab — the URL being honoured by the server is what proves the per-company page exists."
       }
     },
     "notes": ""
@@ -561,7 +561,7 @@
       },
       "exchange": {
         "fetched_at": "2026-10-01",
-        "note": "Tadawul (saudiexchange.sa) returned HTTP 403 to Playwright with Chromium + the VerityResearchBot UA — Akamai bot detection, UA-based. CLAUDE.md rule 3 says 'if a site blocks you, stop for that domain, log it, move on' — Session 4 will not auto-crawl Tadawul. KSA exchange evidence must come from company IR pages or Tier 3/4 paths."
+        "note": "Tadawul (saudiexchange.sa) returned HTTP 403 to Playwright with Chromium + the VerityResearchBot UA — Akamai bot detection, UA-based. project rule 3 says 'if a site blocks you, stop for that domain, log it, move on' — Session 4 will not auto-crawl Tadawul. KSA exchange evidence must come from company IR pages or Tier 3/4 paths."
       }
     },
     "notes": ""
@@ -583,7 +583,7 @@
       },
       "exchange": {
         "fetched_at": "2026-10-01",
-        "note": "Tadawul (saudiexchange.sa) returned HTTP 403 to Playwright with Chromium + the VerityResearchBot UA — Akamai bot detection, UA-based. CLAUDE.md rule 3 says 'if a site blocks you, stop for that domain, log it, move on' — Session 4 will not auto-crawl Tadawul. KSA exchange evidence must come from company IR pages or Tier 3/4 paths."
+        "note": "Tadawul (saudiexchange.sa) returned HTTP 403 to Playwright with Chromium + the VerityResearchBot UA — Akamai bot detection, UA-based. project rule 3 says 'if a site blocks you, stop for that domain, log it, move on' — Session 4 will not auto-crawl Tadawul. KSA exchange evidence must come from company IR pages or Tier 3/4 paths."
       }
     },
     "notes": ""
@@ -606,7 +606,7 @@
       },
       "exchange": {
         "fetched_at": "2026-10-01",
-        "note": "Tadawul (saudiexchange.sa) returned HTTP 403 to Playwright with Chromium + the VerityResearchBot UA — Akamai bot detection, UA-based. CLAUDE.md rule 3 says 'if a site blocks you, stop for that domain, log it, move on' — Session 4 will not auto-crawl Tadawul. KSA exchange evidence must come from company IR pages or Tier 3/4 paths."
+        "note": "Tadawul (saudiexchange.sa) returned HTTP 403 to Playwright with Chromium + the VerityResearchBot UA — Akamai bot detection, UA-based. project rule 3 says 'if a site blocks you, stop for that domain, log it, move on' — Session 4 will not auto-crawl Tadawul. KSA exchange evidence must come from company IR pages or Tier 3/4 paths."
       }
     },
     "notes": ""
@@ -626,7 +626,7 @@
       },
       "exchange": {
         "fetched_at": "2026-10-01",
-        "note": "Tadawul (saudiexchange.sa) returned HTTP 403 to Playwright with Chromium + the VerityResearchBot UA — Akamai bot detection, UA-based. CLAUDE.md rule 3 says 'if a site blocks you, stop for that domain, log it, move on' — Session 4 will not auto-crawl Tadawul. KSA exchange evidence must come from company IR pages or Tier 3/4 paths."
+        "note": "Tadawul (saudiexchange.sa) returned HTTP 403 to Playwright with Chromium + the VerityResearchBot UA — Akamai bot detection, UA-based. project rule 3 says 'if a site blocks you, stop for that domain, log it, move on' — Session 4 will not auto-crawl Tadawul. KSA exchange evidence must come from company IR pages or Tier 3/4 paths."
       }
     },
     "notes": ""
@@ -649,7 +649,7 @@
       },
       "exchange": {
         "fetched_at": "2026-10-01",
-        "note": "Tadawul (saudiexchange.sa) returned HTTP 403 to Playwright with Chromium + the VerityResearchBot UA — Akamai bot detection, UA-based. CLAUDE.md rule 3 says 'if a site blocks you, stop for that domain, log it, move on' — Session 4 will not auto-crawl Tadawul. KSA exchange evidence must come from company IR pages or Tier 3/4 paths."
+        "note": "Tadawul (saudiexchange.sa) returned HTTP 403 to Playwright with Chromium + the VerityResearchBot UA — Akamai bot detection, UA-based. project rule 3 says 'if a site blocks you, stop for that domain, log it, move on' — Session 4 will not auto-crawl Tadawul. KSA exchange evidence must come from company IR pages or Tier 3/4 paths."
       }
     },
     "notes": "Rebranded to Saudi Energy Feb 2026 per press coverage."
@@ -675,7 +675,7 @@
       },
       "exchange": {
         "fetched_at": "2026-10-01",
-        "note": "Tadawul (saudiexchange.sa) returned HTTP 403 to Playwright with Chromium + the VerityResearchBot UA — Akamai bot detection, UA-based. CLAUDE.md rule 3 says 'if a site blocks you, stop for that domain, log it, move on' — Session 4 will not auto-crawl Tadawul. KSA exchange evidence must come from company IR pages or Tier 3/4 paths."
+        "note": "Tadawul (saudiexchange.sa) returned HTTP 403 to Playwright with Chromium + the VerityResearchBot UA — Akamai bot detection, UA-based. project rule 3 says 'if a site blocks you, stop for that domain, log it, move on' — Session 4 will not auto-crawl Tadawul. KSA exchange evidence must come from company IR pages or Tier 3/4 paths."
       }
     },
     "notes": "Yanbu Cement's own IR page links out to saudiexchange.sa-hosted PDFs — direct download URLs may work (Tadawul document store is separate from portlet portal)."
@@ -695,7 +695,7 @@
       },
       "exchange": {
         "fetched_at": "2026-10-01",
-        "note": "Tadawul (saudiexchange.sa) returned HTTP 403 to Playwright with Chromium + the VerityResearchBot UA — Akamai bot detection, UA-based. CLAUDE.md rule 3 says 'if a site blocks you, stop for that domain, log it, move on' — Session 4 will not auto-crawl Tadawul. KSA exchange evidence must come from company IR pages or Tier 3/4 paths."
+        "note": "Tadawul (saudiexchange.sa) returned HTTP 403 to Playwright with Chromium + the VerityResearchBot UA — Akamai bot detection, UA-based. project rule 3 says 'if a site blocks you, stop for that domain, log it, move on' — Session 4 will not auto-crawl Tadawul. KSA exchange evidence must come from company IR pages or Tier 3/4 paths."
       }
     },
     "notes": "Also known as SABIC Agri-Nutrients; may also be at sabic-agrinutrients.com."
@@ -719,7 +719,7 @@
       },
       "exchange": {
         "fetched_at": "2026-10-01",
-        "note": "Tadawul (saudiexchange.sa) returned HTTP 403 to Playwright with Chromium + the VerityResearchBot UA — Akamai bot detection, UA-based. CLAUDE.md rule 3 says 'if a site blocks you, stop for that domain, log it, move on' — Session 4 will not auto-crawl Tadawul. KSA exchange evidence must come from company IR pages or Tier 3/4 paths."
+        "note": "Tadawul (saudiexchange.sa) returned HTTP 403 to Playwright with Chromium + the VerityResearchBot UA — Akamai bot detection, UA-based. project rule 3 says 'if a site blocks you, stop for that domain, log it, move on' — Session 4 will not auto-crawl Tadawul. KSA exchange evidence must come from company IR pages or Tier 3/4 paths."
       }
     },
     "notes": ""
@@ -742,7 +742,7 @@
       },
       "exchange": {
         "fetched_at": "2026-10-01",
-        "note": "Tadawul (saudiexchange.sa) returned HTTP 403 to Playwright with Chromium + the VerityResearchBot UA — Akamai bot detection, UA-based. CLAUDE.md rule 3 says 'if a site blocks you, stop for that domain, log it, move on' — Session 4 will not auto-crawl Tadawul. KSA exchange evidence must come from company IR pages or Tier 3/4 paths."
+        "note": "Tadawul (saudiexchange.sa) returned HTTP 403 to Playwright with Chromium + the VerityResearchBot UA — Akamai bot detection, UA-based. project rule 3 says 'if a site blocks you, stop for that domain, log it, move on' — Session 4 will not auto-crawl Tadawul. KSA exchange evidence must come from company IR pages or Tier 3/4 paths."
       }
     },
     "notes": "IBM WebSphere Portal URLs (long portlet-based)."
@@ -768,7 +768,7 @@
       },
       "exchange": {
         "fetched_at": "2026-10-01",
-        "note": "Tadawul (saudiexchange.sa) returned HTTP 403 to Playwright with Chromium + the VerityResearchBot UA — Akamai bot detection, UA-based. CLAUDE.md rule 3 says 'if a site blocks you, stop for that domain, log it, move on' — Session 4 will not auto-crawl Tadawul. KSA exchange evidence must come from company IR pages or Tier 3/4 paths."
+        "note": "Tadawul (saudiexchange.sa) returned HTTP 403 to Playwright with Chromium + the VerityResearchBot UA — Akamai bot detection, UA-based. project rule 3 says 'if a site blocks you, stop for that domain, log it, move on' — Session 4 will not auto-crawl Tadawul. KSA exchange evidence must come from company IR pages or Tier 3/4 paths."
       }
     },
     "notes": ""
@@ -792,7 +792,7 @@
       },
       "exchange": {
         "fetched_at": "2026-10-01",
-        "note": "Tadawul (saudiexchange.sa) returned HTTP 403 to Playwright with Chromium + the VerityResearchBot UA — Akamai bot detection, UA-based. CLAUDE.md rule 3 says 'if a site blocks you, stop for that domain, log it, move on' — Session 4 will not auto-crawl Tadawul. KSA exchange evidence must come from company IR pages or Tier 3/4 paths."
+        "note": "Tadawul (saudiexchange.sa) returned HTTP 403 to Playwright with Chromium + the VerityResearchBot UA — Akamai bot detection, UA-based. project rule 3 says 'if a site blocks you, stop for that domain, log it, move on' — Session 4 will not auto-crawl Tadawul. KSA exchange evidence must come from company IR pages or Tier 3/4 paths."
       }
     },
     "notes": ""
@@ -818,7 +818,7 @@
       },
       "exchange": {
         "fetched_at": "2026-10-01",
-        "note": "Tadawul (saudiexchange.sa) returned HTTP 403 to Playwright with Chromium + the VerityResearchBot UA — Akamai bot detection, UA-based. CLAUDE.md rule 3 says 'if a site blocks you, stop for that domain, log it, move on' — Session 4 will not auto-crawl Tadawul. KSA exchange evidence must come from company IR pages or Tier 3/4 paths."
+        "note": "Tadawul (saudiexchange.sa) returned HTTP 403 to Playwright with Chromium + the VerityResearchBot UA — Akamai bot detection, UA-based. project rule 3 says 'if a site blocks you, stop for that domain, log it, move on' — Session 4 will not auto-crawl Tadawul. KSA exchange evidence must come from company IR pages or Tier 3/4 paths."
       }
     },
     "notes": ""
@@ -841,7 +841,7 @@
       },
       "exchange": {
         "fetched_at": "2026-10-01",
-        "note": "Tadawul (saudiexchange.sa) returned HTTP 403 to Playwright with Chromium + the VerityResearchBot UA — Akamai bot detection, UA-based. CLAUDE.md rule 3 says 'if a site blocks you, stop for that domain, log it, move on' — Session 4 will not auto-crawl Tadawul. KSA exchange evidence must come from company IR pages or Tier 3/4 paths."
+        "note": "Tadawul (saudiexchange.sa) returned HTTP 403 to Playwright with Chromium + the VerityResearchBot UA — Akamai bot detection, UA-based. project rule 3 says 'if a site blocks you, stop for that domain, log it, move on' — Session 4 will not auto-crawl Tadawul. KSA exchange evidence must come from company IR pages or Tier 3/4 paths."
       }
     },
     "notes": "Registered on Tadawul as 'Emaar The Economic City' but branded as KAEC (King Abdullah Economic City)."
@@ -865,7 +865,7 @@
       },
       "exchange": {
         "fetched_at": "2026-10-01",
-        "note": "Tadawul (saudiexchange.sa) returned HTTP 403 to Playwright with Chromium + the VerityResearchBot UA — Akamai bot detection, UA-based. CLAUDE.md rule 3 says 'if a site blocks you, stop for that domain, log it, move on' — Session 4 will not auto-crawl Tadawul. KSA exchange evidence must come from company IR pages or Tier 3/4 paths."
+        "note": "Tadawul (saudiexchange.sa) returned HTTP 403 to Playwright with Chromium + the VerityResearchBot UA — Akamai bot detection, UA-based. project rule 3 says 'if a site blocks you, stop for that domain, log it, move on' — Session 4 will not auto-crawl Tadawul. KSA exchange evidence must come from company IR pages or Tier 3/4 paths."
       }
     },
     "notes": "Dedicated IR sub-domain."
@@ -889,7 +889,7 @@
       },
       "exchange": {
         "fetched_at": "2026-10-01",
-        "note": "Tadawul (saudiexchange.sa) returned HTTP 403 to Playwright with Chromium + the VerityResearchBot UA — Akamai bot detection, UA-based. CLAUDE.md rule 3 says 'if a site blocks you, stop for that domain, log it, move on' — Session 4 will not auto-crawl Tadawul. KSA exchange evidence must come from company IR pages or Tier 3/4 paths."
+        "note": "Tadawul (saudiexchange.sa) returned HTTP 403 to Playwright with Chromium + the VerityResearchBot UA — Akamai bot detection, UA-based. project rule 3 says 'if a site blocks you, stop for that domain, log it, move on' — Session 4 will not auto-crawl Tadawul. KSA exchange evidence must come from company IR pages or Tier 3/4 paths."
       }
     },
     "notes": ""
@@ -911,7 +911,7 @@
       },
       "exchange": {
         "fetched_at": "2026-10-01",
-        "note": "Tadawul (saudiexchange.sa) returned HTTP 403 to Playwright with Chromium + the VerityResearchBot UA — Akamai bot detection, UA-based. CLAUDE.md rule 3 says 'if a site blocks you, stop for that domain, log it, move on' — Session 4 will not auto-crawl Tadawul. KSA exchange evidence must come from company IR pages or Tier 3/4 paths."
+        "note": "Tadawul (saudiexchange.sa) returned HTTP 403 to Playwright with Chromium + the VerityResearchBot UA — Akamai bot detection, UA-based. project rule 3 says 'if a site blocks you, stop for that domain, log it, move on' — Session 4 will not auto-crawl Tadawul. KSA exchange evidence must come from company IR pages or Tier 3/4 paths."
       }
     },
     "notes": ""
@@ -935,7 +935,7 @@
       },
       "exchange": {
         "fetched_at": "2026-10-01",
-        "note": "Tadawul (saudiexchange.sa) returned HTTP 403 to Playwright with Chromium + the VerityResearchBot UA — Akamai bot detection, UA-based. CLAUDE.md rule 3 says 'if a site blocks you, stop for that domain, log it, move on' — Session 4 will not auto-crawl Tadawul. KSA exchange evidence must come from company IR pages or Tier 3/4 paths."
+        "note": "Tadawul (saudiexchange.sa) returned HTTP 403 to Playwright with Chromium + the VerityResearchBot UA — Akamai bot detection, UA-based. project rule 3 says 'if a site blocks you, stop for that domain, log it, move on' — Session 4 will not auto-crawl Tadawul. KSA exchange evidence must come from company IR pages or Tier 3/4 paths."
       }
     },
     "notes": ""
@@ -957,7 +957,7 @@
       },
       "exchange": {
         "fetched_at": "2026-10-01",
-        "note": "Tadawul (saudiexchange.sa) returned HTTP 403 to Playwright with Chromium + the VerityResearchBot UA — Akamai bot detection, UA-based. CLAUDE.md rule 3 says 'if a site blocks you, stop for that domain, log it, move on' — Session 4 will not auto-crawl Tadawul. KSA exchange evidence must come from company IR pages or Tier 3/4 paths."
+        "note": "Tadawul (saudiexchange.sa) returned HTTP 403 to Playwright with Chromium + the VerityResearchBot UA — Akamai bot detection, UA-based. project rule 3 says 'if a site blocks you, stop for that domain, log it, move on' — Session 4 will not auto-crawl Tadawul. KSA exchange evidence must come from company IR pages or Tier 3/4 paths."
       }
     },
     "notes": "Also known as TASNEE."
@@ -977,7 +977,7 @@
       },
       "exchange": {
         "fetched_at": "2026-10-01",
-        "note": "Tadawul (saudiexchange.sa) returned HTTP 403 to Playwright with Chromium + the VerityResearchBot UA — Akamai bot detection, UA-based. CLAUDE.md rule 3 says 'if a site blocks you, stop for that domain, log it, move on' — Session 4 will not auto-crawl Tadawul. KSA exchange evidence must come from company IR pages or Tier 3/4 paths."
+        "note": "Tadawul (saudiexchange.sa) returned HTTP 403 to Playwright with Chromium + the VerityResearchBot UA — Akamai bot detection, UA-based. project rule 3 says 'if a site blocks you, stop for that domain, log it, move on' — Session 4 will not auto-crawl Tadawul. KSA exchange evidence must come from company IR pages or Tier 3/4 paths."
       }
     },
     "notes": "Also known as Petro Rabigh."
@@ -999,7 +999,7 @@
       },
       "exchange": {
         "fetched_at": "2026-10-01",
-        "note": "Tadawul (saudiexchange.sa) returned HTTP 403 to Playwright with Chromium + the VerityResearchBot UA — Akamai bot detection, UA-based. CLAUDE.md rule 3 says 'if a site blocks you, stop for that domain, log it, move on' — Session 4 will not auto-crawl Tadawul. KSA exchange evidence must come from company IR pages or Tier 3/4 paths."
+        "note": "Tadawul (saudiexchange.sa) returned HTTP 403 to Playwright with Chromium + the VerityResearchBot UA — Akamai bot detection, UA-based. project rule 3 says 'if a site blocks you, stop for that domain, log it, move on' — Session 4 will not auto-crawl Tadawul. KSA exchange evidence must come from company IR pages or Tier 3/4 paths."
       }
     },
     "notes": "Also known as Sipchem."
@@ -1019,7 +1019,7 @@
       },
       "exchange": {
         "fetched_at": "2026-10-01",
-        "note": "Tadawul (saudiexchange.sa) returned HTTP 403 to Playwright with Chromium + the VerityResearchBot UA — Akamai bot detection, UA-based. CLAUDE.md rule 3 says 'if a site blocks you, stop for that domain, log it, move on' — Session 4 will not auto-crawl Tadawul. KSA exchange evidence must come from company IR pages or Tier 3/4 paths."
+        "note": "Tadawul (saudiexchange.sa) returned HTTP 403 to Playwright with Chromium + the VerityResearchBot UA — Akamai bot detection, UA-based. project rule 3 says 'if a site blocks you, stop for that domain, log it, move on' — Session 4 will not auto-crawl Tadawul. KSA exchange evidence must come from company IR pages or Tier 3/4 paths."
       }
     },
     "notes": "Zain KSA subsidiary of Zain Group."
@@ -1039,7 +1039,7 @@
       },
       "exchange": {
         "fetched_at": "2026-10-01",
-        "note": "Tadawul (saudiexchange.sa) returned HTTP 403 to Playwright with Chromium + the VerityResearchBot UA — Akamai bot detection, UA-based. CLAUDE.md rule 3 says 'if a site blocks you, stop for that domain, log it, move on' — Session 4 will not auto-crawl Tadawul. KSA exchange evidence must come from company IR pages or Tier 3/4 paths."
+        "note": "Tadawul (saudiexchange.sa) returned HTTP 403 to Playwright with Chromium + the VerityResearchBot UA — Akamai bot detection, UA-based. project rule 3 says 'if a site blocks you, stop for that domain, log it, move on' — Session 4 will not auto-crawl Tadawul. KSA exchange evidence must come from company IR pages or Tier 3/4 paths."
       }
     },
     "notes": ""
@@ -1061,7 +1061,7 @@
       },
       "exchange": {
         "fetched_at": "2026-10-01",
-        "note": "Tadawul (saudiexchange.sa) returned HTTP 403 to Playwright with Chromium + the VerityResearchBot UA — Akamai bot detection, UA-based. CLAUDE.md rule 3 says 'if a site blocks you, stop for that domain, log it, move on' — Session 4 will not auto-crawl Tadawul. KSA exchange evidence must come from company IR pages or Tier 3/4 paths."
+        "note": "Tadawul (saudiexchange.sa) returned HTTP 403 to Playwright with Chromium + the VerityResearchBot UA — Akamai bot detection, UA-based. project rule 3 says 'if a site blocks you, stop for that domain, log it, move on' — Session 4 will not auto-crawl Tadawul. KSA exchange evidence must come from company IR pages or Tier 3/4 paths."
       }
     },
     "notes": ""
@@ -1086,7 +1086,7 @@
       },
       "exchange": {
         "fetched_at": "2026-10-01",
-        "note": "Tadawul (saudiexchange.sa) returned HTTP 403 to Playwright with Chromium + the VerityResearchBot UA — Akamai bot detection, UA-based. CLAUDE.md rule 3 says 'if a site blocks you, stop for that domain, log it, move on' — Session 4 will not auto-crawl Tadawul. KSA exchange evidence must come from company IR pages or Tier 3/4 paths."
+        "note": "Tadawul (saudiexchange.sa) returned HTTP 403 to Playwright with Chromium + the VerityResearchBot UA — Akamai bot detection, UA-based. project rule 3 says 'if a site blocks you, stop for that domain, log it, move on' — Session 4 will not auto-crawl Tadawul. KSA exchange evidence must come from company IR pages or Tier 3/4 paths."
       }
     },
     "notes": ""
@@ -1106,7 +1106,7 @@
       },
       "exchange": {
         "fetched_at": "2026-10-01",
-        "note": "Verified via Playwright (Chromium) with the VerityResearchBot UA from CLAUDE.md on 2026-10-01: HTTP 200 and final URL preserved (no redirect to homepage). Company-specific data on these pages is loaded via XHR by the SPA, so the shared ticker-scroll dominates a plain inner-text grab — the URL being honoured by the server is what proves the per-company page exists."
+        "note": "Verified via Playwright (Chromium) with the VerityResearchBot UA from the project rules on 2026-10-01: HTTP 200 and final URL preserved (no redirect to homepage). Company-specific data on these pages is loaded via XHR by the SPA, so the shared ticker-scroll dominates a plain inner-text grab — the URL being honoured by the server is what proves the per-company page exists."
       }
     },
     "notes": ""
@@ -1128,7 +1128,7 @@
       },
       "exchange": {
         "fetched_at": "2026-10-01",
-        "note": "Verified via Playwright (Chromium) with the VerityResearchBot UA from CLAUDE.md on 2026-10-01: HTTP 200 and final URL preserved (no redirect to homepage). Company-specific data on these pages is loaded via XHR by the SPA, so the shared ticker-scroll dominates a plain inner-text grab — the URL being honoured by the server is what proves the per-company page exists."
+        "note": "Verified via Playwright (Chromium) with the VerityResearchBot UA from the project rules on 2026-10-01: HTTP 200 and final URL preserved (no redirect to homepage). Company-specific data on these pages is loaded via XHR by the SPA, so the shared ticker-scroll dominates a plain inner-text grab — the URL being honoured by the server is what proves the per-company page exists."
       }
     },
     "notes": "Etisalat rebranded to e&."
@@ -1150,7 +1150,7 @@
       },
       "exchange": {
         "fetched_at": "2026-10-01",
-        "note": "Verified via Playwright (Chromium) with the VerityResearchBot UA from CLAUDE.md on 2026-10-01: HTTP 200 and final URL preserved (no redirect to homepage). Company-specific data on these pages is loaded via XHR by the SPA, so the shared ticker-scroll dominates a plain inner-text grab — the URL being honoured by the server is what proves the per-company page exists."
+        "note": "Verified via Playwright (Chromium) with the VerityResearchBot UA from the project rules on 2026-10-01: HTTP 200 and final URL preserved (no redirect to homepage). Company-specific data on these pages is loaded via XHR by the SPA, so the shared ticker-scroll dominates a plain inner-text grab — the URL being honoured by the server is what proves the per-company page exists."
       }
     },
     "notes": "Also known as TAQA."
@@ -1172,7 +1172,7 @@
       },
       "exchange": {
         "fetched_at": "2026-10-01",
-        "note": "Verified via Playwright (Chromium) with the VerityResearchBot UA from CLAUDE.md on 2026-10-01: HTTP 200 and final URL preserved (no redirect to homepage). Company-specific data on these pages is loaded via XHR by the SPA, so the shared ticker-scroll dominates a plain inner-text grab — the URL being honoured by the server is what proves the per-company page exists."
+        "note": "Verified via Playwright (Chromium) with the VerityResearchBot UA from the project rules on 2026-10-01: HTTP 200 and final URL preserved (no redirect to homepage). Company-specific data on these pages is loaded via XHR by the SPA, so the shared ticker-scroll dominates a plain inner-text grab — the URL being honoured by the server is what proves the per-company page exists."
       }
     },
     "notes": ""
@@ -1192,7 +1192,7 @@
       },
       "exchange": {
         "fetched_at": "2026-10-01",
-        "note": "Verified via Playwright (Chromium) with the VerityResearchBot UA from CLAUDE.md on 2026-10-01: HTTP 200 and final URL preserved (no redirect to homepage). Company-specific data on these pages is loaded via XHR by the SPA, so the shared ticker-scroll dominates a plain inner-text grab — the URL being honoured by the server is what proves the per-company page exists."
+        "note": "Verified via Playwright (Chromium) with the VerityResearchBot UA from the project rules on 2026-10-01: HTTP 200 and final URL preserved (no redirect to homepage). Company-specific data on these pages is loaded via XHR by the SPA, so the shared ticker-scroll dominates a plain inner-text grab — the URL being honoured by the server is what proves the per-company page exists."
       }
     },
     "notes": "Session 4 must confirm which ticker (EMAAR / EMAARDEV) is which and disambiguate."
@@ -1215,7 +1215,7 @@
       },
       "exchange": {
         "fetched_at": "2026-10-01",
-        "note": "Verified via Playwright (Chromium) with the VerityResearchBot UA from CLAUDE.md on 2026-10-01: HTTP 200 and final URL preserved (no redirect to homepage). Company-specific data on these pages is loaded via XHR by the SPA, so the shared ticker-scroll dominates a plain inner-text grab — the URL being honoured by the server is what proves the per-company page exists."
+        "note": "Verified via Playwright (Chromium) with the VerityResearchBot UA from the project rules on 2026-10-01: HTTP 200 and final URL preserved (no redirect to homepage). Company-specific data on these pages is loaded via XHR by the SPA, so the shared ticker-scroll dominates a plain inner-text grab — the URL being honoured by the server is what proves the per-company page exists."
       }
     },
     "notes": ""
@@ -1237,7 +1237,7 @@
       },
       "exchange": {
         "fetched_at": "2026-10-01",
-        "note": "Verified via Playwright (Chromium) with the VerityResearchBot UA from CLAUDE.md on 2026-10-01: HTTP 200 and final URL preserved (no redirect to homepage). Company-specific data on these pages is loaded via XHR by the SPA, so the shared ticker-scroll dominates a plain inner-text grab — the URL being honoured by the server is what proves the per-company page exists."
+        "note": "Verified via Playwright (Chromium) with the VerityResearchBot UA from the project rules on 2026-10-01: HTTP 200 and final URL preserved (no redirect to homepage). Company-specific data on these pages is loaded via XHR by the SPA, so the shared ticker-scroll dominates a plain inner-text grab — the URL being honoured by the server is what proves the per-company page exists."
       }
     },
     "notes": ""
@@ -1259,7 +1259,7 @@
       },
       "exchange": {
         "fetched_at": "2026-10-01",
-        "note": "Verified via Playwright (Chromium) with the VerityResearchBot UA from CLAUDE.md on 2026-10-01: HTTP 200 and final URL preserved (no redirect to homepage). Company-specific data on these pages is loaded via XHR by the SPA, so the shared ticker-scroll dominates a plain inner-text grab — the URL being honoured by the server is what proves the per-company page exists."
+        "note": "Verified via Playwright (Chromium) with the VerityResearchBot UA from the project rules on 2026-10-01: HTTP 200 and final URL preserved (no redirect to homepage). Company-specific data on these pages is loaded via XHR by the SPA, so the shared ticker-scroll dominates a plain inner-text grab — the URL being honoured by the server is what proves the per-company page exists."
       }
     },
     "notes": ""
@@ -1279,7 +1279,7 @@
       },
       "exchange": {
         "fetched_at": "2026-10-01",
-        "note": "Verified via Playwright (Chromium) with the VerityResearchBot UA from CLAUDE.md on 2026-10-01: HTTP 200 and final URL preserved (no redirect to homepage). Company-specific data on these pages is loaded via XHR by the SPA, so the shared ticker-scroll dominates a plain inner-text grab — the URL being honoured by the server is what proves the per-company page exists."
+        "note": "Verified via Playwright (Chromium) with the VerityResearchBot UA from the project rules on 2026-10-01: HTTP 200 and final URL preserved (no redirect to homepage). Company-specific data on these pages is loaded via XHR by the SPA, so the shared ticker-scroll dominates a plain inner-text grab — the URL being honoured by the server is what proves the per-company page exists."
       }
     },
     "notes": ""
@@ -1302,7 +1302,7 @@
       },
       "exchange": {
         "fetched_at": "2026-10-01",
-        "note": "Verified via Playwright (Chromium) with the VerityResearchBot UA from CLAUDE.md on 2026-10-01: HTTP 200 and final URL preserved (no redirect to homepage). Company-specific data on these pages is loaded via XHR by the SPA, so the shared ticker-scroll dominates a plain inner-text grab — the URL being honoured by the server is what proves the per-company page exists."
+        "note": "Verified via Playwright (Chromium) with the VerityResearchBot UA from the project rules on 2026-10-01: HTTP 200 and final URL preserved (no redirect to homepage). Company-specific data on these pages is loaded via XHR by the SPA, so the shared ticker-scroll dominates a plain inner-text grab — the URL being honoured by the server is what proves the per-company page exists."
       }
     },
     "notes": ""
@@ -1324,7 +1324,7 @@
       },
       "exchange": {
         "fetched_at": "2026-10-01",
-        "note": "Verified via Playwright (Chromium) with the VerityResearchBot UA from CLAUDE.md on 2026-10-01: HTTP 200 and final URL preserved (no redirect to homepage). Company-specific data on these pages is loaded via XHR by the SPA, so the shared ticker-scroll dominates a plain inner-text grab — the URL being honoured by the server is what proves the per-company page exists."
+        "note": "Verified via Playwright (Chromium) with the VerityResearchBot UA from the project rules on 2026-10-01: HTTP 200 and final URL preserved (no redirect to homepage). Company-specific data on these pages is loaded via XHR by the SPA, so the shared ticker-scroll dominates a plain inner-text grab — the URL being honoured by the server is what proves the per-company page exists."
       }
     },
     "notes": ""
@@ -1347,7 +1347,7 @@
       },
       "exchange": {
         "fetched_at": "2026-10-01",
-        "note": "Verified via Playwright (Chromium) with the VerityResearchBot UA from CLAUDE.md on 2026-10-01: HTTP 200 and final URL preserved (no redirect to homepage). Company-specific data on these pages is loaded via XHR by the SPA, so the shared ticker-scroll dominates a plain inner-text grab — the URL being honoured by the server is what proves the per-company page exists."
+        "note": "Verified via Playwright (Chromium) with the VerityResearchBot UA from the project rules on 2026-10-01: HTTP 200 and final URL preserved (no redirect to homepage). Company-specific data on these pages is loaded via XHR by the SPA, so the shared ticker-scroll dominates a plain inner-text grab — the URL being honoured by the server is what proves the per-company page exists."
       }
     },
     "notes": ""
@@ -1431,7 +1431,7 @@
       },
       "exchange": {
         "fetched_at": "2026-10-01",
-        "note": "Verified via Playwright (Chromium) with the VerityResearchBot UA from CLAUDE.md on 2026-10-01: HTTP 200 and final URL preserved (no redirect to homepage). Company-specific data on these pages is loaded via XHR by the SPA, so the shared ticker-scroll dominates a plain inner-text grab — the URL being honoured by the server is what proves the per-company page exists."
+        "note": "Verified via Playwright (Chromium) with the VerityResearchBot UA from the project rules on 2026-10-01: HTTP 200 and final URL preserved (no redirect to homepage). Company-specific data on these pages is loaded via XHR by the SPA, so the shared ticker-scroll dominates a plain inner-text grab — the URL being honoured by the server is what proves the per-company page exists."
       }
     },
     "notes": ""
@@ -1455,7 +1455,7 @@
       },
       "exchange": {
         "fetched_at": "2026-10-01",
-        "note": "Verified via Playwright (Chromium) with the VerityResearchBot UA from CLAUDE.md on 2026-10-01: HTTP 200 and final URL preserved (no redirect to homepage). Company-specific data on these pages is loaded via XHR by the SPA, so the shared ticker-scroll dominates a plain inner-text grab — the URL being honoured by the server is what proves the per-company page exists."
+        "note": "Verified via Playwright (Chromium) with the VerityResearchBot UA from the project rules on 2026-10-01: HTTP 200 and final URL preserved (no redirect to homepage). Company-specific data on these pages is loaded via XHR by the SPA, so the shared ticker-scroll dominates a plain inner-text grab — the URL being honoured by the server is what proves the per-company page exists."
       }
     },
     "notes": "Batelco renamed to Beyon."
@@ -1477,7 +1477,7 @@
       },
       "exchange": {
         "fetched_at": "2026-10-01",
-        "note": "Verified via Playwright (Chromium) with the VerityResearchBot UA from CLAUDE.md on 2026-10-01: HTTP 200 and final URL preserved (no redirect to homepage). Company-specific data on these pages is loaded via XHR by the SPA, so the shared ticker-scroll dominates a plain inner-text grab — the URL being honoured by the server is what proves the per-company page exists."
+        "note": "Verified via Playwright (Chromium) with the VerityResearchBot UA from the project rules on 2026-10-01: HTTP 200 and final URL preserved (no redirect to homepage). Company-specific data on these pages is loaded via XHR by the SPA, so the shared ticker-scroll dominates a plain inner-text grab — the URL being honoured by the server is what proves the per-company page exists."
       }
     },
     "notes": ""

@@ -76,7 +76,7 @@ sample counts):
   "section" tag ("bio", "financials", "governance body", "other") and reweight
   in scoring.
 - **Not**: sentiment or negation. The whole point of density scoring is to be
-  polarity-blind (see CLAUDE.md, Method), so "governance" in a bio is not
+  polarity-blind (see the project rules, Method), so "governance" in a bio is not
   wrong because of sentiment — it's wrong because it's out-of-section.
 - **Do not touch the taxonomy this session.** Suppressing "governance" would
   cost real signal on chair statements, framework descriptions and policy

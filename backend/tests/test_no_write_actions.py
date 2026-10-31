@@ -1,7 +1,7 @@
 """Build-failing guard: the crawler package must never attempt to submit
 forms, type into inputs, click submit controls, send HTTP POST, or read
 passwords. If this test fails, the crawler has grown a shape it is
-forbidden to have per CLAUDE.md (public pages only, no login, no
+forbidden to have per the project rules (public pages only, no login, no
 credentials, read-only Playwright).
 
 Scans backend/app/crawler/ and app/cli.py and any .py it imports.

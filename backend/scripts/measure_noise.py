@@ -1,5 +1,5 @@
 """
-Measurement-only diagnostic for CLAUDE.md's suspected problems 4c and 4d.
+Measurement-only diagnostic for the project rules' suspected problems 4c and 4d.
 Does NOT fix anything — the point is to see how big the problem is on real data
 before spending time on it.
 

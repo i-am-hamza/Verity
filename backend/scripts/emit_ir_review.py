@@ -38,7 +38,7 @@ def main() -> None:
     lines.append("")
     lines.append("Current state: **Session 3b** (2026-10-01). Session 3 did WebFetch-based discovery; "
                  "Session 3b retried everything blocked at that layer with Playwright (Chromium + the "
-                 "VerityResearchBot UA from CLAUDE.md), closed the deferred non-financial exchange "
+                 "VerityResearchBot UA from the project rules), closed the deferred non-financial exchange "
                  "work, and resolved ALAFCO's path.")
     lines.append("")
     lines.append("## Statuses")
@@ -50,7 +50,7 @@ def main() -> None:
                  "(403 / 404 / 500 / 523) or redirected to a dead end. For exchange URLs this includes "
                  "Tadawul (saudiexchange.sa) and Boursa Kuwait `/stock/<id>/profile`, which both 403 "
                  "even to Playwright + the honest VerityResearchBot UA — Akamai-style bot detection "
-                 "that trips on the UA string. Per CLAUDE.md rule 3 we stop for those domains and "
+                 "that trips on the UA string. Per project rule 3 we stop for those domains and "
                  "move on; they go to Tier 3/4.")
     lines.append("- **needs_human** — no verified fetch, no definitive block. Three rows remain here "
                  "after Session 3b because no live URL has been identified at all (Jarir Marketing; "
@@ -64,7 +64,7 @@ def main() -> None:
                  "— 27 total `exchange_status = verified` rows (up from 10).")
     lines.append("- SNB (`alahli.com`) was Session-3-unreachable due to a cert error — Playwright "
                  "returned 200 with title \"Investor Relations | Saudi National Bank\". Session 3's "
-                 "cert error was Claude-tool-specific.")
+                 "cert error was fetch-tool-specific.")
     lines.append("- 19 of the 24 deferred `needs_human` IR rows upgraded to `verified`; 6 downgraded "
                  "to `unreachable` (403/500 or redirect-to-homepage).")
     lines.append("- ALAFCO: both sides `unreachable`, with a dedicated Wayback plan — 5 gap rows now live "

@@ -1,7 +1,7 @@
 """Tier 4: draft an email per institution with outstanding gaps.
 
 Writes `docs/ir_email_drafts/<slug>.txt`. **Nothing is sent** — this
-module has no SMTP code and no network calls. CLAUDE.md rule 9.
+module has no SMTP code and no network calls. project rule 9.
 """
 from __future__ import annotations
 

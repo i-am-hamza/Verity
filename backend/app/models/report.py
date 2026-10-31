@@ -44,7 +44,7 @@ class Report(Base):
 
     total_word_count: Mapped[int] = mapped_column(default=0)
     # Latin-script tokens only. Density uses this: Arabic text must not
-    # dilute an English taxonomy (see CLAUDE.md, Method).
+    # dilute an English taxonomy (see the project rules, Method).
     latin_word_count: Mapped[int] = mapped_column(default=0)
     arabic_word_count: Mapped[int] = mapped_column(default=0)
     page_count: Mapped[int] = mapped_column(default=0)

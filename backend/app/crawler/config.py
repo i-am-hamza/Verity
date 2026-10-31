@@ -1,7 +1,7 @@
 """Runtime config for the crawler.
 
 The contact email is read exactly once at import time. If it is unset,
-`get_contact_email()` raises immediately — that's the CLAUDE.md rule 5
+`get_contact_email()` raises immediately — that's the project rule 5
 guarantee: no network request ever leaves this package without a
 descriptive, contactable UA.
 """
@@ -38,7 +38,7 @@ def get_contact_email() -> str:
     email = os.environ.get("VERITY_CONTACT_EMAIL", "").strip()
     if not email:
         raise RuntimeError(
-            "VERITY_CONTACT_EMAIL is not set. Per CLAUDE.md rule 5 the crawler "
+            "VERITY_CONTACT_EMAIL is not set. Per project rule 5 the crawler "
             "refuses to make any network request without a contact email in its "
             "User-Agent. Set the env var and re-run."
         )

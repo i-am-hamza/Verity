@@ -31,8 +31,9 @@ Thumbs.db
 .vscode/
 .idea/
 
-# Claude Code session artefacts (per-user, not source)
+# Local AI-assistant workspace (per-user, not source).
 .claude/
+CLAUDE.md
 
 # Frontend build
 frontend/node_modules/

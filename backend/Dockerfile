@@ -24,7 +24,7 @@ FROM python:3.12-slim-bookworm
 #
 # tesseract-ocr          : the OCR binary pytesseract shells out to
 # tesseract-ocr-eng      : English traineddata
-# tesseract-ocr-ara      : Arabic traineddata (CLAUDE.md: MENA reports
+# tesseract-ocr-ara      : Arabic traineddata (the project rules: MENA reports
 #                          are bilingual; eng+ara is the default
 #                          OCR_LANGS in settings)
 # libgl1 / libglib2.0-0  : runtime deps pulled in by pymupdf's bundled

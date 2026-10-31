@@ -99,7 +99,7 @@ flow.
 
 ## Crawler got blocked
 
-CLAUDE.md rule 3: stop for the domain, log it, move on. The Fetcher
+project rule 3: stop for the domain, log it, move on. The Fetcher
 implements this automatically — once a host is in its in-run
 `_blocked` set, subsequent requests to the same host return
 `outcome="blocked"` without touching the network. You do not retry.

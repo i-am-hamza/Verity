@@ -77,7 +77,7 @@ class TaxonomyMatcher:
     def match_sentences(self, sentences: list[Sentence]) -> list[TermMatch]:
         results: list[TermMatch] = []
         # Matching mode is read from config/verity.toml, not baked into code
-        # (CLAUDE.md, rule 1: config over code).
+        # (the project rules, rule 1: config over code).
         mode = load_verity_config().matching_mode
         if mode not in ("longest", "all"):
             raise ValueError(

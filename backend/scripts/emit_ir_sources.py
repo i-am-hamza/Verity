@@ -8,7 +8,7 @@ Ir_sources structure (one entry per institution slug):
 Statuses: verified | unreachable | needs_human.
 
 Verification convention this session:
-- "verified" means Claude's WebFetch returned HTTP 200 AND the page's own
+- "verified" means WebFetch returned HTTP 200 AND the page's own
   content confirmed it was the institution's IR (or exchange-company)
   page. Where WebFetch also surfaced direct annual-report PDFs those are
   recorded in evidence.sample_report_links.
@@ -19,7 +19,7 @@ Verification convention this session:
   or the URL space is session-based and needs Playwright.
 
 For most Saudi and Abu Dhabi listed companies, the exchange portals
-(saudiexchange.sa and adx.ae) returned 403 to Claude's WebFetch, so
+(saudiexchange.sa and adx.ae) returned 403 to WebFetch, so
 exchange_status = needs_human across those exchanges regardless of the
 per-company URL — Session 4 with Playwright is the right retry path.
 """
@@ -166,7 +166,7 @@ INSTITUTIONS: list[dict] = [
            "https://www.alahli.com/-/media/project/snb/snb-web/about-us/02-1-investor-relations/financial-information/financial-statements/english/SNB-English-YE-2024-Financials-Final.pdf",
            "https://www.alahli.com/-/media/project/snb/snb-web/about-us/02-1-investor-relations/financial-information/investor-presentations/documents/english/SNB-4Q-2024-Investor-Presentation.pdf",
        ],
-       ir_note="WebFetch failed with a TLS cert verification error (Claude tool limitation, not a site block). Search evidence surfaced canonical PDFs on the same domain, so the page is real.",
+       ir_note="WebFetch failed with a TLS cert verification error (fetch-tool limitation, not a site block). Search evidence surfaced canonical PDFs on the same domain, so the page is real.",
        exch_note="Tadawul portal 403.",
        notes="SNB rebranded from NCB; the legacy alahli.com domain is live. Session-1 hint snb.com resolves to Webster Bank USA — bad hint."),
     _v("riyad-bank",
@@ -243,7 +243,7 @@ INSTITUTIONS: list[dict] = [
        None, "needs_human",
        ir_pdfs=["https://agm.rakbank.ae/2025/"],
        allowed=["agm.rakbank.ae"],
-       ir_note="PDF links behind a JS-populated year selector; only the 2025 interactive report URL was directly visible in Claude's WebFetch view.",
+       ir_note="PDF links behind a JS-populated year selector; only the 2025 interactive report URL was directly visible in WebFetch view.",
        exch_note="ADX 403.",
        notes="JS-heavy; ADX ticker RAKBANK."),
     _v("dubai-islamic-bank",

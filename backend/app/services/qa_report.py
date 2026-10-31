@@ -48,7 +48,7 @@ def write_processing_qa(db: Session, out_path: Path | None = None) -> Path:
         out.write_text("# Processing QA\n\n_(no reports yet)_\n", encoding="utf-8")
         return out
 
-    # Threshold flags: independent of cohort, per CLAUDE.md / spec.
+    # Threshold flags: independent of cohort, per the project rules / spec.
     # Each returns a reason string or None.
     def _threshold_reason(r: Report) -> str | None:
         reasons: list[str] = []

@@ -1,6 +1,6 @@
 """Unit tests for each text-quality switch — one per switch, each shows
 the difference it makes on invented page text. Fixtures are invented
-because this is pure logic (CLAUDE.md rule 4 — real fixtures only for
+because this is pure logic (project rule 4 — real fixtures only for
 network code).
 """
 from __future__ import annotations

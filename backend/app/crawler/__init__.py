@@ -1,6 +1,6 @@
 """Verity crawler package.
 
-Hard rules from CLAUDE.md (data acquisition) are enforced here, not
+Hard rules from the project rules (data acquisition) are enforced here, not
 elsewhere. Specifically:
 
 - VERITY_CONTACT_EMAIL env var must be set; otherwise `make_user_agent()`

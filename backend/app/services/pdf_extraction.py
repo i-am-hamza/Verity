@@ -126,6 +126,6 @@ def total_word_count(pages: list[PageText]) -> int:
     """Historic API — total tokens (Latin + Arabic), not used for density.
 
     Kept for callers that just want a rough size figure. Scoring density
-    goes through count_words().latin instead (CLAUDE.md, Method).
+    goes through count_words().latin instead (the project rules, Method).
     """
     return sum(len(p.text.split()) for p in pages)
