@@ -41,6 +41,7 @@ interface EsgFinData {
   robustness: RobustnessRow[];
   quartiles: QuartileRow[];
   trends: TrendRow[];
+  board: BoardSection;
   points: PointRow[];
 }
 
@@ -110,6 +111,59 @@ interface PointRow {
   EPS: number | null;
   Leverage: number | null;
   lnMcap: number | null;
+}
+
+interface BoardDescriptiveRow {
+  Group: string;
+  N_obs: number;
+  N_companies: number;
+  mean_boardsize: number;
+  median_boardsize: number;
+  min_boardsize: number;
+  max_boardsize: number;
+  companies_changed_at_least_once: number;
+  year_to_year_changes: number;
+}
+
+interface BoardYearRow {
+  Group: string;
+  Year: number;
+  N: number;
+  mean_boardsize: number;
+  median_boardsize: number;
+}
+
+interface BoardCorrRow {
+  Group: string;
+  ESG: string;
+  rho: number;
+  p: number;
+  N: number;
+}
+
+interface BoardRegRow {
+  Group: string;
+  ESG: string;
+  Model: string;
+  beta_per_seat: number;
+  se: number;
+  p: number;
+  N: number;
+}
+
+interface BoardSection {
+  summary: string;
+  variables: {
+    dependent: string;
+    independent: string;
+    effect_unit: string;
+    exclusions: string;
+    controls: string[];
+  };
+  descriptives: BoardDescriptiveRow[];
+  year_summary: BoardYearRow[];
+  correlations: BoardCorrRow[];
+  regressions: BoardRegRow[];
 }
 
 // ---------------------------------------------------------------------------
@@ -237,8 +291,233 @@ export function EsgFinancialsPage() {
       {/* g. ESG quartiles */}
       <QuartilesSect quartiles={d.quartiles} />
 
-      {/* h. Robustness + downloads */}
+      {/* h. Board size and ESG */}
+      <BoardSizeSect board={d.board} />
+
+      {/* i. Robustness + downloads */}
       <RobustnessSect robustness={d.robustness} />
+    </section>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// h. Board size and ESG
+// ---------------------------------------------------------------------------
+
+const BOARD_GROUPS = ["All companies", "Financial", "Non-financial"] as const;
+type BoardGroup = (typeof BOARD_GROUPS)[number];
+const BOARD_ESG_ORDER = [
+  "ESG composite",
+  "Environmental",
+  "Social",
+  "Governance",
+  "General",
+] as const;
+
+function BoardSizeSect({ board }: { board: BoardSection }) {
+  const [group, setGroup] = useState<BoardGroup>("All companies");
+
+  const desc = board.descriptives.find((r) => r.Group === group);
+  const corr = BOARD_ESG_ORDER.map((e) =>
+    board.correlations.find((r) => r.Group === group && r.ESG === e),
+  ).filter((r): r is BoardCorrRow => Boolean(r));
+  const regs = board.regressions.filter((r) => r.Group === group);
+  const regsByModel = (code: "A" | "B" | "C" | "D") =>
+    regs.filter((r) => r.Model.startsWith(code + "."));
+  const regAB = BOARD_ESG_ORDER.flatMap((e) => [
+    regs.find((r) => r.ESG === e && r.Model.startsWith("A.")),
+    regs.find((r) => r.ESG === e && r.Model.startsWith("B.")),
+  ]).filter((r): r is BoardRegRow => Boolean(r));
+  const regC = regsByModel("C")[0];
+  const regD = regsByModel("D")[0];
+
+  return (
+    <section className="flex flex-col gap-4" aria-labelledby="board-h">
+      <h2 id="board-h" className="font-heading text-lg font-semibold">
+        Board size and ESG
+      </h2>
+
+      <div className="rounded-md border border-border bg-surface p-4 text-sm leading-relaxed text-text-muted">
+        {board.summary}
+      </div>
+
+      <GroupToggle<BoardGroup>
+        value={group}
+        options={[...BOARD_GROUPS]}
+        onChange={setGroup}
+      />
+
+      {/* Descriptives */}
+      {desc && (
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <StatCard
+            value={`${desc.N_obs}`}
+            label="Company-years with a board size"
+            detail={`${desc.N_companies} companies; 4 not available excluded`}
+          />
+          <StatCard
+            value={`${desc.mean_boardsize.toFixed(2)}`}
+            label="Mean board size"
+            detail={`Median ${desc.median_boardsize}; range ${desc.min_boardsize}–${desc.max_boardsize}`}
+          />
+          <StatCard
+            value={`${desc.companies_changed_at_least_once} / ${desc.N_companies}`}
+            label="Companies that changed board size"
+            detail="At least once over FY2020–FY2025"
+          />
+          <StatCard
+            value={`${desc.year_to_year_changes}`}
+            label="Year-on-year changes"
+            detail="Consecutive-year transitions where board size moved"
+          />
+        </div>
+      )}
+
+      {/* Spearman */}
+      <div className="overflow-x-auto rounded-md border border-border bg-surface">
+        <table
+          className="w-full min-w-[320px] text-xs tabular"
+          aria-label={`Spearman correlation of board size with ESG, ${group}`}
+        >
+          <caption className="px-4 py-2 text-left text-xs text-text-muted">
+            Spearman ρ: board size vs ESG — {group}
+          </caption>
+          <thead>
+            <tr className="border-b border-border text-xs uppercase tracking-wide text-text-muted">
+              <th className="py-2 pl-4 pr-3 text-left" scope="col">
+                ESG measure
+              </th>
+              <th className="py-2 px-3 text-right" scope="col">ρ</th>
+              <th className="py-2 px-3 text-right" scope="col">p</th>
+              <th className="py-2 pl-3 pr-4 text-right" scope="col">N</th>
+            </tr>
+          </thead>
+          <tbody>
+            {corr.map((r) => (
+              <tr key={r.ESG} className="border-b border-border last:border-0">
+                <td className="py-1.5 pl-4 pr-3 text-text">{r.ESG}</td>
+                <td className="py-1.5 px-3 text-right font-mono text-text">
+                  {fmt(r.rho, 3)}
+                  <sup>{pStar(r.p)}</sup>
+                </td>
+                <td className="py-1.5 px-3 text-right font-mono text-text-muted">
+                  {r.p < 0.001 ? "<0.001" : fmt(r.p, 3)}
+                </td>
+                <td className="py-1.5 pl-3 pr-4 text-right font-mono text-text-muted">
+                  {r.N}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Regressions: A + B grid by ESG metric, with C and D for the composite below. */}
+      <div className="overflow-x-auto rounded-md border border-border bg-surface">
+        <table
+          className="w-full min-w-[560px] text-xs tabular"
+          aria-label={`Board size → ESG regression results, ${group}`}
+        >
+          <caption className="px-4 py-2 text-left text-xs text-text-muted">
+            Effect of board size on ESG — {group} (β per +1 seat; SE clustered
+            by company)
+          </caption>
+          <thead>
+            <tr className="border-b border-border text-xs uppercase tracking-wide text-text-muted">
+              <th className="py-2 pl-4 pr-3 text-left" scope="col">
+                ESG measure
+              </th>
+              <th className="py-2 px-3 text-left" scope="col">Model</th>
+              <th className="py-2 px-3 text-right" scope="col">β</th>
+              <th className="py-2 px-3 text-right" scope="col">SE</th>
+              <th className="py-2 px-3 text-right" scope="col">p</th>
+              <th className="py-2 pl-3 pr-4 text-right" scope="col">N</th>
+            </tr>
+          </thead>
+          <tbody>
+            {regAB.map((r, i) => (
+              <tr
+                key={`${r.ESG}-${r.Model}-${i}`}
+                className="border-b border-border last:border-0"
+              >
+                <td className="py-1.5 pl-4 pr-3 text-text">{r.ESG}</td>
+                <td className="py-1.5 px-3 text-text-muted">{r.Model}</td>
+                <td className="py-1.5 px-3 text-right font-mono text-text">
+                  {fmt(r.beta_per_seat, 3)}
+                  <sup>{pStar(r.p)}</sup>
+                </td>
+                <td className="py-1.5 px-3 text-right font-mono text-text-muted">
+                  {fmt(r.se, 3)}
+                </td>
+                <td className="py-1.5 px-3 text-right font-mono text-text-muted">
+                  {r.p < 0.001 ? "<0.001" : fmt(r.p, 3)}
+                </td>
+                <td className="py-1.5 pl-3 pr-4 text-right font-mono text-text-muted">
+                  {r.N}
+                </td>
+              </tr>
+            ))}
+            {regC && (
+              <tr className="border-b border-border last:border-0">
+                <td className="py-1.5 pl-4 pr-3 text-text">{regC.ESG}</td>
+                <td className="py-1.5 px-3 text-text-muted">{regC.Model}</td>
+                <td className="py-1.5 px-3 text-right font-mono text-text">
+                  {fmt(regC.beta_per_seat, 3)}
+                  <sup>{pStar(regC.p)}</sup>
+                </td>
+                <td className="py-1.5 px-3 text-right font-mono text-text-muted">
+                  {fmt(regC.se, 3)}
+                </td>
+                <td className="py-1.5 px-3 text-right font-mono text-text-muted">
+                  {regC.p < 0.001 ? "<0.001" : fmt(regC.p, 3)}
+                </td>
+                <td className="py-1.5 pl-3 pr-4 text-right font-mono text-text-muted">
+                  {regC.N}
+                </td>
+              </tr>
+            )}
+            {regD && (
+              <tr className="border-b border-border last:border-0">
+                <td className="py-1.5 pl-4 pr-3 text-text">{regD.ESG}</td>
+                <td className="py-1.5 px-3 text-text-muted">{regD.Model}</td>
+                <td className="py-1.5 px-3 text-right font-mono text-text">
+                  {fmt(regD.beta_per_seat, 3)}
+                  <sup>{pStar(regD.p)}</sup>
+                </td>
+                <td className="py-1.5 px-3 text-right font-mono text-text-muted">
+                  {fmt(regD.se, 3)}
+                </td>
+                <td className="py-1.5 px-3 text-right font-mono text-text-muted">
+                  {regD.p < 0.001 ? "<0.001" : fmt(regD.p, 3)}
+                </td>
+                <td className="py-1.5 pl-3 pr-4 text-right font-mono text-text-muted">
+                  {regD.N}
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      <div className="flex flex-wrap gap-2">
+        <button
+          type="button"
+          onClick={() =>
+            exportRowsAsCsv(
+              [
+                ...corr.map((r) => ({ table: "spearman", ...r })),
+                ...regAB.map((r) => ({ table: "regression", ...r })),
+                ...(regC ? [{ table: "regression", ...regC }] : []),
+                ...(regD ? [{ table: "regression", ...regD }] : []),
+              ],
+              `board_${group.replace(/\s+/g, "_").toLowerCase()}.csv`,
+            )
+          }
+          className="rounded-md border border-border bg-surface px-3 py-1.5 text-xs text-text-muted hover:text-text"
+        >
+          Export CSV
+        </button>
+      </div>
     </section>
   );
 }

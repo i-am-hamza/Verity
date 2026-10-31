@@ -777,16 +777,16 @@
    "Group": "Company 6-year averages",
    "ESG": "ESG composite",
    "Measure": "EPS",
-   "rho": 0.2745,
-   "p": 0.0269,
+   "rho": 0.2743,
+   "p": 0.027,
    "N": 65
   },
   {
    "Group": "Company 6-year averages",
    "ESG": "ESG composite",
    "Measure": "Leverage (D/E)",
-   "rho": 0.0859,
-   "p": 0.4964,
+   "rho": 0.0845,
+   "p": 0.5034,
    "N": 65
   },
   {
@@ -825,16 +825,16 @@
    "Group": "Company 6-year averages",
    "ESG": "Environmental",
    "Measure": "EPS",
-   "rho": 0.252,
-   "p": 0.0428,
+   "rho": 0.2519,
+   "p": 0.043,
    "N": 65
   },
   {
    "Group": "Company 6-year averages",
    "ESG": "Environmental",
    "Measure": "Leverage (D/E)",
-   "rho": -0.0407,
-   "p": 0.7476,
+   "rho": -0.0414,
+   "p": 0.7431,
    "N": 65
   },
   {
@@ -873,7 +873,7 @@
    "Group": "Company 6-year averages",
    "ESG": "Social",
    "Measure": "EPS",
-   "rho": 0.4118,
+   "rho": 0.4116,
    "p": 0.0007,
    "N": 65
   },
@@ -881,8 +881,8 @@
    "Group": "Company 6-year averages",
    "ESG": "Social",
    "Measure": "Leverage (D/E)",
-   "rho": -0.0647,
-   "p": 0.6084,
+   "rho": -0.0664,
+   "p": 0.5991,
    "N": 65
   },
   {
@@ -921,16 +921,16 @@
    "Group": "Company 6-year averages",
    "ESG": "Governance",
    "Measure": "EPS",
-   "rho": -0.119,
-   "p": 0.345,
+   "rho": -0.1188,
+   "p": 0.3458,
    "N": 65
   },
   {
    "Group": "Company 6-year averages",
    "ESG": "Governance",
    "Measure": "Leverage (D/E)",
-   "rho": 0.1869,
-   "p": 0.136,
+   "rho": 0.1867,
+   "p": 0.1364,
    "N": 65
   },
   {
@@ -969,16 +969,16 @@
    "Group": "Company 6-year averages",
    "ESG": "General",
    "Measure": "EPS",
-   "rho": 0.1122,
-   "p": 0.3737,
+   "rho": 0.1118,
+   "p": 0.3751,
    "N": 65
   },
   {
    "Group": "Company 6-year averages",
    "ESG": "General",
    "Measure": "Leverage (D/E)",
-   "rho": 0.1435,
-   "p": 0.2541,
+   "rho": 0.1438,
+   "p": 0.253,
    "N": 65
   },
   {
@@ -3332,6 +3332,619 @@
    "RoE median (Non-financial)": 13.24
   }
  ],
+ "board": {
+  "summary": "Larger boards go with more ESG disclosure, but this reflects company size: once size, age, industry, country and year are taken into account, board size has no significant link with ESG disclosure, and changes in board size are not followed by changes in disclosure, or the other way round.",
+  "variables": {
+   "dependent": "ESG composite and E, S, G, General pillars (0-100)",
+   "independent": "Board size (seats at fiscal year-end, researcher-read)",
+   "effect_unit": "change in ESG per +1 board seat (per +10 ESG points for the reverse model D)",
+   "exclusions": "4 company-years with board_size not available",
+   "controls": [
+    "ln(market cap)",
+    "ln(1 + age since established)  [in model A only]",
+    "year effects",
+    "SASB industry effects",
+    "country effects (A)",
+    "company fixed effects (B, C, D)"
+   ]
+  },
+  "descriptives": [
+   {
+    "Group": "All companies",
+    "N_obs": 386,
+    "N_companies": 65,
+    "mean_boardsize": 9.08,
+    "median_boardsize": 9.0,
+    "min_boardsize": 5,
+    "max_boardsize": 14,
+    "companies_changed_at_least_once": 31,
+    "year_to_year_changes": 44
+   },
+   {
+    "Group": "Financial",
+    "N_obs": 118,
+    "N_companies": 20,
+    "mean_boardsize": 9.839,
+    "median_boardsize": 10.0,
+    "min_boardsize": 7,
+    "max_boardsize": 14,
+    "companies_changed_at_least_once": 11,
+    "year_to_year_changes": 16
+   },
+   {
+    "Group": "Non-financial",
+    "N_obs": 268,
+    "N_companies": 45,
+    "mean_boardsize": 8.746,
+    "median_boardsize": 9.0,
+    "min_boardsize": 5,
+    "max_boardsize": 11,
+    "companies_changed_at_least_once": 20,
+    "year_to_year_changes": 28
+   }
+  ],
+  "year_summary": [
+   {
+    "Group": "All companies",
+    "Year": 2020,
+    "N": 63,
+    "mean_boardsize": 8.81,
+    "median_boardsize": 9.0
+   },
+   {
+    "Group": "All companies",
+    "Year": 2021,
+    "N": 63,
+    "mean_boardsize": 8.984,
+    "median_boardsize": 9.0
+   },
+   {
+    "Group": "All companies",
+    "Year": 2022,
+    "N": 65,
+    "mean_boardsize": 9.015,
+    "median_boardsize": 9.0
+   },
+   {
+    "Group": "All companies",
+    "Year": 2023,
+    "N": 65,
+    "mean_boardsize": 9.138,
+    "median_boardsize": 9.0
+   },
+   {
+    "Group": "All companies",
+    "Year": 2024,
+    "N": 65,
+    "mean_boardsize": 9.262,
+    "median_boardsize": 9.0
+   },
+   {
+    "Group": "All companies",
+    "Year": 2025,
+    "N": 65,
+    "mean_boardsize": 9.262,
+    "median_boardsize": 9.0
+   },
+   {
+    "Group": "Financial",
+    "Year": 2020,
+    "N": 19,
+    "mean_boardsize": 9.579,
+    "median_boardsize": 9.0
+   },
+   {
+    "Group": "Financial",
+    "Year": 2021,
+    "N": 19,
+    "mean_boardsize": 9.737,
+    "median_boardsize": 10.0
+   },
+   {
+    "Group": "Financial",
+    "Year": 2022,
+    "N": 20,
+    "mean_boardsize": 9.8,
+    "median_boardsize": 10.0
+   },
+   {
+    "Group": "Financial",
+    "Year": 2023,
+    "N": 20,
+    "mean_boardsize": 9.85,
+    "median_boardsize": 10.0
+   },
+   {
+    "Group": "Financial",
+    "Year": 2024,
+    "N": 20,
+    "mean_boardsize": 10.0,
+    "median_boardsize": 10.0
+   },
+   {
+    "Group": "Financial",
+    "Year": 2025,
+    "N": 20,
+    "mean_boardsize": 10.05,
+    "median_boardsize": 10.0
+   },
+   {
+    "Group": "Non-financial",
+    "Year": 2020,
+    "N": 44,
+    "mean_boardsize": 8.477,
+    "median_boardsize": 9.0
+   },
+   {
+    "Group": "Non-financial",
+    "Year": 2021,
+    "N": 44,
+    "mean_boardsize": 8.659,
+    "median_boardsize": 9.0
+   },
+   {
+    "Group": "Non-financial",
+    "Year": 2022,
+    "N": 45,
+    "mean_boardsize": 8.667,
+    "median_boardsize": 9.0
+   },
+   {
+    "Group": "Non-financial",
+    "Year": 2023,
+    "N": 45,
+    "mean_boardsize": 8.822,
+    "median_boardsize": 9.0
+   },
+   {
+    "Group": "Non-financial",
+    "Year": 2024,
+    "N": 45,
+    "mean_boardsize": 8.933,
+    "median_boardsize": 9.0
+   },
+   {
+    "Group": "Non-financial",
+    "Year": 2025,
+    "N": 45,
+    "mean_boardsize": 8.911,
+    "median_boardsize": 9.0
+   }
+  ],
+  "correlations": [
+   {
+    "Group": "All companies",
+    "ESG": "ESG composite",
+    "rho": 0.2246,
+    "p": 0.0,
+    "N": 386
+   },
+   {
+    "Group": "All companies",
+    "ESG": "Environmental",
+    "rho": 0.1762,
+    "p": 0.0005,
+    "N": 386
+   },
+   {
+    "Group": "All companies",
+    "ESG": "Social",
+    "rho": 0.1016,
+    "p": 0.0461,
+    "N": 386
+   },
+   {
+    "Group": "All companies",
+    "ESG": "Governance",
+    "rho": 0.0725,
+    "p": 0.1551,
+    "N": 386
+   },
+   {
+    "Group": "All companies",
+    "ESG": "General",
+    "rho": 0.2429,
+    "p": 0.0,
+    "N": 386
+   },
+   {
+    "Group": "Financial",
+    "ESG": "ESG composite",
+    "rho": 0.3065,
+    "p": 0.0007,
+    "N": 118
+   },
+   {
+    "Group": "Financial",
+    "ESG": "Environmental",
+    "rho": 0.345,
+    "p": 0.0001,
+    "N": 118
+   },
+   {
+    "Group": "Financial",
+    "ESG": "Social",
+    "rho": 0.0683,
+    "p": 0.4625,
+    "N": 118
+   },
+   {
+    "Group": "Financial",
+    "ESG": "Governance",
+    "rho": 0.3295,
+    "p": 0.0003,
+    "N": 118
+   },
+   {
+    "Group": "Financial",
+    "ESG": "General",
+    "rho": 0.1498,
+    "p": 0.1054,
+    "N": 118
+   },
+   {
+    "Group": "Non-financial",
+    "ESG": "ESG composite",
+    "rho": 0.2107,
+    "p": 0.0005,
+    "N": 268
+   },
+   {
+    "Group": "Non-financial",
+    "ESG": "Environmental",
+    "rho": 0.1675,
+    "p": 0.006,
+    "N": 268
+   },
+   {
+    "Group": "Non-financial",
+    "ESG": "Social",
+    "rho": 0.1864,
+    "p": 0.0022,
+    "N": 268
+   },
+   {
+    "Group": "Non-financial",
+    "ESG": "Governance",
+    "rho": -0.0549,
+    "p": 0.371,
+    "N": 268
+   },
+   {
+    "Group": "Non-financial",
+    "ESG": "General",
+    "rho": 0.2187,
+    "p": 0.0003,
+    "N": 268
+   }
+  ],
+  "regressions": [
+   {
+    "Group": "All companies",
+    "ESG": "ESG composite",
+    "Model": "A. Across companies (industry, country, year)",
+    "beta_per_seat": -0.7159,
+    "se": 0.946,
+    "p": 0.4492,
+    "N": 385
+   },
+   {
+    "Group": "All companies",
+    "ESG": "ESG composite",
+    "Model": "B. Within company (company, year)",
+    "beta_per_seat": -0.2989,
+    "se": 1.817,
+    "p": 0.8694,
+    "N": 386
+   },
+   {
+    "Group": "All companies",
+    "ESG": "Environmental",
+    "Model": "A. Across companies (industry, country, year)",
+    "beta_per_seat": -2.511,
+    "se": 1.4481,
+    "p": 0.0829,
+    "N": 385
+   },
+   {
+    "Group": "All companies",
+    "ESG": "Environmental",
+    "Model": "B. Within company (company, year)",
+    "beta_per_seat": -1.5506,
+    "se": 2.5979,
+    "p": 0.551,
+    "N": 386
+   },
+   {
+    "Group": "All companies",
+    "ESG": "Social",
+    "Model": "A. Across companies (industry, country, year)",
+    "beta_per_seat": -0.6506,
+    "se": 1.2721,
+    "p": 0.609,
+    "N": 385
+   },
+   {
+    "Group": "All companies",
+    "ESG": "Social",
+    "Model": "B. Within company (company, year)",
+    "beta_per_seat": 0.3294,
+    "se": 2.0833,
+    "p": 0.8745,
+    "N": 386
+   },
+   {
+    "Group": "All companies",
+    "ESG": "Governance",
+    "Model": "A. Across companies (industry, country, year)",
+    "beta_per_seat": 2.5338,
+    "se": 1.5737,
+    "p": 0.1074,
+    "N": 385
+   },
+   {
+    "Group": "All companies",
+    "ESG": "Governance",
+    "Model": "B. Within company (company, year)",
+    "beta_per_seat": 0.0868,
+    "se": 2.3264,
+    "p": 0.9703,
+    "N": 386
+   },
+   {
+    "Group": "All companies",
+    "ESG": "General",
+    "Model": "A. Across companies (industry, country, year)",
+    "beta_per_seat": -2.2424,
+    "se": 1.361,
+    "p": 0.0994,
+    "N": 385
+   },
+   {
+    "Group": "All companies",
+    "ESG": "General",
+    "Model": "B. Within company (company, year)",
+    "beta_per_seat": -0.0557,
+    "se": 2.4865,
+    "p": 0.9821,
+    "N": 386
+   },
+   {
+    "Group": "All companies",
+    "ESG": "ESG composite",
+    "Model": "C. Board last year -> ESG this year",
+    "beta_per_seat": 0.096,
+    "se": 1.686,
+    "p": 0.9546,
+    "N": 321
+   },
+   {
+    "Group": "All companies",
+    "ESG": "ESG composite",
+    "Model": "D. Reverse: ESG last year -> Board this year (per +10 ESG points)",
+    "beta_per_seat": -0.0155,
+    "se": 0.0381,
+    "p": 0.685,
+    "N": 323
+   },
+   {
+    "Group": "Financial",
+    "ESG": "ESG composite",
+    "Model": "A. Across companies (industry, country, year)",
+    "beta_per_seat": -1.8707,
+    "se": 1.9908,
+    "p": 0.3474,
+    "N": 117
+   },
+   {
+    "Group": "Financial",
+    "ESG": "ESG composite",
+    "Model": "B. Within company (company, year)",
+    "beta_per_seat": -0.9082,
+    "se": 2.2804,
+    "p": 0.6914,
+    "N": 118
+   },
+   {
+    "Group": "Financial",
+    "ESG": "Environmental",
+    "Model": "A. Across companies (industry, country, year)",
+    "beta_per_seat": -1.5056,
+    "se": 3.1998,
+    "p": 0.638,
+    "N": 117
+   },
+   {
+    "Group": "Financial",
+    "ESG": "Environmental",
+    "Model": "B. Within company (company, year)",
+    "beta_per_seat": 1.7405,
+    "se": 3.6467,
+    "p": 0.6343,
+    "N": 118
+   },
+   {
+    "Group": "Financial",
+    "ESG": "Social",
+    "Model": "A. Across companies (industry, country, year)",
+    "beta_per_seat": -4.8636,
+    "se": 3.0822,
+    "p": 0.1146,
+    "N": 117
+   },
+   {
+    "Group": "Financial",
+    "ESG": "Social",
+    "Model": "B. Within company (company, year)",
+    "beta_per_seat": -4.3478,
+    "se": 3.7129,
+    "p": 0.2447,
+    "N": 118
+   },
+   {
+    "Group": "Financial",
+    "ESG": "Governance",
+    "Model": "A. Across companies (industry, country, year)",
+    "beta_per_seat": 1.911,
+    "se": 2.6929,
+    "p": 0.4779,
+    "N": 117
+   },
+   {
+    "Group": "Financial",
+    "ESG": "Governance",
+    "Model": "B. Within company (company, year)",
+    "beta_per_seat": -1.073,
+    "se": 4.7143,
+    "p": 0.8205,
+    "N": 118
+   },
+   {
+    "Group": "Financial",
+    "ESG": "General",
+    "Model": "A. Across companies (industry, country, year)",
+    "beta_per_seat": -3.0001,
+    "se": 2.762,
+    "p": 0.2774,
+    "N": 117
+   },
+   {
+    "Group": "Financial",
+    "ESG": "General",
+    "Model": "B. Within company (company, year)",
+    "beta_per_seat": 0.0793,
+    "se": 2.7392,
+    "p": 0.977,
+    "N": 118
+   },
+   {
+    "Group": "Financial",
+    "ESG": "ESG composite",
+    "Model": "C. Board last year -> ESG this year",
+    "beta_per_seat": -0.0656,
+    "se": 2.7026,
+    "p": 0.9807,
+    "N": 98
+   },
+   {
+    "Group": "Financial",
+    "ESG": "ESG composite",
+    "Model": "D. Reverse: ESG last year -> Board this year (per +10 ESG points)",
+    "beta_per_seat": -0.1044,
+    "se": 0.0792,
+    "p": 0.1915,
+    "N": 99
+   },
+   {
+    "Group": "Non-financial",
+    "ESG": "ESG composite",
+    "Model": "A. Across companies (industry, country, year)",
+    "beta_per_seat": -0.1369,
+    "se": 0.9304,
+    "p": 0.883,
+    "N": 268
+   },
+   {
+    "Group": "Non-financial",
+    "ESG": "ESG composite",
+    "Model": "B. Within company (company, year)",
+    "beta_per_seat": -0.0438,
+    "se": 2.4299,
+    "p": 0.9856,
+    "N": 268
+   },
+   {
+    "Group": "Non-financial",
+    "ESG": "Environmental",
+    "Model": "A. Across companies (industry, country, year)",
+    "beta_per_seat": -2.5105,
+    "se": 1.7534,
+    "p": 0.1522,
+    "N": 268
+   },
+   {
+    "Group": "Non-financial",
+    "ESG": "Environmental",
+    "Model": "B. Within company (company, year)",
+    "beta_per_seat": -2.8497,
+    "se": 3.2991,
+    "p": 0.3887,
+    "N": 268
+   },
+   {
+    "Group": "Non-financial",
+    "ESG": "Social",
+    "Model": "A. Across companies (industry, country, year)",
+    "beta_per_seat": 1.0529,
+    "se": 1.368,
+    "p": 0.4415,
+    "N": 268
+   },
+   {
+    "Group": "Non-financial",
+    "ESG": "Social",
+    "Model": "B. Within company (company, year)",
+    "beta_per_seat": 2.2007,
+    "se": 2.5,
+    "p": 0.3797,
+    "N": 268
+   },
+   {
+    "Group": "Non-financial",
+    "ESG": "Governance",
+    "Model": "A. Across companies (industry, country, year)",
+    "beta_per_seat": 2.8506,
+    "se": 1.8579,
+    "p": 0.1249,
+    "N": 268
+   },
+   {
+    "Group": "Non-financial",
+    "ESG": "Governance",
+    "Model": "B. Within company (company, year)",
+    "beta_per_seat": 0.5894,
+    "se": 2.7487,
+    "p": 0.8304,
+    "N": 268
+   },
+   {
+    "Group": "Non-financial",
+    "ESG": "General",
+    "Model": "A. Across companies (industry, country, year)",
+    "beta_per_seat": -1.9586,
+    "se": 1.3708,
+    "p": 0.1531,
+    "N": 268
+   },
+   {
+    "Group": "Non-financial",
+    "ESG": "General",
+    "Model": "B. Within company (company, year)",
+    "beta_per_seat": -0.1196,
+    "se": 3.3782,
+    "p": 0.9718,
+    "N": 268
+   },
+   {
+    "Group": "Non-financial",
+    "ESG": "ESG composite",
+    "Model": "C. Board last year -> ESG this year",
+    "beta_per_seat": 0.424,
+    "se": 2.3457,
+    "p": 0.8568,
+    "N": 223
+   },
+   {
+    "Group": "Non-financial",
+    "ESG": "ESG composite",
+    "Model": "D. Reverse: ESG last year -> Board this year (per +10 ESG points)",
+    "beta_per_seat": 0.0054,
+    "se": 0.0435,
+    "p": 0.9016,
+    "N": 224
+   }
+  ]
+ },
  "points": [
   {
    "Company": "Abdullah Al Othaim Markets",

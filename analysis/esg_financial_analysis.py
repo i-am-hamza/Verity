@@ -74,6 +74,14 @@ ESG_COLUMNS = {
     "General (0-100)": "Gen", "Composite (0-100)": "ESG",
     "Composite 3-pillar (0-100)": "ESG3", "Composite no-new3 (0-100)": "ESGno3",
 }
+# Board + firm-age columns in the Verity export. Ages here may be stale when the
+# researcher has updated incoming/company_ages_board_2020_2025.xlsx but the DB
+# has not been re-loaded; --ages overrides them row-by-row.
+BOARD_COLUMNS = {
+    "Board size": "BoardSize",
+    "Age since established": "AgeEst",
+    "Age since listed": "AgeList",
+}
 ESG_LABELS = {"ESG": "ESG composite", "E": "Environmental", "S": "Social",
               "G": "Governance", "Gen": "General"}
 MODELS = {
@@ -188,19 +196,72 @@ def match_names(fin_names, esg_names) -> dict[str, str]:
     return mapping
 
 
-def build_panel(esg_path: Path, fin_path: Path) -> pd.DataFrame:
+def _load_ages(path: Path, name_map: dict[str, str]) -> pd.DataFrame:
+    """Load the researcher's firm-ages workbook keyed by Verity company name."""
+    ws = load_workbook(path, data_only=True).active
+    headers = [c.value for c in ws[1]]
+    i_name = headers.index("Company")
+    i_year = headers.index("Year")
+    i_est = headers.index("Age since established")
+    i_list = headers.index("Age since listed")
+    rows = []
+    for r in range(2, ws.max_row + 1):
+        name_raw = ws.cell(r, i_name + 1).value
+        if name_raw is None:
+            continue
+        name = str(name_raw).strip()
+        rows.append({
+            "Company": name_map.get(name, name),
+            "Year": int(ws.cell(r, i_year + 1).value),
+            "AgeEst_r": ws.cell(r, i_est + 1).value,
+            "AgeList_r": ws.cell(r, i_list + 1).value,
+        })
+    return pd.DataFrame(rows)
+
+
+def build_panel(esg_path: Path, fin_path: Path,
+                ages_path: Path | None = None) -> pd.DataFrame:
     fin = apply_corrections(load_financials(fin_path))
     esg = pd.read_excel(esg_path, sheet_name="Scores by year").rename(columns=ESG_COLUMNS)
+    esg = esg.rename(columns=BOARD_COLUMNS)
     fin["Company"] = fin.Company.map(match_names(fin.Company.unique(), esg.Company.unique()))
     esg = esg.rename(columns={"Fiscal year": "Year"})[
         ["Company", "Year", "Country", "SASB industry", "Financial", "Data-quality flag",
-         *ESG_COLUMNS.values()]]
+         *ESG_COLUMNS.values(), *BOARD_COLUMNS.values()]]
     df = fin.merge(esg, on=["Company", "Year"], how="left", validate="one_to_one")
     if df.ESG.isna().any():
         raise ValueError("Some company-years have no ESG score")
 
+    if ages_path is not None:
+        # Build a name map identical to the ESG match (ESG workbook names ARE
+        # the researcher's canonical names here) so a Company that already
+        # matches is left alone.
+        age_name_map = match_names(
+            pd.unique(_load_ages(ages_path, {}).Company), esg.Company.unique()
+        )
+        ages = _load_ages(ages_path, age_name_map)
+        df = df.merge(ages, on=["Company", "Year"], how="left", validate="one_to_one")
+        # Only override where the researcher workbook has a value (keep ESG-xlsx
+        # value otherwise — e.g., when the workbook is missing a row).
+        df["AgeEst"] = df.AgeEst_r.where(df.AgeEst_r.notna(), df.AgeEst)
+        df["AgeList"] = df.AgeList_r.where(df.AgeList_r.notna(), df.AgeList)
+        # BUT: NaN in the workbook is a *deliberate* "blank" (SNB FY2020), so
+        # when a workbook row exists with a NaN we honour the blank. Use the
+        # presence of a workbook row as the signal.
+        in_workbook = ages.set_index(["Company", "Year"]).index
+        key = pd.MultiIndex.from_frame(df[["Company", "Year"]])
+        mask = key.isin(in_workbook)
+        df.loc[mask, "AgeEst"] = df.loc[mask, "AgeEst_r"]
+        df.loc[mask, "AgeList"] = df.loc[mask, "AgeList_r"]
+        df = df.drop(columns=["AgeEst_r", "AgeList_r"])
+
+    # Coerce board + age columns to numeric (openpyxl can return str for ints).
+    for c in ("BoardSize", "AgeEst", "AgeList"):
+        df[c] = pd.to_numeric(df[c], errors="coerce")
+
     df["Fin"] = df.Financial.eq("Yes")
     df["lnMcap"] = np.log(df.MarketCapUSD / 1e9)
+    df["ln1pAgeEst"] = np.log1p(df.AgeEst)
     # Cap extreme values at the 1st and 99th percentiles (pooled).
     for k in ["ROA", "ROE", "NetMargin", "EPS", "Leverage"]:
         lo, hi = df[k].quantile([0.01, 0.99])
@@ -208,7 +269,7 @@ def build_panel(esg_path: Path, fin_path: Path) -> pd.DataFrame:
     df["lnMcap_w"] = df.lnMcap
     df = df.sort_values(["Company", "Year"]).reset_index(drop=True)
     g = df.groupby("Company")
-    for c in ["ESG", "E", "S", "G", "Gen", "ESG3", "ESGno3"]:
+    for c in ["ESG", "E", "S", "G", "Gen", "ESG3", "ESGno3", "BoardSize"]:
         df[c + "_lag"] = g[c].shift(1)
     for k in OUTCOMES:
         df[k + "_lagY"] = g[k + "_w"].shift(1)
@@ -337,6 +398,145 @@ def quartiles(df) -> pd.DataFrame:
     return pd.DataFrame(rows)
 
 
+# --------------------------------------------------------------------------
+# Board-size module
+#
+# "Does board size go with ESG disclosure, does an increase in board size
+# lead to more disclosure, and does disclosure lead to board changes?"
+# Groups: all, financial, non-financial. The four not_found company-years
+# are excluded (dropna on BoardSize).
+# --------------------------------------------------------------------------
+BOARD_ESG_METRICS = {"ESG": "ESG composite", "E": "Environmental", "S": "Social",
+                     "G": "Governance", "Gen": "General"}
+
+
+def _board_df(df):
+    """Panel restricted to rows with a board size (drops the 4 not_found)."""
+    return df[df.BoardSize.notna()].copy()
+
+
+def _board_groups(df):
+    b = _board_df(df)
+    return {"All companies": b, "Financial": b[b.Fin], "Non-financial": b[~b.Fin]}
+
+
+def board_descriptives(df) -> pd.DataFrame:
+    """Board-size descriptives per group, plus a per-year summary for 'All'."""
+    rows: list[dict] = []
+    for g, s in _board_groups(df).items():
+        n = len(s)
+        companies = s.Company.nunique()
+        # Count companies with >= 1 year-on-year change (needs >= 2 obs).
+        changed = (s.sort_values(["Company", "Year"]).groupby("Company")["BoardSize"]
+                   .apply(lambda v: v.dropna().nunique() > 1).sum())
+        # Count distinct year-to-year changes (consecutive-year transitions).
+        s_sorted = s.sort_values(["Company", "Year"]).copy()
+        s_sorted["prev_board"] = s_sorted.groupby("Company").BoardSize.shift(1)
+        s_sorted["prev_year"] = s_sorted.groupby("Company").Year.shift(1)
+        consec = (s_sorted.prev_year.notna()) & (s_sorted.prev_year == s_sorted.Year - 1)
+        yoy_changes = int(((s_sorted.BoardSize != s_sorted.prev_board) & consec).sum())
+        rows.append({
+            "Group": g, "N_obs": n, "N_companies": companies,
+            "mean_boardsize": round(s.BoardSize.mean(), 3),
+            "median_boardsize": float(s.BoardSize.median()),
+            "min_boardsize": int(s.BoardSize.min()),
+            "max_boardsize": int(s.BoardSize.max()),
+            "companies_changed_at_least_once": int(changed),
+            "year_to_year_changes": yoy_changes,
+        })
+    return pd.DataFrame(rows)
+
+
+def board_year_summary(df) -> pd.DataFrame:
+    """Mean and median board size per year, across groups."""
+    rows: list[dict] = []
+    for g, s in _board_groups(df).items():
+        yr = s.groupby("Year")["BoardSize"].agg(["count", "mean", "median"]).reset_index()
+        for _, r in yr.iterrows():
+            rows.append({"Group": g, "Year": int(r["Year"]), "N": int(r["count"]),
+                         "mean_boardsize": round(float(r["mean"]), 3),
+                         "median_boardsize": float(r["median"])})
+    return pd.DataFrame(rows)
+
+
+def board_correlations(df) -> pd.DataFrame:
+    rows: list[dict] = []
+    for g, s in _board_groups(df).items():
+        for v, vl in BOARD_ESG_METRICS.items():
+            d = s[["BoardSize", v]].dropna()
+            rho, p = spearmanr(d.BoardSize, d[v])
+            rows.append({"Group": g, "ESG": vl, "rho": float(rho),
+                         "p": float(p), "N": int(len(d))})
+    return pd.DataFrame(rows)
+
+
+def _board_across(d, y, controls, country: bool):
+    """Across-companies OLS with industry/country/year effects, SE clustered
+    by Company. Returns b per +1 seat."""
+    d = d[[y, "BoardSize", *controls, "Year", "SASB industry", "Country", "Company"]].dropna().copy()
+    f = f"{y} ~ BoardSize + {' + '.join(controls)} + C(Year)"
+    if d["SASB industry"].nunique() > 1:
+        f += " + C(Q('SASB industry'))"
+    if country and d.Country.nunique() > 1:
+        f += " + C(Country)"
+    m = smf.ols(f, d).fit(cov_type="cluster", cov_kwds={"groups": d.Company})
+    return m.params["BoardSize"], m.bse["BoardSize"], m.pvalues["BoardSize"], int(m.nobs)
+
+
+def _board_within(d, y, x, controls):
+    """Within-company (entity + time effects) panel OLS, SE clustered by Company.
+    `x` is the regressor whose coefficient we report (BoardSize or BoardSize_lag)."""
+    d = d[[y, x, *controls, "Company", "Year"]].dropna().copy()
+    d = d.set_index(["Company", "Year"])
+    m = PanelOLS(d[y], d[[x, *controls]], entity_effects=True, time_effects=True).fit(
+        cov_type="clustered", cluster_entity=True)
+    return m.params[x], m.std_errors[x], m.pvalues[x], int(m.nobs)
+
+
+def _board_reverse(d, controls):
+    """Reverse direction: Board_t = d * (ESG_lag/10) + controls + FE. The
+    coefficient is reported per 10 ESG points."""
+    d = d[["BoardSize", "ESG_lag", *controls, "Company", "Year"]].dropna().copy()
+    d["ESG_lag_10"] = d.ESG_lag / 10
+    d = d.set_index(["Company", "Year"])
+    m = PanelOLS(d["BoardSize"], d[["ESG_lag_10", *controls]],
+                 entity_effects=True, time_effects=True).fit(
+        cov_type="clustered", cluster_entity=True)
+    return m.params["ESG_lag_10"], m.std_errors["ESG_lag_10"], m.pvalues["ESG_lag_10"], int(m.nobs)
+
+
+def board_regressions(df) -> pd.DataFrame:
+    """A and B for each of ESG/E/S/G/Gen; C and D for the composite only.
+
+    Controls:
+      A: ln(market cap), ln(1 + age since established)
+      B: ln(market cap)
+      C: ln(market cap)
+      D: ln(market cap)
+    """
+    across_controls = ["lnMcap_w", "ln1pAgeEst"]
+    within_controls = ["lnMcap_w"]
+    rows: list[dict] = []
+    for g, s in _board_groups(df).items():
+        for v, vl in BOARD_ESG_METRICS.items():
+            b1, se1, p1, n1 = _board_across(s, v, across_controls, country=True)
+            rows.append({"Group": g, "ESG": vl, "Model": "A. Across companies (industry, country, year)",
+                         "beta_per_seat": float(b1), "se": float(se1), "p": float(p1), "N": int(n1)})
+            b2, se2, p2, n2 = _board_within(s, v, "BoardSize", within_controls)
+            rows.append({"Group": g, "ESG": vl, "Model": "B. Within company (company, year)",
+                         "beta_per_seat": float(b2), "se": float(se2), "p": float(p2), "N": int(n2)})
+        # C and D for composite only.
+        b3, se3, p3, n3 = _board_within(s, "ESG", "BoardSize_lag", within_controls)
+        rows.append({"Group": g, "ESG": "ESG composite",
+                     "Model": "C. Board last year -> ESG this year",
+                     "beta_per_seat": float(b3), "se": float(se3), "p": float(p3), "N": int(n3)})
+        b4, se4, p4, n4 = _board_reverse(s, within_controls)
+        rows.append({"Group": g, "ESG": "ESG composite",
+                     "Model": "D. Reverse: ESG last year -> Board this year (per +10 ESG points)",
+                     "beta_per_seat": float(b4), "se": float(se4), "p": float(p4), "N": int(n4)})
+    return pd.DataFrame(rows)
+
+
 def trends(df) -> pd.DataFrame:
     t = df.groupby("Year").agg(ESG=("ESG", "mean"), E=("E", "mean"), S=("S", "mean"),
                                G=("G", "mean"), General=("Gen", "mean")).reset_index()
@@ -350,17 +550,31 @@ def trends(df) -> pd.DataFrame:
 # --------------------------------------------------------------------------
 # Outputs
 # --------------------------------------------------------------------------
-def write_excel(path: Path, df, tables: dict[str, pd.DataFrame]) -> None:
+BOARD_SUMMARY = (
+    "Larger boards go with more ESG disclosure, but this reflects company "
+    "size: once size, age, industry, country and year are taken into "
+    "account, board size has no significant link with ESG disclosure, "
+    "and changes in board size are not followed by changes in disclosure, "
+    "or the other way round."
+)
+
+
+def write_excel(path: Path, df, tables: dict[str, pd.DataFrame],
+                board_tables: dict[str, pd.DataFrame]) -> None:
     with pd.ExcelWriter(path, engine="openpyxl") as xw:
         for name, t in tables.items():
             t.to_excel(xw, sheet_name=name[:31], index=False)
+        for name, t in board_tables.items():
+            t.to_excel(xw, sheet_name=name[:31], index=False)
         pd.DataFrame([c.__dict__ for c in CORRECTIONS]).to_excel(xw, sheet_name="Corrections", index=False)
         cols = ["Company", "Year", "Country", "Financial", "SASB industry", "ESG", "E", "S", "G", "Gen",
-                "ROA", "ROE", "NetMargin", "EPS", "Leverage", "MarketCapUSD"]
+                "ROA", "ROE", "NetMargin", "EPS", "Leverage", "MarketCapUSD",
+                "BoardSize", "AgeEst", "AgeList"]
         df[cols].to_excel(xw, sheet_name="Data used", index=False)
 
 
-def write_json(path: Path, df, tables: dict[str, pd.DataFrame]) -> None:
+def write_json(path: Path, df, tables: dict[str, pd.DataFrame],
+               board_tables: dict[str, pd.DataFrame]) -> None:
     def records(t):
         return json.loads(t.round(4).to_json(orient="records"))
     payload = {
@@ -379,6 +593,25 @@ def write_json(path: Path, df, tables: dict[str, pd.DataFrame]) -> None:
                          "industry effects", "country effects (main across-company model)"],
         },
         **{name: records(t) for name, t in tables.items()},
+        "board": {
+            "summary": BOARD_SUMMARY,
+            "variables": {
+                "dependent": "ESG composite and E, S, G, General pillars (0-100)",
+                "independent": "Board size (seats at fiscal year-end, researcher-read)",
+                "effect_unit": "change in ESG per +1 board seat (per +10 ESG points for the reverse model D)",
+                "exclusions": "4 company-years with board_size not available",
+                "controls": [
+                    "ln(market cap)",
+                    "ln(1 + age since established)  [in model A only]",
+                    "year effects", "SASB industry effects", "country effects (A)",
+                    "company fixed effects (B, C, D)",
+                ],
+            },
+            "descriptives": records(board_tables["board_descriptives"]),
+            "year_summary": records(board_tables["board_year_summary"]),
+            "correlations": records(board_tables["board_correlations"]),
+            "regressions": records(board_tables["board_regressions"]),
+        },
         "points": records(df[["Company", "Year", "Financial", "ESG", "ROA_w", "ROE_w",
                               "NetMargin_w", "EPS_w", "Leverage_w", "lnMcap"]]
                           .rename(columns=lambda c: c.replace("_w", ""))),
@@ -390,12 +623,15 @@ def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     ap.add_argument("--esg", type=Path, required=True)
     ap.add_argument("--financials", type=Path, required=True)
+    ap.add_argument("--ages", type=Path, default=None,
+                    help="Optional researcher ages workbook; if given, overrides "
+                         "Age since established / Age since listed from the ESG export.")
     ap.add_argument("--out", type=Path, default=Path("results"))
     args = ap.parse_args()
     logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")
     args.out.mkdir(parents=True, exist_ok=True)
 
-    df = build_panel(args.esg, args.financials)
+    df = build_panel(args.esg, args.financials, ages_path=args.ages)
     tables = {
         "correlations": correlations(df),
         "regressions": regressions(df),
@@ -404,8 +640,14 @@ def main() -> None:
         "quartiles": quartiles(df),
         "trends": trends(df),
     }
-    write_excel(args.out / "ESG_vs_Financials_Results.xlsx", df, tables)
-    write_json(args.out / "esg_financials_results.json", df, tables)
+    board_tables = {
+        "board_descriptives": board_descriptives(df),
+        "board_year_summary": board_year_summary(df),
+        "board_correlations": board_correlations(df),
+        "board_regressions": board_regressions(df),
+    }
+    write_excel(args.out / "ESG_vs_Financials_Results.xlsx", df, tables, board_tables)
+    write_json(args.out / "esg_financials_results.json", df, tables, board_tables)
     log.info("Done: results written to %s", args.out)
 
 
