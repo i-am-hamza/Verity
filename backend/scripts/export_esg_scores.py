@@ -863,67 +863,92 @@ def main() -> int:
         ws_guide.append([col, meaning, unit])
     _auto_width(ws_guide)
 
-    # Save XLSX
-    xlsx_path = EXPORTS_DIR / "verity_esg_scores.xlsx"
-    wb.save(str(xlsx_path))
-    print(f"Saved: {xlsx_path}")
+    # Full internal workbook: five sheets, every column — used by the analysis
+    # pipeline and anyone with internal access. NOT linked on the public site.
+    full_xlsx_path = EXPORTS_DIR / "verity_esg_scores_full.xlsx"
+    wb.save(str(full_xlsx_path))
+    print(f"Saved: {full_xlsx_path}")
     print(f"  'Scores by year':    {ws_year.max_row - 1} rows")
     print(f"  'Company averages':  {ws_avg.max_row - 1} rows")
     print(f"  'Robustness':        {n_rob - 1} company rows + correlation table")
 
     # ------------------------------------------------------------------ #
-    # CSV: Scores by year
+    # Public download: 1 sheet "Research dataset", 21 columns
     # ------------------------------------------------------------------ #
-    csv_headers = [
-        "company", "ticker", "country", "sasb_sector", "sasb_industry", "financial",
-        "fiscal_year", "report_type",
-        "environmental_score", "social_score", "governance_score", "general_score",
-        "composite_score", "composite_3pillar", "composite_general_no_new3",
-        "e_density", "s_density", "g_density", "general_esg_density",
-        "banking_addon_density", "banking_addon_score",
-        "words_analysed", "total_words", "share_of_text_analysed",
-        "data_quality_flag",
-        "board_size", "board_size_basis", "board_size_page",
-        "age_since_established", "age_since_listed",
+    def _rget(iid: int, fy: int, attr: str, dp: int | None = None) -> object:
+        cyd = cyd_map.get((iid, fy))
+        if cyd is None:
+            return ""
+        v = getattr(cyd, attr, None)
+        if v is None:
+            return ""
+        return round(float(v), dp) if dp is not None else v
+
+    PUBLIC_HEADERS = [
+        "Company", "Ticker", "Country", "Fiscal year",
+        "Environmental", "Social", "Governance", "Composite ESG score",
+        "Board size", "Age since established", "Age since listing",
+        "Market cap (USD million)", "EPS",
+        "Leverage (debt/equity)", "Net margin (%)", "RoE (%)", "RoA (%)",
+        "Total assets (USD million)", "Total liabilities (USD million)",
+        "Tobin's Q", "Price-to-book",
     ]
+    public_rows: list[list[object]] = []
+    for r in reports:
+        inst = inst_map.get(r.institution_id)
+        if inst is None:
+            continue
+        iid = inst.id
+        fy = r.fiscal_year
+        public_rows.append([
+            inst.name,
+            inst.ticker or "",
+            inst.country,
+            fy,
+            round(r.e_score, 1) if r.e_score is not None else "",
+            round(r.s_score, 1) if r.s_score is not None else "",
+            round(r.g_score, 1) if r.g_score is not None else "",
+            round(r.composite_score, 1) if r.composite_score is not None else "",
+            _rget(iid, fy, "board_size"),
+            _rget(iid, fy, "age_since_established"),
+            _rget(iid, fy, "age_since_listed"),
+            _rget(iid, fy, "market_cap_usd_m", 0),
+            _rget(iid, fy, "eps", 2),
+            _rget(iid, fy, "leverage", 2),
+            _rget(iid, fy, "net_margin", 2),
+            _rget(iid, fy, "roe", 2),
+            _rget(iid, fy, "roa", 2),
+            _rget(iid, fy, "total_assets_usd_m", 1),
+            _rget(iid, fy, "total_liabilities_usd_m", 1),
+            _rget(iid, fy, "tobins_q", 3),
+            _rget(iid, fy, "price_to_book", 3),
+        ])
+
+    pub_wb = openpyxl.Workbook()
+    pub_ws = pub_wb.active
+    pub_ws.title = "Research dataset"
+    pub_ws.append(PUBLIC_HEADERS)
+    _style_header(pub_ws)
+    pub_ws.freeze_panes = "B2"
+    pub_ws.auto_filter.ref = f"A1:{get_column_letter(len(PUBLIC_HEADERS))}1"
+    for pr in public_rows:
+        pub_ws.append(pr)
+    _auto_width(pub_ws)
+    _band_rows(pub_ws)
+    public_xlsx = EXPORTS_DIR / "verity_esg_scores.xlsx"
+    pub_wb.save(str(public_xlsx))
+    print(f"Saved: {public_xlsx}  ({len(public_rows)} rows, 1 sheet)")
+
+    # ------------------------------------------------------------------ #
+    # Public CSV: same 21 columns, same values as the public workbook
+    # ------------------------------------------------------------------ #
     csv_path = EXPORTS_DIR / "verity_esg_scores.csv"
     with csv_path.open("w", newline="", encoding="utf-8") as fh:
-        w = csv.DictWriter(fh, fieldnames=csv_headers)
-        w.writeheader()
-        for rd in rows:
-            w.writerow({
-                "company": rd["company"],
-                "ticker": rd["ticker"],
-                "country": rd["country"],
-                "sasb_sector": rd["sasb_sector"],
-                "sasb_industry": rd["sasb_industry"],
-                "financial": rd["financial"],
-                "fiscal_year": rd["fiscal_year"],
-                "report_type": rd["report_type"],
-                "environmental_score": f"{rd['e_score']:.1f}" if rd["e_score"] is not None else "",
-                "social_score": f"{rd['s_score']:.1f}" if rd["s_score"] is not None else "",
-                "governance_score": f"{rd['g_score']:.1f}" if rd["g_score"] is not None else "",
-                "general_score": f"{rd['general_score']:.1f}" if rd["general_score"] is not None else "",
-                "composite_score": f"{rd['composite']:.1f}" if rd["composite"] is not None else "",
-                "composite_3pillar": f"{rd['composite_3pillar']:.1f}" if rd["composite_3pillar"] is not None else "",
-                "composite_general_no_new3": f"{rd['composite_general_no_new3']:.1f}" if rd["composite_general_no_new3"] is not None else "",
-                "e_density": f"{rd['e_density']:.4f}" if rd["e_density"] is not None else "",
-                "s_density": f"{rd['s_density']:.4f}" if rd["s_density"] is not None else "",
-                "g_density": f"{rd['g_density']:.4f}" if rd["g_density"] is not None else "",
-                "general_esg_density": f"{rd['general_density']:.4f}" if rd["general_density"] is not None else "",
-                "banking_addon_density": f"{rd['addon_density']:.4f}" if rd["addon_density"] is not None else "",
-                "banking_addon_score": f"{rd['addon_score']:.1f}" if rd["addon_score"] is not None else "",
-                "words_analysed": rd["words_analysed"],
-                "total_words": rd["total_words"],
-                "share_of_text_analysed": f"{rd['share_analysed']:.4f}" if rd["share_analysed"] is not None else "",
-                "data_quality_flag": rd["flag"],
-                "board_size": rd.get("board_size", ""),
-                "board_size_basis": rd.get("board_size_basis", ""),
-                "board_size_page": rd.get("board_size_page", ""),
-                "age_since_established": rd.get("age_since_established", ""),
-                "age_since_listed": rd.get("age_since_listed", ""),
-            })
-    print(f"Saved: {csv_path}  ({len(rows)} rows)")
+        w = csv.writer(fh)
+        w.writerow(PUBLIC_HEADERS)
+        for pr in public_rows:
+            w.writerow(pr)
+    print(f"Saved: {csv_path}  ({len(public_rows)} rows)")
 
     # ------------------------------------------------------------------ #
     # CSV: Column guide

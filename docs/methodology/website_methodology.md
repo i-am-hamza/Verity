@@ -74,7 +74,42 @@ Alongside the ESG scores, Verity records two kinds of non-score variables for ea
 
 Neither variable is part of the ESG score. Both are exported alongside the scores (Excel and CSV) and shown on each company page so the data can be used by future analyses.
 
-## 8. Limitations
+## 8. Research dataset and financial measures (researcher-supplied)
+
+The site publishes a 390-row dataset (one per company-year) with 21 columns. Twelve of them are the ESG scores and the governance / firm-age variables described above. The remaining columns come from the researcher's financial dataset and from a workbook of total assets and liabilities compiled from the audited financial statements:
+
+| Column | Source | Note |
+|---|---|---|
+| **Company**, **Ticker**, **Country**, **Fiscal year** | Verity institution registry | Primary listing. |
+| **Environmental**, **Social**, **Governance** | Verity pipeline | 0–100 rank-normalised; see §5. |
+| **Composite ESG score** | Verity pipeline | Mean of E, S, G and General, 0–100. |
+| **Board size** | Researcher (assisted reading of annual reports) | §7. |
+| **Age since established**, **Age since listing** | Researcher | §7. |
+| **Market cap (USD million)**, **EPS**, **Leverage (debt/equity)**, **Net margin (%)**, **RoE (%)**, **RoA (%)** | Researcher's financial data (Data_20_10_2026.xlsx) | Four researcher corrections applied before publication: Saudi Aramco 2024 and 2025 RoA / RoE were swapped in the source and are restored; Sahara Petrochemical 2025 net margin is set to the audited loss (−12.6%); Bank Aljazira 2020 EPS is set to the post-adjustment value (0.03). |
+| **Total assets (USD million)**, **Total liabilities (USD million)** | Researcher (company_assets_liabilities_2020_2025_USD.xlsx) | Audited year-end balance-sheet items, converted to USD at year-end FX. |
+| **Tobin's Q** | Derived | (Market cap + Total liabilities) ÷ Total assets. |
+| **Price-to-book** | Derived | Market cap ÷ (Total assets − Total liabilities). Left blank if book equity is zero or negative. |
+
+Growth is not reported — the growth column in the source file is empty — so it is not included in the dataset.
+
+## 9. ESG & Financials analysis
+
+The ESG & Financials page uses the dataset above to ask whether companies that disclose more about ESG are also more profitable or more highly valued. **It is an association study, not a causal one.** We report six profitability-and-value measures (RoA, RoE, net margin, EPS, Tobin's Q, price-to-book), with ESG composite (0–100) as the single explanatory measure, and the following controls:
+
+- `ln(total assets)` for firm size,
+- leverage (debt/equity) for capital structure,
+- board size for governance,
+- `ln(1 + age since established)` for firm maturity.
+
+Models add year, industry, country or company effects depending on the design (see "How the models work" on the page). Standard errors are clustered by company. β is reported per **+10 ESG points**.
+
+### Diagnostics
+
+- **Hausman test** — compares the within-company (fixed-effects) and random-effects estimators for each measure and group. p &lt; 0.05 means the within-company design is preferred; otherwise the random-effects estimator is reported.
+- **Variance-inflation factors (VIF)** — for ESG composite and the four controls, per group. All values below 2, well under the usual 10-threshold rule of thumb.
+- **Two-stage least squares (2SLS)** — ESG is instrumented by the average ESG score of same-sector companies in **other** countries in the same year. The first-stage F is below 10 for every measure in this sample, so IV estimates are only indicative and reported for completeness; the preferred main estimates are A2 (across companies, with country effects) and B (within companies, with year effects).
+
+## 10. Limitations
 
 - Verity measures **how much** a company discloses, not how good its ESG performance is or how credible its claims are.
 - Only **English** text is analysed.
@@ -82,7 +117,7 @@ Neither variable is part of the ESG score. Both are exported alongside the score
 - Scores are **relative to this sample** of 65 companies.
 - The scores have **not yet been compared with external ESG ratings** such as MSCI, LSEG or Sustainalytics.
 
-## References
+## 11. References
 
 - Ferjančič, U., Ichev, R., Lončarski, I., Montariol, S., Pelicon, A., Pollak, S., Sitar Šuštar, K., Toman, A., Valentinčič, A. and Žnidaršič, M. (2024). Textual analysis of corporate sustainability reporting and corporate ESG scores. *International Review of Financial Analysis*, 96, 103669.
 - Global Reporting Initiative. *GRI Standards*.

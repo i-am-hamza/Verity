@@ -11,7 +11,7 @@ from __future__ import annotations
 import enum
 from typing import TYPE_CHECKING
 
-from sqlalchemy import JSON, Enum, ForeignKey, String, Text, UniqueConstraint
+from sqlalchemy import JSON, Enum, Float, ForeignKey, String, Text, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base
@@ -75,6 +75,22 @@ class CompanyYearData(Base):
     # Firm ages (supplied by the researcher).
     age_since_established: Mapped[int | None] = mapped_column(nullable=True)
     age_since_listed: Mapped[int | None] = mapped_column(nullable=True)
+
+    # Financials (supplied by the researcher). Not part of the ESG score.
+    # Market cap, total assets and total liabilities are USD millions; EPS is
+    # the local-currency per-share figure; leverage is debt/equity; net_margin,
+    # roe and roa are percentages. tobins_q and price_to_book are derived in
+    # the loader so the DB mirrors the research dataset.
+    market_cap_usd_m: Mapped[float | None] = mapped_column(Float, nullable=True)
+    eps: Mapped[float | None] = mapped_column(Float, nullable=True)
+    leverage: Mapped[float | None] = mapped_column(Float, nullable=True)
+    net_margin: Mapped[float | None] = mapped_column(Float, nullable=True)
+    roe: Mapped[float | None] = mapped_column(Float, nullable=True)
+    roa: Mapped[float | None] = mapped_column(Float, nullable=True)
+    total_assets_usd_m: Mapped[float | None] = mapped_column(Float, nullable=True)
+    total_liabilities_usd_m: Mapped[float | None] = mapped_column(Float, nullable=True)
+    tobins_q: Mapped[float | None] = mapped_column(Float, nullable=True)
+    price_to_book: Mapped[float | None] = mapped_column(Float, nullable=True)
 
     institution: Mapped[Institution] = relationship(
         "Institution", back_populates="company_year_data"

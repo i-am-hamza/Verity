@@ -1,15 +1,17 @@
-import { type ReactNode, type RefObject, useRef, useState } from "react";
+import {
+  type ReactNode,
+  type RefObject,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
-  Bar,
-  BarChart,
   CartesianGrid,
   Legend,
   Line,
   LineChart,
   ResponsiveContainer,
-  Scatter,
-  ScatterChart,
   Tooltip,
   XAxis,
   YAxis,
@@ -17,35 +19,37 @@ import {
 
 import { EmptyState, ErrorState, Loading } from "../components/StateViews";
 import { exportElementAsPng, exportRowsAsCsv } from "../lib/export";
+import { exportCsvUrl, exportXlsxUrl } from "../lib/api/client";
 
 // ---------------------------------------------------------------------------
-// Types
+// Types — mirror analysis/results/esg_financials_results.json one-to-one
 // ---------------------------------------------------------------------------
 
-interface EsgFinData {
-  meta: {
-    companies: number;
-    company_years: number;
-    financial_companies: number;
-    years: [number, number];
-    esg_scale: string;
-    effect_unit: string;
-  };
-  variables: {
-    dependent: string[];
-    independent: string;
-    controls: string[];
-  };
-  correlations: CorrelationRow[];
-  regressions: RegressionRow[];
-  robustness: RobustnessRow[];
-  quartiles: QuartileRow[];
-  trends: TrendRow[];
-  board: BoardSection;
-  points: PointRow[];
+interface DescriptiveRow {
+  Group: string;
+  Variable: string;
+  N: number;
+  Mean: number;
+  SD: number;
+  Min: number;
+  P25: number;
+  Median: number;
+  P75: number;
+  Max: number;
 }
 
-interface CorrelationRow {
+interface CorrelationMatrixRow {
+  Variable: string;
+  [column: string]: number | string;
+}
+
+interface VifRow {
+  Group: string;
+  Variable: string;
+  VIF: number;
+}
+
+interface SpearmanRow {
   Group: string;
   ESG: string;
   Measure: string;
@@ -59,32 +63,20 @@ interface RegressionRow {
   Measure: string;
   Model: string;
   beta: number;
-  se?: number;
+  se: number;
   p: number;
   N: number;
+  R2: number | null;
+  first_stage_F: number | null;
 }
 
-interface RobustnessRow {
+interface HausmanRow {
   Group: string;
   Measure: string;
-  ESG_measure: string;
-  beta_A2: number;
-  p_A2: number;
-  beta_B: number;
-  p_B: number;
-  N: number;
-}
-
-interface QuartileRow {
-  Group: string;
-  Quartile: string;
-  N: number;
-  ESG_median: number;
-  "RoA (%)": number;
-  "RoE (%)": number;
-  "Net margin (%)": number;
-  "Leverage (D/E)": number;
-  "Market cap ($bn)": number;
+  chi2: number;
+  df: number;
+  p: number;
+  Preferred: string;
 }
 
 interface TrendRow {
@@ -96,153 +88,101 @@ interface TrendRow {
   General: number;
   "RoA median (Financial)": number;
   "RoE median (Financial)": number;
+  "Q median (Financial)": number;
   "RoA median (Non-financial)": number;
   "RoE median (Non-financial)": number;
+  "Q median (Non-financial)": number;
 }
 
-interface PointRow {
-  Company: string;
-  Year: number;
-  Financial: string;
-  ESG: number;
-  ROA: number | null;
-  ROE: number | null;
-  NetMargin: number | null;
-  EPS: number | null;
-  Leverage: number | null;
-  lnMcap: number | null;
-}
-
-interface BoardDescriptiveRow {
+interface BoardRow {
   Group: string;
-  N_obs: number;
-  N_companies: number;
-  mean_boardsize: number;
-  median_boardsize: number;
-  min_boardsize: number;
-  max_boardsize: number;
-  companies_changed_at_least_once: number;
-  year_to_year_changes: number;
-}
-
-interface BoardYearRow {
-  Group: string;
-  Year: number;
-  N: number;
-  mean_boardsize: number;
-  median_boardsize: number;
-}
-
-interface BoardCorrRow {
-  Group: string;
-  ESG: string;
-  rho: number;
+  Test: string;
+  beta: number;
   p: number;
   N: number;
 }
 
-interface BoardRegRow {
-  Group: string;
-  ESG: string;
-  Model: string;
-  beta_per_seat: number;
-  se: number;
-  p: number;
-  N: number;
-}
-
-interface BoardSection {
-  summary: string;
-  variables: {
-    dependent: string;
-    independent: string;
+interface EsgFinData {
+  meta: {
+    companies: number;
+    company_years: number;
+    financial_companies: number;
     effect_unit: string;
-    exclusions: string;
-    controls: string[];
   };
-  descriptives: BoardDescriptiveRow[];
-  year_summary: BoardYearRow[];
-  correlations: BoardCorrRow[];
-  regressions: BoardRegRow[];
+  descriptives: DescriptiveRow[];
+  correlation_matrix: CorrelationMatrixRow[];
+  vif: VifRow[];
+  spearman: SpearmanRow[];
+  regressions: RegressionRow[];
+  hausman: HausmanRow[];
+  board_size: BoardRow[];
+  trends: TrendRow[];
 }
 
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
 
-async function loadEsgFinData(): Promise<EsgFinData> {
+async function loadData(): Promise<EsgFinData> {
   const res = await fetch("/esg_financials_results.json");
-  if (!res.ok) throw new Error(`Failed to load ESG data: ${res.status}`);
+  if (!res.ok) throw new Error(`Failed to load data: ${res.status}`);
   return res.json() as Promise<EsgFinData>;
 }
 
-function pStar(p: number): string {
+function pStar(p: number | null | undefined): string {
+  if (p === null || p === undefined) return "";
+  if (p < 0.001) return "***";
   if (p < 0.01) return "**";
   if (p < 0.05) return "*";
   return "";
 }
 
 function fmt(v: number | null | undefined, dp = 2): string {
-  if (v === null || v === undefined) return "—";
+  if (v === null || v === undefined || Number.isNaN(v)) return "—";
   return v.toFixed(dp);
 }
 
-/** Extract short model code from full model string, e.g. "A2. Across…" → "A2" */
+function fmtP(p: number | null | undefined): string {
+  if (p === null || p === undefined || Number.isNaN(p)) return "—";
+  return p < 0.001 ? "<0.001" : p.toFixed(3);
+}
+
 function modelCode(model: string): string {
-  return model.split(".")[0] ?? model;
+  return model.split(".")[0]?.trim() ?? model;
 }
-
-/** True for the two main models */
-function isMain(model: string): boolean {
-  const code = modelCode(model);
-  return code === "A2" || code === "B";
-}
-
-// Ordered constants
-const ESG_MEASURES = [
-  "ESG composite",
-  "Environmental",
-  "Social",
-  "Governance",
-  "General",
-] as const;
 
 const FIN_MEASURES = [
   "RoA (%)",
   "RoE (%)",
   "Net margin (%)",
   "EPS",
-  "Leverage (D/E)",
-  "Market cap (log)",
+  "Tobin's Q",
+  "Price-to-book",
 ] as const;
+type FinMeasure = (typeof FIN_MEASURES)[number];
 
-const SCATTER_OPTIONS: { key: keyof PointRow; label: string }[] = [
-  { key: "ROE", label: "RoE (%)" },
-  { key: "ROA", label: "RoA (%)" },
-  { key: "NetMargin", label: "Net margin (%)" },
-  { key: "EPS", label: "EPS" },
-  { key: "Leverage", label: "Leverage (D/E)" },
-  { key: "lnMcap", label: "Market cap (log)" },
+const GROUPS = ["All companies", "Financial", "Non-financial"] as const;
+type Group = (typeof GROUPS)[number];
+
+const REG_MODELS: { code: string; label: string; main?: boolean }[] = [
+  { code: "A1", label: "A1" },
+  { code: "A2", label: "A2", main: true },
+  { code: "RE", label: "RE" },
+  { code: "B0", label: "B0" },
+  { code: "B", label: "B", main: true },
+  { code: "C", label: "C" },
+  { code: "D", label: "D" },
+  { code: "IV", label: "IV" },
 ];
 
-const REG_MEASURES = ["RoA (%)", "RoE (%)", "Net margin (%)", "Market cap (log)"] as const;
-const REG_MODELS_SHOW = ["A1", "A2", "B0", "B", "C"] as const;
-
-const QUARTILE_ORDER = [
-  "Q1 (lowest ESG)",
-  "Q2",
-  "Q3",
-  "Q4 (highest ESG)",
-] as const;
-
 // ---------------------------------------------------------------------------
-// Main page
+// Page
 // ---------------------------------------------------------------------------
 
 export function EsgFinancialsPage() {
   const q = useQuery({
-    queryKey: ["esg-financials"],
-    queryFn: loadEsgFinData,
+    queryKey: ["esg-financials-v2"],
+    queryFn: loadData,
     staleTime: Infinity,
   });
 
@@ -259,265 +199,33 @@ export function EsgFinancialsPage() {
   const d = q.data;
 
   return (
-    <section className="flex flex-col gap-8">
+    <section className="flex flex-col gap-10">
       <header>
         <h1 className="font-heading text-2xl font-semibold tracking-tight">
           ESG &amp; Financials
         </h1>
         <p className="mt-1 text-sm text-text-muted">
-          {d.meta.companies} companies · {d.meta.company_years} company-years ·
-          FY{d.meta.years[0]}–{d.meta.years[1]} · ESG scale: {d.meta.esg_scale}
+          {d.meta.companies} companies · {d.meta.company_years} company-years ·{" "}
+          FY2020–FY2025 · {d.meta.financial_companies} financial companies ·
+          effects reported per +10 ESG points
         </p>
       </header>
 
-      {/* a. Summary */}
       <SummarySect />
-
-      {/* b. Variables */}
-      <VariablesSect variables={d.variables} />
-
-      {/* c. Trends */}
+      <VariablesSect />
+      <ModelsSect />
       <TrendsSect trends={d.trends} />
-
-      {/* d. Correlations */}
-      <CorrelationsSect correlations={d.correlations} />
-
-      {/* e. Scatter */}
-      <ScatterSect points={d.points} />
-
-      {/* f. Regression results */}
-      <RegressionSect regressions={d.regressions} />
-
-      {/* g. ESG quartiles */}
-      <QuartilesSect quartiles={d.quartiles} />
-
-      {/* h. Board size and ESG */}
-      <BoardSizeSect board={d.board} />
-
-      {/* i. Robustness + downloads */}
-      <RobustnessSect robustness={d.robustness} />
-    </section>
-  );
-}
-
-// ---------------------------------------------------------------------------
-// h. Board size and ESG
-// ---------------------------------------------------------------------------
-
-const BOARD_GROUPS = ["All companies", "Financial", "Non-financial"] as const;
-type BoardGroup = (typeof BOARD_GROUPS)[number];
-const BOARD_ESG_ORDER = [
-  "ESG composite",
-  "Environmental",
-  "Social",
-  "Governance",
-  "General",
-] as const;
-
-function BoardSizeSect({ board }: { board: BoardSection }) {
-  const [group, setGroup] = useState<BoardGroup>("All companies");
-
-  const desc = board.descriptives.find((r) => r.Group === group);
-  const corr = BOARD_ESG_ORDER.map((e) =>
-    board.correlations.find((r) => r.Group === group && r.ESG === e),
-  ).filter((r): r is BoardCorrRow => Boolean(r));
-  const regs = board.regressions.filter((r) => r.Group === group);
-  const regsByModel = (code: "A" | "B" | "C" | "D") =>
-    regs.filter((r) => r.Model.startsWith(code + "."));
-  const regAB = BOARD_ESG_ORDER.flatMap((e) => [
-    regs.find((r) => r.ESG === e && r.Model.startsWith("A.")),
-    regs.find((r) => r.ESG === e && r.Model.startsWith("B.")),
-  ]).filter((r): r is BoardRegRow => Boolean(r));
-  const regC = regsByModel("C")[0];
-  const regD = regsByModel("D")[0];
-
-  return (
-    <section className="flex flex-col gap-4" aria-labelledby="board-h">
-      <h2 id="board-h" className="font-heading text-lg font-semibold">
-        Board size and ESG
-      </h2>
-
-      <div className="rounded-md border border-border bg-surface p-4 text-sm leading-relaxed text-text-muted">
-        {board.summary}
-      </div>
-
-      <GroupToggle<BoardGroup>
-        value={group}
-        options={[...BOARD_GROUPS]}
-        onChange={setGroup}
+      <DescriptivesSect rows={d.descriptives} />
+      <CorrelationsSect
+        spearman={d.spearman}
+        matrix={d.correlation_matrix}
+        vif={d.vif}
       />
-
-      {/* Descriptives */}
-      {desc && (
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <StatCard
-            value={`${desc.N_obs}`}
-            label="Company-years with a board size"
-            detail={`${desc.N_companies} companies; 4 not available excluded`}
-          />
-          <StatCard
-            value={`${desc.mean_boardsize.toFixed(2)}`}
-            label="Mean board size"
-            detail={`Median ${desc.median_boardsize}; range ${desc.min_boardsize}–${desc.max_boardsize}`}
-          />
-          <StatCard
-            value={`${desc.companies_changed_at_least_once} / ${desc.N_companies}`}
-            label="Companies that changed board size"
-            detail="At least once over FY2020–FY2025"
-          />
-          <StatCard
-            value={`${desc.year_to_year_changes}`}
-            label="Year-on-year changes"
-            detail="Consecutive-year transitions where board size moved"
-          />
-        </div>
-      )}
-
-      {/* Spearman */}
-      <div className="overflow-x-auto rounded-md border border-border bg-surface">
-        <table
-          className="w-full min-w-[320px] text-xs tabular"
-          aria-label={`Spearman correlation of board size with ESG, ${group}`}
-        >
-          <caption className="px-4 py-2 text-left text-xs text-text-muted">
-            Spearman ρ: board size vs ESG — {group}
-          </caption>
-          <thead>
-            <tr className="border-b border-border text-xs uppercase tracking-wide text-text-muted">
-              <th className="py-2 pl-4 pr-3 text-left" scope="col">
-                ESG measure
-              </th>
-              <th className="py-2 px-3 text-right" scope="col">ρ</th>
-              <th className="py-2 px-3 text-right" scope="col">p</th>
-              <th className="py-2 pl-3 pr-4 text-right" scope="col">N</th>
-            </tr>
-          </thead>
-          <tbody>
-            {corr.map((r) => (
-              <tr key={r.ESG} className="border-b border-border last:border-0">
-                <td className="py-1.5 pl-4 pr-3 text-text">{r.ESG}</td>
-                <td className="py-1.5 px-3 text-right font-mono text-text">
-                  {fmt(r.rho, 3)}
-                  <sup>{pStar(r.p)}</sup>
-                </td>
-                <td className="py-1.5 px-3 text-right font-mono text-text-muted">
-                  {r.p < 0.001 ? "<0.001" : fmt(r.p, 3)}
-                </td>
-                <td className="py-1.5 pl-3 pr-4 text-right font-mono text-text-muted">
-                  {r.N}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      {/* Regressions: A + B grid by ESG metric, with C and D for the composite below. */}
-      <div className="overflow-x-auto rounded-md border border-border bg-surface">
-        <table
-          className="w-full min-w-[560px] text-xs tabular"
-          aria-label={`Board size → ESG regression results, ${group}`}
-        >
-          <caption className="px-4 py-2 text-left text-xs text-text-muted">
-            Effect of board size on ESG — {group} (β per +1 seat; SE clustered
-            by company)
-          </caption>
-          <thead>
-            <tr className="border-b border-border text-xs uppercase tracking-wide text-text-muted">
-              <th className="py-2 pl-4 pr-3 text-left" scope="col">
-                ESG measure
-              </th>
-              <th className="py-2 px-3 text-left" scope="col">Model</th>
-              <th className="py-2 px-3 text-right" scope="col">β</th>
-              <th className="py-2 px-3 text-right" scope="col">SE</th>
-              <th className="py-2 px-3 text-right" scope="col">p</th>
-              <th className="py-2 pl-3 pr-4 text-right" scope="col">N</th>
-            </tr>
-          </thead>
-          <tbody>
-            {regAB.map((r, i) => (
-              <tr
-                key={`${r.ESG}-${r.Model}-${i}`}
-                className="border-b border-border last:border-0"
-              >
-                <td className="py-1.5 pl-4 pr-3 text-text">{r.ESG}</td>
-                <td className="py-1.5 px-3 text-text-muted">{r.Model}</td>
-                <td className="py-1.5 px-3 text-right font-mono text-text">
-                  {fmt(r.beta_per_seat, 3)}
-                  <sup>{pStar(r.p)}</sup>
-                </td>
-                <td className="py-1.5 px-3 text-right font-mono text-text-muted">
-                  {fmt(r.se, 3)}
-                </td>
-                <td className="py-1.5 px-3 text-right font-mono text-text-muted">
-                  {r.p < 0.001 ? "<0.001" : fmt(r.p, 3)}
-                </td>
-                <td className="py-1.5 pl-3 pr-4 text-right font-mono text-text-muted">
-                  {r.N}
-                </td>
-              </tr>
-            ))}
-            {regC && (
-              <tr className="border-b border-border last:border-0">
-                <td className="py-1.5 pl-4 pr-3 text-text">{regC.ESG}</td>
-                <td className="py-1.5 px-3 text-text-muted">{regC.Model}</td>
-                <td className="py-1.5 px-3 text-right font-mono text-text">
-                  {fmt(regC.beta_per_seat, 3)}
-                  <sup>{pStar(regC.p)}</sup>
-                </td>
-                <td className="py-1.5 px-3 text-right font-mono text-text-muted">
-                  {fmt(regC.se, 3)}
-                </td>
-                <td className="py-1.5 px-3 text-right font-mono text-text-muted">
-                  {regC.p < 0.001 ? "<0.001" : fmt(regC.p, 3)}
-                </td>
-                <td className="py-1.5 pl-3 pr-4 text-right font-mono text-text-muted">
-                  {regC.N}
-                </td>
-              </tr>
-            )}
-            {regD && (
-              <tr className="border-b border-border last:border-0">
-                <td className="py-1.5 pl-4 pr-3 text-text">{regD.ESG}</td>
-                <td className="py-1.5 px-3 text-text-muted">{regD.Model}</td>
-                <td className="py-1.5 px-3 text-right font-mono text-text">
-                  {fmt(regD.beta_per_seat, 3)}
-                  <sup>{pStar(regD.p)}</sup>
-                </td>
-                <td className="py-1.5 px-3 text-right font-mono text-text-muted">
-                  {fmt(regD.se, 3)}
-                </td>
-                <td className="py-1.5 px-3 text-right font-mono text-text-muted">
-                  {regD.p < 0.001 ? "<0.001" : fmt(regD.p, 3)}
-                </td>
-                <td className="py-1.5 pl-3 pr-4 text-right font-mono text-text-muted">
-                  {regD.N}
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
-
-      <div className="flex flex-wrap gap-2">
-        <button
-          type="button"
-          onClick={() =>
-            exportRowsAsCsv(
-              [
-                ...corr.map((r) => ({ table: "spearman", ...r })),
-                ...regAB.map((r) => ({ table: "regression", ...r })),
-                ...(regC ? [{ table: "regression", ...regC }] : []),
-                ...(regD ? [{ table: "regression", ...regD }] : []),
-              ],
-              `board_${group.replace(/\s+/g, "_").toLowerCase()}.csv`,
-            )
-          }
-          className="rounded-md border border-border bg-surface px-3 py-1.5 text-xs text-text-muted hover:text-text"
-        >
-          Export CSV
-        </button>
-      </div>
+      <HausmanSect rows={d.hausman} />
+      <RegressionsSect rows={d.regressions} />
+      <BoardSizeSect rows={d.board_size} />
+      <ComparisonSect />
+      <DownloadsSect />
     </section>
   );
 }
@@ -528,55 +236,18 @@ function BoardSizeSect({ board }: { board: BoardSection }) {
 
 function SummarySect() {
   return (
-    <section className="flex flex-col gap-4" aria-labelledby="summ-h">
+    <section className="flex flex-col gap-3" aria-labelledby="summ-h">
       <h2 id="summ-h" className="font-heading text-lg font-semibold">
         Summary
       </h2>
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-        <StatCard
-          value="36 → 60"
-          label="ESG composite (median)"
-          detail="FY2020 to FY2025"
-        />
-        <StatCard
-          value="ρ = 0.59"
-          label="Bank RoE correlation"
-          detail="Spearman, financial sector"
-        />
-        <StatCard
-          value="≈ 0"
-          label="Within-company effect"
-          detail="Model B: year effects controlled"
-        />
-      </div>
-      <div className="rounded-md border border-border bg-surface p-4 text-sm leading-relaxed text-text-muted">
-        ESG disclosure is positively associated with profitability and firm value
-        among GCC companies, most strongly among banks, where part of the
-        association reflects country differences. Disclosure and profitability
-        rose together over 2020–2025, but the evidence does not show that rising
-        disclosure leads to higher financial performance.
+      <div className="rounded-md border border-border bg-surface p-4 text-sm leading-relaxed text-text">
+        Companies that disclose more about ESG tend to be more profitable and
+        more highly valued, especially banks, partly reflecting country
+        differences. Disclosure and profitability rose together over 2020–2025,
+        but faster disclosure growth did not bring faster improvement in
+        profitability or value: an association, not cause and effect.
       </div>
     </section>
-  );
-}
-
-function StatCard({
-  value,
-  label,
-  detail,
-}: {
-  value: string;
-  label: string;
-  detail: string;
-}) {
-  return (
-    <div className="rounded-md border border-border bg-surface p-4">
-      <div className="tabular text-2xl font-semibold tracking-tight text-accent">
-        {value}
-      </div>
-      <div className="mt-1 text-sm font-medium text-text">{label}</div>
-      <div className="mt-0.5 text-xs text-text-faint">{detail}</div>
-    </div>
   );
 }
 
@@ -584,120 +255,185 @@ function StatCard({
 // b. Variables
 // ---------------------------------------------------------------------------
 
-const MODEL_EQUATIONS = [
-  {
-    code: "A1",
-    eq: "Yᵢₜ = α + β·ESGᵢₜ + γ′Xᵢₜ + δₜ + ζⱼ + εᵢₜ",
-    note: "Across companies; year + industry effects",
-  },
-  {
-    code: "A2",
-    eq: "Yᵢₜ = α + β·ESGᵢₜ + γ′Xᵢₜ + δₜ + ζⱼ + θᵏ + εᵢₜ",
-    note: "A1 + country effects  [main across-company]",
-    main: true,
-  },
-  {
-    code: "B",
-    eq: "Yᵢₜ = αᵢ + β·ESGᵢₜ + γ′Xᵢₜ + δₜ + εᵢₜ",
-    note: "Within-company FE; year effects  [main within-company]",
-    main: true,
-  },
-  {
-    code: "C",
-    eq: "Yᵢₜ = αᵢ + β·ESGᵢₜ₋₁ + γ′Xᵢₜ + δₜ + εᵢₜ",
-    note: "ESG lagged one year — tests whether disclosure leads performance",
-  },
-];
-
-function VariablesSect({
-  variables,
-}: {
-  variables: EsgFinData["variables"];
-}) {
+function VariablesSect() {
   return (
-    <section className="flex flex-col gap-4" aria-labelledby="vars-h">
+    <section className="flex flex-col gap-3" aria-labelledby="vars-h">
       <h2 id="vars-h" className="font-heading text-lg font-semibold">
-        Variables &amp; Models
+        Variables
       </h2>
-
       <div className="rounded-md border border-border bg-surface p-4 text-sm">
         <dl className="flex flex-col gap-3">
           <div>
             <dt className="font-medium text-text">Dependent</dt>
             <dd className="mt-0.5 text-text-muted">
-              {variables.dependent.join("; ")}
+              RoA, RoE, net margin, EPS, Tobin&apos;s Q, price-to-book
             </dd>
           </div>
           <div>
             <dt className="font-medium text-text">Independent</dt>
-            <dd className="mt-0.5 text-text-muted">{variables.independent}</dd>
+            <dd className="mt-0.5 text-text-muted">
+              ESG composite (0–100). E, S, G and General pillars are used in
+              robustness.
+            </dd>
           </div>
           <div>
             <dt className="font-medium text-text">Controls</dt>
             <dd className="mt-0.5 text-text-muted">
-              {variables.controls.join("; ")}
+              ln(total assets), leverage (debt/equity), board size, ln(1 + firm
+              age). Models add year, industry, country or company effects
+              depending on the design.
             </dd>
           </div>
         </dl>
       </div>
-
-      <div className="overflow-x-auto rounded-md border border-border bg-surface">
-        <table className="w-full min-w-[560px] text-sm" aria-label="Model equations">
-          <thead>
-            <tr className="border-b border-border text-xs uppercase tracking-wide text-text-muted">
-              <th className="py-2 pl-4 pr-3 text-left" scope="col">
-                Model
-              </th>
-              <th className="py-2 px-3 text-left font-mono" scope="col">
-                Equation
-              </th>
-              <th className="py-2 pl-3 pr-4 text-left" scope="col">
-                Note
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {MODEL_EQUATIONS.map((m) => (
-              <tr
-                key={m.code}
-                className={[
-                  "border-b border-border last:border-0",
-                  m.main ? "bg-accent/5" : "",
-                ].join(" ")}
-              >
-                <td className="py-2 pl-4 pr-3 font-mono font-semibold text-accent">
-                  {m.code}
-                  {m.main && (
-                    <span className="ml-1.5 rounded bg-accent/15 px-1 py-0.5 text-[10px]">
-                      main
-                    </span>
-                  )}
-                </td>
-                <td className="py-2 px-3 font-mono text-text">{m.eq}</td>
-                <td className="py-2 pl-3 pr-4 text-text-muted">{m.note}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-      <p className="text-xs text-text-faint">
-        β entered per +10 ESG points. Standard errors clustered by company. α
-        <sub>i</sub> = company fixed effect; δ<sub>t</sub> = year effect; ζ
-        <sub>j</sub> = industry effect; θ<sub>k</sub> = country effect.
-      </p>
     </section>
   );
 }
 
 // ---------------------------------------------------------------------------
-// c. Trends
+// c. How the models work
+// ---------------------------------------------------------------------------
+
+type ModelCard = {
+  code: string;
+  title: string;
+  question: string;
+  analogy: string;
+  main?: boolean;
+};
+
+const MODEL_CARDS: ModelCard[] = [
+  {
+    code: "A1 / A2",
+    title: "Across companies",
+    question:
+      "Among all 390 company-years, do higher ESG disclosers tend to have higher financial results?",
+    analogy:
+      "A1 compares students in the same class and year group. A2 also compares students from the same school: it holds country constant so the effect is a within-country comparison.",
+    main: true,
+  },
+  {
+    code: "RE",
+    title: "Random effects",
+    question:
+      "Blend across- and within-company variation under the assumption that company differences are random noise rather than fixed traits.",
+    analogy:
+      "A middle ground between asking \"which students study more?\" and \"when does a student study more?\". It is efficient when the Hausman test does not reject it.",
+  },
+  {
+    code: "B0 / B",
+    title: "Within a company",
+    question:
+      "When the same company's ESG disclosure goes up over time, do its own results go up?",
+    analogy:
+      "Follow one student year by year. B0 uses only that student's time pattern; B also removes shocks shared with other students that year (e.g. an easier exam).",
+    main: true,
+  },
+  {
+    code: "C",
+    title: "ESG first",
+    question:
+      "Does an increase in ESG this year predict a higher financial result next year?",
+    analogy:
+      "Hours studied in September measured against the November grade — gives disclosure time to feed through.",
+  },
+  {
+    code: "D",
+    title: "Reverse: results first",
+    question:
+      "Does a higher financial result this year predict higher ESG disclosure next year?",
+    analogy:
+      "The reverse arrow — do good grades push a student to study more next semester? Guards against reading the association in only one direction.",
+  },
+  {
+    code: "IV",
+    title: "2SLS (instrument)",
+    question:
+      "What is the effect of ESG that is purely driven by sector-wide disclosure habits, not by the company's own choices?",
+    analogy:
+      "Use the average study hours of peers in other classes as a stand-in for how much \"culture\" alone pushes a student to study. Only works when that peer culture clearly moves the student's hours (strong first-stage F). Our first-stage F is below 10 for every measure, so the IV estimates are weak and reported for completeness.",
+  },
+];
+
+function ModelsSect() {
+  return (
+    <section className="flex flex-col gap-3" aria-labelledby="models-h">
+      <h2 id="models-h" className="font-heading text-lg font-semibold">
+        How the models work
+      </h2>
+      <p className="text-sm text-text-muted">
+        Analogy: ESG disclosure is like hours studied, the financial result is
+        the exam grade. Each model asks a different question.
+      </p>
+      <div className="overflow-x-auto rounded-md border border-border bg-surface">
+        <table
+          className="w-full min-w-[640px] text-sm"
+          aria-label="How each model works"
+        >
+          <thead>
+            <tr className="border-b border-border text-xs uppercase tracking-wide text-text-muted">
+              <th className="py-2 pl-4 pr-3 text-left" scope="col">
+                Model
+              </th>
+              <th className="py-2 px-3 text-left" scope="col">
+                What it asks
+              </th>
+              <th className="py-2 pl-3 pr-4 text-left" scope="col">
+                Analogy
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {MODEL_CARDS.map((m) => (
+              <tr
+                key={m.code}
+                className={[
+                  "border-b border-border align-top last:border-0",
+                  m.main ? "bg-accent/5" : "",
+                ].join(" ")}
+              >
+                <td className="py-2 pl-4 pr-3 font-mono text-sm font-semibold text-accent">
+                  {m.code}
+                  <div className="text-[11px] font-normal text-text-muted">
+                    {m.title}
+                  </div>
+                  {m.main && (
+                    <div className="mt-1 inline-block rounded bg-accent/15 px-1 py-0.5 text-[10px]">
+                      main
+                    </div>
+                  )}
+                </td>
+                <td className="py-2 px-3 text-text">{m.question}</td>
+                <td className="py-2 pl-3 pr-4 text-text-muted">{m.analogy}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <div className="rounded-md border border-border bg-surface p-4 text-sm leading-relaxed text-text">
+        <div className="mb-1 text-xs uppercase tracking-wide text-text-muted">
+          Worked example — ESG and bank RoE
+        </div>
+        Two banks alike in size, leverage, board and age: one scores 70 on ESG,
+        the other 60. Comparing banks, the higher scorer&apos;s RoE is about
+        1.0 point higher; comparing only within the same country the gap is
+        0.8 points and not reliable; following each bank over time, a 10-point
+        rise goes with only 0.45 more RoE points, which cannot be told apart
+        from zero.
+      </div>
+    </section>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// d. Trends
 // ---------------------------------------------------------------------------
 
 function TrendsSect({ trends }: { trends: TrendRow[] }) {
   const esgRef = useRef<HTMLDivElement>(null);
   const finRef = useRef<HTMLDivElement>(null);
 
-  const esgCsvRows = trends.map((t) => ({
+  const esgCsv = trends.map((t) => ({
     Year: t.Year,
     ESG: t.ESG,
     Environmental: t.E,
@@ -705,13 +441,14 @@ function TrendsSect({ trends }: { trends: TrendRow[] }) {
     Governance: t.G,
     General: t.General,
   }));
-
-  const finCsvRows = trends.map((t) => ({
+  const finCsv = trends.map((t) => ({
     Year: t.Year,
-    "RoA (Financial)": t["RoA median (Financial)"],
-    "RoE (Financial)": t["RoE median (Financial)"],
-    "RoA (Non-financial)": t["RoA median (Non-financial)"],
-    "RoE (Non-financial)": t["RoE median (Non-financial)"],
+    "RoA median (Financial)": t["RoA median (Financial)"],
+    "RoE median (Financial)": t["RoE median (Financial)"],
+    "Tobin's Q median (Financial)": t["Q median (Financial)"],
+    "RoA median (Non-financial)": t["RoA median (Non-financial)"],
+    "RoE median (Non-financial)": t["RoE median (Non-financial)"],
+    "Tobin's Q median (Non-financial)": t["Q median (Non-financial)"],
   }));
 
   return (
@@ -720,17 +457,16 @@ function TrendsSect({ trends }: { trends: TrendRow[] }) {
         Trends
       </h2>
 
-      {/* ESG trends */}
       <ChartCard
         title="ESG composite &amp; pillars by year"
-        description="Median score across all 65 companies per year (0-100 scale)."
+        description="Mean score across all 65 companies per year (0–100 scale)."
         chartRef={esgRef}
         onExportPng={() =>
           esgRef.current && exportElementAsPng(esgRef.current, "esg_trends.png")
         }
-        onExportCsv={() => exportRowsAsCsv(esgCsvRows, "esg_trends.csv")}
+        onExportCsv={() => exportRowsAsCsv(esgCsv, "esg_trends.csv")}
       >
-        <div ref={esgRef} className="h-64 w-full sm:h-80">
+        <div className="h-64 w-full sm:h-80">
           <ResponsiveContainer width="100%" height="100%">
             <LineChart
               data={trends}
@@ -761,9 +497,7 @@ function TrendsSect({ trends }: { trends: TrendRow[] }) {
                   color: "rgb(var(--text))",
                 }}
               />
-              <Legend
-                wrapperStyle={{ fontSize: 12, color: "rgb(var(--text-muted))" }}
-              />
+              <Legend wrapperStyle={{ fontSize: 12, color: "rgb(var(--text-muted))" }} />
               <Line type="monotone" dataKey="ESG" name="Composite" stroke="rgb(var(--accent))" strokeWidth={2} dot={false} />
               <Line type="monotone" dataKey="E" name="Environmental" stroke="rgb(var(--env))" strokeWidth={2} dot={false} strokeDasharray="4 2" />
               <Line type="monotone" dataKey="S" name="Social" stroke="rgb(var(--soc))" strokeWidth={2} dot={false} strokeDasharray="4 2" />
@@ -774,35 +508,36 @@ function TrendsSect({ trends }: { trends: TrendRow[] }) {
         </div>
       </ChartCard>
 
-      {/* Financial trends */}
       <ChartCard
-        title="Median RoA &amp; RoE by year: financial vs non-financial"
-        description="Median return on assets and equity, split by sector."
+        title="Median RoA, RoE and Tobin's Q by year: financial vs non-financial"
+        description="Median within each sector per year."
         chartRef={finRef}
         onExportPng={() =>
           finRef.current && exportElementAsPng(finRef.current, "financial_trends.png")
         }
-        onExportCsv={() => exportRowsAsCsv(finCsvRows, "financial_trends.csv")}
+        onExportCsv={() => exportRowsAsCsv(finCsv, "financial_trends.csv")}
       >
-        <div ref={finRef} className="h-64 w-full sm:h-80">
+        <div className="h-64 w-full sm:h-80">
           <ResponsiveContainer width="100%" height="100%">
-            <LineChart
-              data={trends}
-              margin={{ top: 4, right: 8, bottom: 4, left: 0 }}
-            >
+            <LineChart data={trends} margin={{ top: 4, right: 8, bottom: 4, left: 0 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="rgb(var(--border))" />
               <XAxis dataKey="Year" tick={{ fontSize: 12, fill: "rgb(var(--text-muted))" }} />
-              <YAxis tick={{ fontSize: 12, fill: "rgb(var(--text-muted))" }}
+              <YAxis yAxisId="left" tick={{ fontSize: 12, fill: "rgb(var(--text-muted))" }}
                 label={{ value: "% return", angle: -90, position: "insideLeft", offset: 12, style: { fontSize: 11, fill: "rgb(var(--text-faint))" } }}
+              />
+              <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 12, fill: "rgb(var(--text-muted))" }}
+                label={{ value: "Tobin's Q", angle: 90, position: "insideRight", offset: 12, style: { fontSize: 11, fill: "rgb(var(--text-faint))" } }}
               />
               <Tooltip
                 contentStyle={{ background: "rgb(var(--surface))", border: "1px solid rgb(var(--border))", borderRadius: "6px", fontSize: 12, color: "rgb(var(--text))" }}
               />
               <Legend wrapperStyle={{ fontSize: 12, color: "rgb(var(--text-muted))" }} />
-              <Line type="monotone" dataKey="RoA median (Financial)" name="RoA · Financial" stroke="rgb(var(--accent))" strokeWidth={2} dot={false} />
-              <Line type="monotone" dataKey="RoE median (Financial)" name="RoE · Financial" stroke="rgb(var(--accent))" strokeWidth={2} dot={false} strokeDasharray="5 3" />
-              <Line type="monotone" dataKey="RoA median (Non-financial)" name="RoA · Non-fin" stroke="rgb(var(--env))" strokeWidth={2} dot={false} />
-              <Line type="monotone" dataKey="RoE median (Non-financial)" name="RoE · Non-fin" stroke="rgb(var(--env))" strokeWidth={2} dot={false} strokeDasharray="5 3" />
+              <Line yAxisId="left" type="monotone" dataKey="RoA median (Financial)" name="RoA · Financial" stroke="rgb(var(--accent))" strokeWidth={2} dot={false} />
+              <Line yAxisId="left" type="monotone" dataKey="RoE median (Financial)" name="RoE · Financial" stroke="rgb(var(--accent))" strokeWidth={2} dot={false} strokeDasharray="5 3" />
+              <Line yAxisId="right" type="monotone" dataKey="Q median (Financial)" name="Q · Financial" stroke="rgb(var(--accent))" strokeWidth={1.5} dot={false} strokeDasharray="2 2" />
+              <Line yAxisId="left" type="monotone" dataKey="RoA median (Non-financial)" name="RoA · Non-fin" stroke="rgb(var(--env))" strokeWidth={2} dot={false} />
+              <Line yAxisId="left" type="monotone" dataKey="RoE median (Non-financial)" name="RoE · Non-fin" stroke="rgb(var(--env))" strokeWidth={2} dot={false} strokeDasharray="5 3" />
+              <Line yAxisId="right" type="monotone" dataKey="Q median (Non-financial)" name="Q · Non-fin" stroke="rgb(var(--env))" strokeWidth={1.5} dot={false} strokeDasharray="2 2" />
             </LineChart>
           </ResponsiveContainer>
         </div>
@@ -812,26 +547,109 @@ function TrendsSect({ trends }: { trends: TrendRow[] }) {
 }
 
 // ---------------------------------------------------------------------------
-// d. Correlations heatmap
+// e. Descriptive statistics
 // ---------------------------------------------------------------------------
 
-type CorrGroup = "All companies" | "Financial" | "Non-financial";
-const CORR_GROUPS: CorrGroup[] = ["All companies", "Financial", "Non-financial"];
+function DescriptivesSect({ rows }: { rows: DescriptiveRow[] }) {
+  const [group, setGroup] = useState<Group>("All companies");
+  const filtered = rows.filter((r) => r.Group === group);
+  const csvRows = filtered.map((r) => {
+    const { Group: _g, ...rest } = r;
+    void _g;
+    return rest;
+  });
 
-function CorrelationsSect({ correlations }: { correlations: CorrelationRow[] }) {
-  const [group, setGroup] = useState<CorrGroup>("All companies");
-  const tableRef = useRef<HTMLDivElement>(null);
+  return (
+    <section className="flex flex-col gap-3" aria-labelledby="desc-h">
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <h2 id="desc-h" className="font-heading text-lg font-semibold">
+          Descriptive statistics
+        </h2>
+        <GroupToggle value={group} options={[...GROUPS]} onChange={setGroup} />
+      </div>
+      <div className="overflow-x-auto rounded-md border border-border bg-surface">
+        <table className="w-full min-w-[640px] text-xs tabular" aria-label="Descriptive statistics">
+          <thead>
+            <tr className="border-b border-border text-xs uppercase tracking-wide text-text-muted">
+              <th className="py-2 pl-4 pr-3 text-left" scope="col">Variable</th>
+              <th className="py-2 px-3 text-right" scope="col">N</th>
+              <th className="py-2 px-3 text-right" scope="col">Mean</th>
+              <th className="py-2 px-3 text-right" scope="col">SD</th>
+              <th className="py-2 px-3 text-right" scope="col">Min</th>
+              <th className="py-2 px-3 text-right" scope="col">P25</th>
+              <th className="py-2 px-3 text-right" scope="col">Median</th>
+              <th className="py-2 px-3 text-right" scope="col">P75</th>
+              <th className="py-2 pl-3 pr-4 text-right" scope="col">Max</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filtered.map((r, i) => (
+              <tr key={i} className="border-b border-border last:border-0">
+                <td className="py-1.5 pl-4 pr-3 text-text">{r.Variable}</td>
+                <td className="py-1.5 px-3 text-right font-mono text-text-muted">{r.N}</td>
+                <td className="py-1.5 px-3 text-right font-mono text-text">{fmt(r.Mean)}</td>
+                <td className="py-1.5 px-3 text-right font-mono text-text-muted">{fmt(r.SD)}</td>
+                <td className="py-1.5 px-3 text-right font-mono text-text-muted">{fmt(r.Min)}</td>
+                <td className="py-1.5 px-3 text-right font-mono text-text-muted">{fmt(r.P25)}</td>
+                <td className="py-1.5 px-3 text-right font-mono text-text">{fmt(r.Median)}</td>
+                <td className="py-1.5 px-3 text-right font-mono text-text-muted">{fmt(r.P75)}</td>
+                <td className="py-1.5 pl-3 pr-4 text-right font-mono text-text-muted">{fmt(r.Max)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <div>
+        <button
+          type="button"
+          onClick={() => exportRowsAsCsv(csvRows, `descriptives_${group.replace(/\s+/g, "_").toLowerCase()}.csv`)}
+          className="rounded-md border border-border bg-surface px-3 py-1.5 text-xs text-text-muted hover:text-text"
+        >
+          Export CSV
+        </button>
+      </div>
+    </section>
+  );
+}
 
-  const filtered = correlations.filter((r) => r.Group === group);
+// ---------------------------------------------------------------------------
+// f. Correlations: heatmap + full matrix + VIF
+// ---------------------------------------------------------------------------
 
-  const lookup = new Map<string, CorrelationRow>();
-  for (const r of filtered) lookup.set(`${r.ESG}||${r.Measure}`, r);
+function CorrelationsSect({
+  spearman,
+  matrix,
+  vif,
+}: {
+  spearman: SpearmanRow[];
+  matrix: CorrelationMatrixRow[];
+  vif: VifRow[];
+}) {
+  const [group, setGroup] = useState<Group>("All companies");
+  const heatRef = useRef<HTMLDivElement>(null);
 
-  const csvRows = [...ESG_MEASURES].flatMap((esg) =>
-    [...FIN_MEASURES].map((fin) => {
+  // Build the ESG-vs-financial-measures heatmap: 5 ESG rows × 6 financial cols.
+  const ESG_ROWS = ["ESG composite", "Environmental", "Social", "Governance", "General"];
+  const lookup = useMemo(() => {
+    const m = new Map<string, SpearmanRow>();
+    for (const r of spearman.filter((x) => x.Group === group)) {
+      m.set(`${r.ESG}||${r.Measure}`, r);
+    }
+    return m;
+  }, [spearman, group]);
+
+  const csvHeat = ESG_ROWS.flatMap((esg) =>
+    FIN_MEASURES.map((fin) => {
       const r = lookup.get(`${esg}||${fin}`);
-      return { Group: group, ESG: esg, Measure: fin, rho: r?.rho ?? null, p: r?.p ?? null, N: r?.N ?? null };
-    })
+      return {
+        Group: group,
+        ESG: esg,
+        Measure: fin,
+        rho: r?.rho ?? null,
+        p: r?.p ?? null,
+        N: r?.N ?? null,
+      };
+    }),
   );
 
   return (
@@ -839,38 +657,35 @@ function CorrelationsSect({ correlations }: { correlations: CorrelationRow[] }) 
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h2 id="corr-h" className="font-heading text-lg font-semibold">
-            Correlations
+            Correlations &amp; multicollinearity
           </h2>
           <p className="mt-0.5 text-xs text-text-muted">
-            Spearman ρ. * p&lt;0.05, ** p&lt;0.01. Hover cells for detail.
+            Spearman ρ for ESG vs the six financial measures. *p&lt;0.05,
+            **p&lt;0.01, ***p&lt;0.001.
           </p>
         </div>
-        <GroupToggle<CorrGroup>
-          value={group}
-          options={CORR_GROUPS}
-          onChange={setGroup}
-        />
+        <GroupToggle value={group} options={[...GROUPS]} onChange={setGroup} />
       </div>
 
       <div className="flex flex-wrap gap-2">
         <button
           type="button"
-          onClick={() => tableRef.current && exportElementAsPng(tableRef.current, "correlations_heatmap.png")}
+          onClick={() => heatRef.current && exportElementAsPng(heatRef.current, `corr_heatmap_${group.replace(/\s+/g, "_").toLowerCase()}.png`)}
           className="rounded-md border border-border bg-surface px-3 py-1.5 text-xs text-text-muted hover:text-text"
         >
           Export PNG
         </button>
         <button
           type="button"
-          onClick={() => exportRowsAsCsv(csvRows, "correlations.csv")}
+          onClick={() => exportRowsAsCsv(csvHeat, `corr_heatmap_${group.replace(/\s+/g, "_").toLowerCase()}.csv`)}
           className="rounded-md border border-border bg-surface px-3 py-1.5 text-xs text-text-muted hover:text-text"
         >
           Export CSV
         </button>
       </div>
 
-      <div ref={tableRef} className="overflow-x-auto rounded-md border border-border bg-surface">
-        <table className="w-full min-w-[600px] border-collapse text-xs" aria-label="Correlation heatmap">
+      <div ref={heatRef} className="overflow-x-auto rounded-md border border-border bg-surface">
+        <table className="w-full min-w-[640px] border-collapse text-xs" aria-label="ESG vs financial correlations">
           <thead>
             <tr>
               <th className="border-b border-r border-border p-2 text-left text-xs font-medium text-text-muted" scope="col">
@@ -884,14 +699,15 @@ function CorrelationsSect({ correlations }: { correlations: CorrelationRow[] }) 
             </tr>
           </thead>
           <tbody>
-            {ESG_MEASURES.map((esg) => (
+            {ESG_ROWS.map((esg) => (
               <tr key={esg} className="border-b border-border last:border-0">
                 <th scope="row" className="border-r border-border p-2 text-left text-xs font-medium text-text">
                   {esg}
                 </th>
                 {FIN_MEASURES.map((fin) => {
                   const r = lookup.get(`${esg}||${fin}`);
-                  if (!r) return <td key={fin} className="border-r border-border p-2 last:border-r-0" />;
+                  if (!r)
+                    return <td key={fin} className="border-r border-border p-2 last:border-r-0" />;
                   const abs = Math.min(Math.abs(r.rho), 1);
                   const opacity = Math.round(abs * 65);
                   const bgStyle =
@@ -904,11 +720,8 @@ function CorrelationsSect({ correlations }: { correlations: CorrelationRow[] }) 
                       className="border-r border-border p-2 text-center tabular last:border-r-0"
                       style={bgStyle}
                       title={`ρ = ${r.rho.toFixed(3)}, p = ${r.p < 0.001 ? "<0.001" : r.p.toFixed(3)}, N = ${r.N}`}
-                      aria-label={`${esg} vs ${fin}: ρ=${r.rho.toFixed(3)} ${pStar(r.p) || "n.s."}`}
                     >
-                      <span className="font-semibold text-text">
-                        {r.rho.toFixed(2)}
-                      </span>
+                      <span className="font-semibold text-text">{r.rho.toFixed(2)}</span>
                       <sup className="text-text">{pStar(r.p)}</sup>
                     </td>
                   );
@@ -921,504 +734,433 @@ function CorrelationsSect({ correlations }: { correlations: CorrelationRow[] }) 
       <p className="text-xs text-text-faint">
         Blue = positive, orange = negative. Intensity ∝ |ρ|.
       </p>
+
+      <h3 className="mt-2 font-heading text-sm font-semibold text-text">
+        Full correlation matrix (Pearson, all companies)
+      </h3>
+      <FullMatrix matrix={matrix} />
+
+      <h3 className="mt-2 font-heading text-sm font-semibold text-text">
+        Variance-inflation factors
+      </h3>
+      <VifTable vif={vif} />
+    </section>
+  );
+}
+
+function FullMatrix({ matrix }: { matrix: CorrelationMatrixRow[] }) {
+  const cols =
+    matrix.length === 0
+      ? []
+      : Object.keys(matrix[0]!).filter((k) => k !== "Variable");
+
+  return (
+    <div className="overflow-x-auto rounded-md border border-border bg-surface">
+      <table className="w-full min-w-[720px] border-collapse text-xs tabular" aria-label="Full correlation matrix">
+        <thead>
+          <tr>
+            <th className="border-b border-r border-border p-2 text-left text-xs font-medium text-text-muted">
+              Variable
+            </th>
+            {cols.map((c) => (
+              <th key={c} className="border-b border-r border-border p-2 text-center text-xs font-medium text-text-muted last:border-r-0">
+                {c}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {matrix.map((row) => (
+            <tr key={row.Variable} className="border-b border-border last:border-0">
+              <th scope="row" className="border-r border-border p-2 text-left text-xs font-medium text-text">
+                {row.Variable}
+              </th>
+              {cols.map((c) => {
+                const v = row[c];
+                if (typeof v !== "number")
+                  return <td key={c} className="border-r border-border p-2 last:border-r-0" />;
+                const abs = Math.min(Math.abs(v), 1);
+                const opacity = Math.round(abs * 60);
+                const style =
+                  v >= 0
+                    ? { backgroundColor: `rgb(var(--accent) / ${opacity}%)` }
+                    : { backgroundColor: `rgb(var(--warn) / ${opacity}%)` };
+                return (
+                  <td
+                    key={c}
+                    className="border-r border-border p-2 text-center last:border-r-0"
+                    style={style}
+                  >
+                    {v.toFixed(2)}
+                  </td>
+                );
+              })}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+function VifTable({ vif }: { vif: VifRow[] }) {
+  return (
+    <div className="overflow-x-auto rounded-md border border-border bg-surface">
+      <table className="w-full min-w-[320px] text-xs tabular" aria-label="VIF table">
+        <thead>
+          <tr className="border-b border-border text-xs uppercase tracking-wide text-text-muted">
+            <th className="py-2 pl-4 pr-3 text-left" scope="col">Group</th>
+            <th className="py-2 px-3 text-left" scope="col">Variable</th>
+            <th className="py-2 pl-3 pr-4 text-right" scope="col">VIF</th>
+          </tr>
+        </thead>
+        <tbody>
+          {vif.map((r, i) => (
+            <tr key={i} className="border-b border-border last:border-0">
+              <td className="py-1.5 pl-4 pr-3 text-text-muted">{r.Group}</td>
+              <td className="py-1.5 px-3 text-text">{r.Variable}</td>
+              <td className="py-1.5 pl-3 pr-4 text-right font-mono text-text">{fmt(r.VIF)}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// g. Model choice: Hausman table
+// ---------------------------------------------------------------------------
+
+function HausmanSect({ rows }: { rows: HausmanRow[] }) {
+  return (
+    <section className="flex flex-col gap-3" aria-labelledby="haus-h">
+      <h2 id="haus-h" className="font-heading text-lg font-semibold">
+        Model choice (Hausman test)
+      </h2>
+      <p className="text-sm text-text-muted">
+        p &lt; 0.05 means the within-company (fixed-effects, B) design is
+        preferred over random effects. Otherwise RE is efficient.
+      </p>
+      <div className="overflow-x-auto rounded-md border border-border bg-surface">
+        <table className="w-full min-w-[520px] text-xs tabular" aria-label="Hausman test table">
+          <thead>
+            <tr className="border-b border-border text-xs uppercase tracking-wide text-text-muted">
+              <th className="py-2 pl-4 pr-3 text-left" scope="col">Group</th>
+              <th className="py-2 px-3 text-left" scope="col">Measure</th>
+              <th className="py-2 px-3 text-right" scope="col">χ²</th>
+              <th className="py-2 px-3 text-right" scope="col">df</th>
+              <th className="py-2 px-3 text-right" scope="col">p</th>
+              <th className="py-2 pl-3 pr-4 text-left" scope="col">Preferred</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((r, i) => (
+              <tr key={i} className="border-b border-border last:border-0">
+                <td className="py-1.5 pl-4 pr-3 text-text-muted">{r.Group}</td>
+                <td className="py-1.5 px-3 text-text">{r.Measure}</td>
+                <td className="py-1.5 px-3 text-right font-mono text-text">{fmt(r.chi2)}</td>
+                <td className="py-1.5 px-3 text-right font-mono text-text-muted">{r.df}</td>
+                <td className="py-1.5 px-3 text-right font-mono text-text-muted">{fmtP(r.p)}</td>
+                <td className="py-1.5 pl-3 pr-4 text-text">{r.Preferred}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <div>
+        <button
+          type="button"
+          onClick={() => exportRowsAsCsv(rows as unknown as Record<string, string | number | null>[], "hausman.csv")}
+          className="rounded-md border border-border bg-surface px-3 py-1.5 text-xs text-text-muted hover:text-text"
+        >
+          Export CSV
+        </button>
+      </div>
     </section>
   );
 }
 
 // ---------------------------------------------------------------------------
-// e. Scatter
+// h. Regression results
 // ---------------------------------------------------------------------------
 
-function ScatterSect({ points }: { points: PointRow[] }) {
-  const [measure, setMeasure] = useState<keyof PointRow>("ROE");
-  const chartRef = useRef<HTMLDivElement>(null);
-
-  const label =
-    SCATTER_OPTIONS.find((o) => o.key === measure)?.label ?? String(measure);
-
-  const finPoints = points
-    .filter((p) => p.Financial === "Yes" && p[measure] !== null && p.ESG !== null)
-    .map((p) => ({ x: p.ESG, y: p[measure] as number, name: `${p.Company} ${p.Year}` }));
-
-  const nonFinPoints = points
-    .filter((p) => p.Financial === "No" && p[measure] !== null && p.ESG !== null)
-    .map((p) => ({ x: p.ESG, y: p[measure] as number, name: `${p.Company} ${p.Year}` }));
-
-  const csvRows = points
-    .filter((p) => p[measure] !== null)
-    .map((p) => ({
-      Company: p.Company,
-      Year: p.Year,
-      Financial: p.Financial,
-      ESG: p.ESG,
-      [label]: p[measure],
-    }));
+function RegressionsSect({ rows }: { rows: RegressionRow[] }) {
+  const [group, setGroup] = useState<Group>("All companies");
+  const filtered = rows.filter((r) => r.Group === group);
+  const byMeasureModel = new Map<string, RegressionRow>();
+  for (const r of filtered) {
+    byMeasureModel.set(`${r.Measure}||${modelCode(r.Model)}`, r);
+  }
 
   return (
-    <section className="flex flex-col gap-4" aria-labelledby="scatter-h">
+    <section className="flex flex-col gap-3" aria-labelledby="reg-h">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h2 id="scatter-h" className="font-heading text-lg font-semibold">
-            Scatter: ESG composite vs financial measure
+          <h2 id="reg-h" className="font-heading text-lg font-semibold">
+            Regression results
           </h2>
           <p className="mt-0.5 text-xs text-text-muted">
-            Each point = one company-year. Hover for company name and year.
+            β: change in the dependent per +10 ESG points. SE clustered by
+            company. *p&lt;0.05, **p&lt;0.01, ***p&lt;0.001.
           </p>
         </div>
-        <div className="flex flex-wrap gap-2">
-          {SCATTER_OPTIONS.map((o) => (
-            <button
-              key={o.key}
-              type="button"
-              onClick={() => setMeasure(o.key)}
-              className={[
-                "rounded-md border px-3 py-1.5 text-xs",
-                measure === o.key
-                  ? "border-accent bg-accent/10 text-accent"
-                  : "border-border bg-surface text-text-muted hover:text-text",
-              ].join(" ")}
-            >
-              {o.label}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      <div className="flex flex-wrap gap-2">
-        <button
-          type="button"
-          onClick={() => chartRef.current && exportElementAsPng(chartRef.current, `scatter_esg_vs_${String(measure).toLowerCase()}.png`)}
-          className="rounded-md border border-border bg-surface px-3 py-1.5 text-xs text-text-muted hover:text-text"
-        >
-          Export PNG
-        </button>
-        <button
-          type="button"
-          onClick={() => exportRowsAsCsv(csvRows, `scatter_esg_vs_${String(measure).toLowerCase()}.csv`)}
-          className="rounded-md border border-border bg-surface px-3 py-1.5 text-xs text-text-muted hover:text-text"
-        >
-          Export CSV
-        </button>
-      </div>
-
-      <div
-        ref={chartRef}
-        className="rounded-md border border-border bg-surface p-2"
-      >
-        <div className="h-72 w-full sm:h-96">
-          <ResponsiveContainer width="100%" height="100%">
-            <ScatterChart margin={{ top: 8, right: 16, bottom: 20, left: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="rgb(var(--border))" />
-              <XAxis
-                dataKey="x"
-                name="ESG composite"
-                type="number"
-                domain={[0, 100]}
-                tick={{ fontSize: 11, fill: "rgb(var(--text-muted))" }}
-                label={{ value: "ESG composite (0-100)", position: "insideBottom", offset: -10, style: { fontSize: 11, fill: "rgb(var(--text-faint))" } }}
-              />
-              <YAxis
-                dataKey="y"
-                name={label}
-                type="number"
-                tick={{ fontSize: 11, fill: "rgb(var(--text-muted))" }}
-                label={{ value: label, angle: -90, position: "insideLeft", offset: 12, style: { fontSize: 11, fill: "rgb(var(--text-faint))" } }}
-              />
-              <Tooltip
-                cursor={{ strokeDasharray: "3 3" }}
-                content={({ payload }) => {
-                  if (!payload?.length) return null;
-                  const pt = payload[0]?.payload as { x: number; y: number; name: string } | undefined;
-                  if (!pt) return null;
-                  return (
-                    <div className="rounded-md border border-border bg-surface px-3 py-2 text-xs shadow-pop">
-                      <div className="font-medium text-text">{pt.name}</div>
-                      <div className="mt-1 text-text-muted">
-                        ESG: <span className="tabular text-text">{pt.x.toFixed(1)}</span>
-                      </div>
-                      <div className="text-text-muted">
-                        {label}: <span className="tabular text-text">{fmt(pt.y)}</span>
-                      </div>
-                    </div>
-                  );
-                }}
-              />
-              <Legend wrapperStyle={{ fontSize: 12, color: "rgb(var(--text-muted))" }} />
-              <Scatter
-                name="Financial"
-                data={finPoints}
-                fill="rgb(var(--accent))"
-                fillOpacity={0.7}
-                r={3}
-              />
-              <Scatter
-                name="Non-financial"
-                data={nonFinPoints}
-                fill="rgb(var(--env))"
-                fillOpacity={0.5}
-                r={3}
-              />
-            </ScatterChart>
-          </ResponsiveContainer>
-        </div>
-      </div>
-    </section>
-  );
-}
-
-// ---------------------------------------------------------------------------
-// f. Regression results
-// ---------------------------------------------------------------------------
-
-type RegGroup = "All companies" | "Financial" | "Non-financial";
-const REG_GROUPS: RegGroup[] = ["All companies", "Financial", "Non-financial"];
-
-function RegressionSect({ regressions }: { regressions: RegressionRow[] }) {
-  const [group, setGroup] = useState<RegGroup>("All companies");
-  const [measure, setMeasure] = useState<string>(REG_MEASURES[0]);
-
-  const filtered = regressions.filter(
-    (r) => r.Group === group && r.Measure === measure
-  );
-
-  const byModel = new Map<string, RegressionRow>();
-  for (const r of filtered) byModel.set(modelCode(r.Model), r);
-
-  const csvRows = REG_MODELS_SHOW.map((code) => {
-    const r = byModel.get(code);
-    return {
-      Group: group,
-      Measure: measure,
-      Model: code,
-      β: r?.beta ?? null,
-      p: r?.p ?? null,
-      N: r?.N ?? null,
-      main: isMain(code + ".") ? "yes" : "no",
-    };
-  });
-
-  return (
-    <section className="flex flex-col gap-4" aria-labelledby="reg-h">
-      <div>
-        <h2 id="reg-h" className="font-heading text-lg font-semibold">
-          Regression results
-        </h2>
-        <p className="mt-0.5 text-xs text-text-muted">
-          Effect per +10 ESG points (β). Standard errors clustered by company.
-          * p&lt;0.05, ** p&lt;0.01. Shaded rows = main models.
-        </p>
-      </div>
-
-      <div className="flex flex-wrap gap-3">
-        <GroupToggle<RegGroup> value={group} options={REG_GROUPS} onChange={setGroup} />
-        <div className="flex flex-wrap gap-1">
-          {REG_MEASURES.map((m) => (
-            <button
-              key={m}
-              type="button"
-              onClick={() => setMeasure(m)}
-              className={[
-                "rounded-md border px-3 py-1.5 text-xs",
-                measure === m
-                  ? "border-accent bg-accent/10 text-accent"
-                  : "border-border bg-surface text-text-muted hover:text-text",
-              ].join(" ")}
-            >
-              {m}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      <div className="flex flex-wrap gap-2">
-        <button
-          type="button"
-          onClick={() => exportRowsAsCsv(csvRows, `regression_${group.replace(/ /g,"_")}_${measure.replace(/[^a-z0-9]/gi,"_")}.csv`)}
-          className="rounded-md border border-border bg-surface px-3 py-1.5 text-xs text-text-muted hover:text-text"
-        >
-          Export CSV
-        </button>
+        <GroupToggle value={group} options={[...GROUPS]} onChange={setGroup} />
       </div>
 
       <div className="overflow-x-auto rounded-md border border-border bg-surface">
-        <table className="w-full min-w-[480px] text-sm tabular" aria-label="Regression results table">
+        <table className="w-full min-w-[840px] text-xs tabular" aria-label="Regression results">
           <thead>
             <tr className="border-b border-border text-xs uppercase tracking-wide text-text-muted">
-              <th className="py-2 pl-4 pr-3 text-left" scope="col">Model</th>
-              <th className="py-2 px-3 text-right" scope="col">β</th>
+              <th className="py-2 pl-4 pr-3 text-left" scope="col">Measure</th>
+              {REG_MODELS.map((m) => (
+                <th key={m.code} scope="col" className={["py-2 px-3 text-right", m.main ? "bg-accent/10 text-accent" : ""].join(" ")}>
+                  {m.label}
+                  {m.main && <sup className="ml-0.5 text-[9px]">main</sup>}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {FIN_MEASURES.map((measure) => (
+              <RegressionRows
+                key={measure}
+                measure={measure}
+                lookup={byMeasureModel}
+              />
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      <p className="text-xs text-text-faint">
+        For IV, the first-stage F is reported below each β; the instrument is
+        weak (F &lt; 10 for every measure) so IV estimates are only indicative.
+      </p>
+
+      <div>
+        <button
+          type="button"
+          onClick={() =>
+            exportRowsAsCsv(
+              filtered as unknown as Record<string, string | number | null>[],
+              `regressions_${group.replace(/\s+/g, "_").toLowerCase()}.csv`,
+            )
+          }
+          className="rounded-md border border-border bg-surface px-3 py-1.5 text-xs text-text-muted hover:text-text"
+        >
+          Export CSV
+        </button>
+      </div>
+    </section>
+  );
+}
+
+function RegressionRows({
+  measure,
+  lookup,
+}: {
+  measure: FinMeasure;
+  lookup: Map<string, RegressionRow>;
+}) {
+  return (
+    <>
+      <tr className="border-b border-border last:border-0">
+        <td rowSpan={2} className="py-1.5 pl-4 pr-3 text-text">
+          {measure}
+        </td>
+        {REG_MODELS.map((m) => {
+          const r = lookup.get(`${measure}||${m.code}`);
+          return (
+            <td
+              key={m.code}
+              className={[
+                "py-1.5 px-3 text-right font-mono",
+                m.main ? "bg-accent/5 text-text" : "text-text",
+              ].join(" ")}
+            >
+              {r ? (
+                <>
+                  {fmt(r.beta, 3)}
+                  <sup>{pStar(r.p)}</sup>
+                </>
+              ) : (
+                "—"
+              )}
+            </td>
+          );
+        })}
+      </tr>
+      <tr className="border-b border-border last:border-0">
+        {REG_MODELS.map((m) => {
+          const r = lookup.get(`${measure}||${m.code}`);
+          return (
+            <td
+              key={m.code}
+              className={[
+                "py-1.5 px-3 text-right font-mono text-[10px] text-text-muted",
+                m.main ? "bg-accent/5" : "",
+              ].join(" ")}
+            >
+              {r ? (
+                <>
+                  {fmtP(r.p)}
+                  {m.code === "IV" && r.first_stage_F !== null && (
+                    <div className="text-[10px] text-text-faint">
+                      F={fmt(r.first_stage_F, 1)}
+                    </div>
+                  )}
+                </>
+              ) : null}
+            </td>
+          );
+        })}
+      </tr>
+    </>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// i. Board size and ESG
+// ---------------------------------------------------------------------------
+
+function BoardSizeSect({ rows }: { rows: BoardRow[] }) {
+  const [group, setGroup] = useState<Group>("All companies");
+  const filtered = rows.filter((r) => r.Group === group);
+
+  return (
+    <section className="flex flex-col gap-3" aria-labelledby="board-h">
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h2 id="board-h" className="font-heading text-lg font-semibold">
+            Board size and ESG
+          </h2>
+          <p className="mt-0.5 text-xs text-text-muted">
+            Does board size correlate with ESG disclosure? Across companies yes,
+            within a company no.
+          </p>
+        </div>
+        <GroupToggle value={group} options={[...GROUPS]} onChange={setGroup} />
+      </div>
+      <div className="overflow-x-auto rounded-md border border-border bg-surface">
+        <table className="w-full min-w-[480px] text-xs tabular" aria-label="Board size vs ESG tests">
+          <thead>
+            <tr className="border-b border-border text-xs uppercase tracking-wide text-text-muted">
+              <th className="py-2 pl-4 pr-3 text-left" scope="col">Test</th>
+              <th className="py-2 px-3 text-right" scope="col">β / ρ</th>
               <th className="py-2 px-3 text-right" scope="col">p</th>
               <th className="py-2 pl-3 pr-4 text-right" scope="col">N</th>
             </tr>
           </thead>
           <tbody>
-            {REG_MODELS_SHOW.map((code) => {
-              const r = byModel.get(code);
-              const fullModel = r?.Model ?? code;
-              const main = isMain(fullModel);
-              return (
-                <tr
-                  key={code}
-                  className={[
-                    "border-b border-border last:border-0",
-                    main ? "bg-accent/5" : "",
-                  ].join(" ")}
-                >
-                  <td className="py-2 pl-4 pr-3 font-mono">
-                    <span className="font-semibold text-accent">{code}</span>
-                    {main && (
-                      <span className="ml-1.5 rounded bg-accent/15 px-1 py-0.5 text-[10px]">
-                        main
-                      </span>
-                    )}
-                    <span className="ml-2 text-xs text-text-faint">
-                      {fullModel.split(". ")[1]?.split("[")[0]?.trim() ?? ""}
-                    </span>
-                  </td>
-                  <td className="py-2 px-3 text-right font-mono text-text">
-                    {r ? (
-                      <>
-                        {fmt(r.beta, 3)}
-                        <sup>{pStar(r.p)}</sup>
-                      </>
-                    ) : "—"}
-                  </td>
-                  <td className="py-2 px-3 text-right font-mono text-text-muted">
-                    {r ? (r.p < 0.001 ? "<0.001" : fmt(r.p, 3)) : "—"}
-                  </td>
-                  <td className="py-2 pl-3 pr-4 text-right text-text-muted">
-                    {r?.N ?? "—"}
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
-    </section>
-  );
-}
-
-// ---------------------------------------------------------------------------
-// g. ESG quartiles
-// ---------------------------------------------------------------------------
-
-type QGroup = "Financial" | "Non-financial";
-const Q_GROUPS: QGroup[] = ["Financial", "Non-financial"];
-const Q_MEASURES = ["RoA (%)", "RoE (%)", "Market cap ($bn)"] as const;
-
-function QuartilesSect({ quartiles }: { quartiles: QuartileRow[] }) {
-  const [group, setGroup] = useState<QGroup>("Financial");
-  const [measure, setMeasure] = useState<typeof Q_MEASURES[number]>("RoE (%)");
-  const chartRef = useRef<HTMLDivElement>(null);
-
-  const rows = quartiles
-    .filter((r) => r.Group === group)
-    .sort((a, b) => QUARTILE_ORDER.indexOf(a.Quartile as (typeof QUARTILE_ORDER)[number]) - QUARTILE_ORDER.indexOf(b.Quartile as (typeof QUARTILE_ORDER)[number]));
-
-  const chartData = rows.map((r) => ({
-    Quartile: r.Quartile.replace(" (lowest ESG)", " ↓").replace(" (highest ESG)", " ↑"),
-    [measure]: r[measure],
-    N: r.N,
-  }));
-
-  const csvRows = rows.map((r) => ({
-    Group: r.Group,
-    Quartile: r.Quartile,
-    N: r.N,
-    ESG_median: r.ESG_median,
-    [measure]: r[measure],
-  }));
-
-  return (
-    <section className="flex flex-col gap-4" aria-labelledby="quartile-h">
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <h2 id="quartile-h" className="font-heading text-lg font-semibold">
-            ESG quartiles
-          </h2>
-          <p className="mt-0.5 text-xs text-text-muted">
-            Median financial performance by ESG disclosure quartile.
-          </p>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          <GroupToggle<QGroup> value={group} options={Q_GROUPS} onChange={setGroup} />
-          <div className="flex flex-wrap gap-1">
-            {Q_MEASURES.map((m) => (
-              <button
-                key={m}
-                type="button"
-                onClick={() => setMeasure(m)}
-                className={[
-                  "rounded-md border px-3 py-1.5 text-xs",
-                  measure === m
-                    ? "border-accent bg-accent/10 text-accent"
-                    : "border-border bg-surface text-text-muted hover:text-text",
-                ].join(" ")}
-              >
-                {m}
-              </button>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      <div className="flex flex-wrap gap-2">
-        <button
-          type="button"
-          onClick={() => chartRef.current && exportElementAsPng(chartRef.current, `quartiles_${group.replace(/ /g,"_")}_${measure.replace(/[^a-z0-9]/gi,"_")}.png`)}
-          className="rounded-md border border-border bg-surface px-3 py-1.5 text-xs text-text-muted hover:text-text"
-        >
-          Export PNG
-        </button>
-        <button
-          type="button"
-          onClick={() => exportRowsAsCsv(csvRows, `quartiles_${group.replace(/ /g,"_")}.csv`)}
-          className="rounded-md border border-border bg-surface px-3 py-1.5 text-xs text-text-muted hover:text-text"
-        >
-          Export CSV
-        </button>
-      </div>
-
-      <div
-        ref={chartRef}
-        className="rounded-md border border-border bg-surface p-2"
-      >
-        <div className="h-64 w-full sm:h-80">
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart
-              data={chartData}
-              margin={{ top: 8, right: 8, bottom: 4, left: 0 }}
-            >
-              <CartesianGrid strokeDasharray="3 3" stroke="rgb(var(--border))" vertical={false} />
-              <XAxis
-                dataKey="Quartile"
-                tick={{ fontSize: 11, fill: "rgb(var(--text-muted))" }}
-              />
-              <YAxis
-                tick={{ fontSize: 11, fill: "rgb(var(--text-muted))" }}
-                label={{ value: measure, angle: -90, position: "insideLeft", offset: 12, style: { fontSize: 11, fill: "rgb(var(--text-faint))" } }}
-              />
-              <Tooltip
-                contentStyle={{ background: "rgb(var(--surface))", border: "1px solid rgb(var(--border))", borderRadius: "6px", fontSize: 12, color: "rgb(var(--text))" }}
-                formatter={(value: number, _name: string, props: { payload?: { N?: number } }) => [
-                  `${fmt(value)} (N=${props.payload?.N ?? "?"})`,
-                  measure,
-                ]}
-              />
-              <Bar dataKey={measure} fill="rgb(var(--accent))" fillOpacity={0.85} radius={[4, 4, 0, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-      </div>
-    </section>
-  );
-}
-
-// ---------------------------------------------------------------------------
-// h. Robustness + downloads
-// ---------------------------------------------------------------------------
-
-function RobustnessSect({ robustness }: { robustness: RobustnessRow[] }) {
-  const csvRows = robustness.map((r) => ({
-    Group: r.Group,
-    Measure: r.Measure,
-    ESG_measure: r.ESG_measure,
-    beta_A2: r.beta_A2,
-    p_A2: r.p_A2,
-    beta_B: r.beta_B,
-    p_B: r.p_B,
-    N: r.N,
-  }));
-
-  return (
-    <section className="flex flex-col gap-4" aria-labelledby="robust-h">
-      <h2 id="robust-h" className="font-heading text-lg font-semibold">
-        Robustness &amp; limitations
-      </h2>
-
-      <div className="rounded-md border border-border bg-surface p-4 text-sm leading-relaxed text-text-muted">
-        <p>
-          Results hold across E, S, G and General sub-scores as the independent
-          variable and across the six outcome measures (Table: ESG sub-scores on
-          financial measures, A2 and B columns). The cross-sectional correlations
-          (models A1 and A2) partly reflect persistent country differences —
-          Saudi and UAE companies both score higher on ESG and operate in
-          higher-margin sectors — rather than a causal effect of disclosure.
-          Within-company estimates (model B) remove this confound and are
-          uniformly small and non-significant.
-        </p>
-        <p className="mt-2">
-          Limitations: six years of panel data limit statistical power for the
-          within-company models. Financial variables for Sipchem FY2025 show a
-          net loss; outlier sensitivity checks excluding observations with
-          |RoE|&gt;100% do not change conclusions. Market cap is proxied by
-          ln(market cap in USD at year-end), which ties ESG to size — a known
-          confounder in cross-sectional ESG research.
-        </p>
-      </div>
-
-      {/* Robustness table */}
-      <div className="overflow-x-auto rounded-md border border-border bg-surface">
-        <table className="w-full min-w-[600px] text-xs tabular" aria-label="Robustness checks">
-          <thead>
-            <tr className="border-b border-border text-xs uppercase tracking-wide text-text-muted">
-              <th className="py-2 pl-4 pr-3 text-left" scope="col">Group</th>
-              <th className="py-2 px-3 text-left" scope="col">Measure</th>
-              <th className="py-2 px-3 text-left" scope="col">ESG measure</th>
-              <th className="py-2 px-3 text-right" scope="col">β A2</th>
-              <th className="py-2 px-3 text-right" scope="col">p A2</th>
-              <th className="py-2 px-3 text-right" scope="col">β B</th>
-              <th className="py-2 pl-3 pr-4 text-right" scope="col">p B</th>
-            </tr>
-          </thead>
-          <tbody>
-            {robustness.map((r, i) => (
+            {filtered.map((r, i) => (
               <tr key={i} className="border-b border-border last:border-0">
-                <td className="py-1.5 pl-4 pr-3 text-text-muted">{r.Group}</td>
-                <td className="py-1.5 px-3 text-text-muted">{r.Measure}</td>
-                <td className="py-1.5 px-3 text-text">{r.ESG_measure}</td>
+                <td className="py-1.5 pl-4 pr-3 text-text">{r.Test}</td>
                 <td className="py-1.5 px-3 text-right font-mono text-text">
-                  {fmt(r.beta_A2, 3)}<sup>{pStar(r.p_A2)}</sup>
+                  {fmt(r.beta, 3)}<sup>{pStar(r.p)}</sup>
                 </td>
                 <td className="py-1.5 px-3 text-right font-mono text-text-muted">
-                  {r.p_A2 < 0.001 ? "<0.001" : fmt(r.p_A2, 3)}
-                </td>
-                <td className="py-1.5 px-3 text-right font-mono text-text">
-                  {fmt(r.beta_B, 3)}<sup>{pStar(r.p_B)}</sup>
+                  {fmtP(r.p)}
                 </td>
                 <td className="py-1.5 pl-3 pr-4 text-right font-mono text-text-muted">
-                  {r.p_B < 0.001 ? "<0.001" : fmt(r.p_B, 3)}
+                  {r.N}
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
+      <div>
+        <button
+          type="button"
+          onClick={() =>
+            exportRowsAsCsv(
+              filtered as unknown as Record<string, string | number | null>[],
+              `board_size_${group.replace(/\s+/g, "_").toLowerCase()}.csv`,
+            )
+          }
+          className="rounded-md border border-border bg-surface px-3 py-1.5 text-xs text-text-muted hover:text-text"
+        >
+          Export CSV
+        </button>
+      </div>
+    </section>
+  );
+}
 
-      {/* Downloads */}
+// ---------------------------------------------------------------------------
+// j. Comparison with other studies
+// ---------------------------------------------------------------------------
+
+function ComparisonSect() {
+  return (
+    <section className="flex flex-col gap-3" aria-labelledby="comp-h">
+      <h2 id="comp-h" className="font-heading text-lg font-semibold">
+        Comparison with other studies
+      </h2>
+      <figure className="rounded-md border border-border bg-surface p-4">
+        <img
+          src="/fig_study_comparison.png"
+          alt="Comparison of ESG–performance effect sizes with earlier studies"
+          className="mx-auto h-auto max-w-full"
+        />
+        <figcaption className="mt-3 text-xs leading-relaxed text-text-muted">
+          Across-company (A2) and within-company (B) estimates sit alongside
+          comparable papers (Friede et al., 2015; Ferjančič et al., 2024; Khan
+          et al., 2016). The direction matches the broader literature; the
+          within-company effect in this sample is smaller and not reliably
+          different from zero, consistent with a mostly cross-sectional
+          association.
+        </figcaption>
+      </figure>
+    </section>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// k. Downloads
+// ---------------------------------------------------------------------------
+
+function DownloadsSect() {
+  return (
+    <section className="flex flex-col gap-3" aria-labelledby="dl-h">
+      <h2 id="dl-h" className="font-heading text-lg font-semibold">
+        Downloads
+      </h2>
       <div className="flex flex-wrap gap-2">
+        <a
+          href={exportXlsxUrl()}
+          download
+          className="rounded-md border border-border bg-surface px-3 py-1.5 text-xs text-text-muted hover:text-text"
+        >
+          Research dataset (Excel)
+        </a>
+        <a
+          href={exportCsvUrl()}
+          download
+          className="rounded-md border border-border bg-surface px-3 py-1.5 text-xs text-text-muted hover:text-text"
+        >
+          Research dataset (CSV)
+        </a>
+        <a
+          href="/downloads/ESG_vs_Financials_Results.xlsx"
+          download
+          className="rounded-md border border-border bg-surface px-3 py-1.5 text-xs text-text-muted hover:text-text"
+        >
+          Results workbook
+        </a>
         <a
           href="/esg_financials_results.json"
           download
           className="rounded-md border border-border bg-surface px-3 py-1.5 text-xs text-text-muted hover:text-text"
         >
-          Download JSON
+          Results JSON
         </a>
-        <a
-          href="/downloads/ESG_vs_Financials_Analysis_FINAL.xlsx"
-          download
-          className="rounded-md border border-border bg-surface px-3 py-1.5 text-xs text-text-muted hover:text-text"
-        >
-          Download Excel
-        </a>
-        <button
-          type="button"
-          onClick={() => exportRowsAsCsv(csvRows, "robustness_checks.csv")}
-          className="rounded-md border border-border bg-surface px-3 py-1.5 text-xs text-text-muted hover:text-text"
-        >
-          Export table CSV
-        </button>
       </div>
+      <p className="text-xs text-text-faint">
+        The research dataset has 390 company-years and 21 columns. The results
+        workbook holds every table from the analysis.
+      </p>
     </section>
   );
 }
