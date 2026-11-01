@@ -1,0 +1,105 @@
+concept,spelling_variants,component,sasb_category,industries
+air quality,air quality,E,Air Quality,"Chemicals, Construction Materials, Electric Utilities & Power Generators, Iron & Steel Producers, Marine Transportation, Metals & Mining, Oil & Gas – Exploration & Production, Oil & Gas – Refining & Marketing"
+biodiversity,biodiversity,E,Ecological Impacts,"Construction Materials, Home Builders, Hotels & Lodging, Marine Transportation, Meat, Poultry & Dairy, Metals & Mining, Oil & Gas – Exploration & Production, Oil & Gas – Services"
+carbon emissions,carbon emissions,E,GHG Emissions,"Airlines, Chemicals, Commercial Banks, Construction Materials, Electric Utilities & Power Generators, Food Retailers & Distributors, Iron & Steel Producers, Marine Transportation, Meat, Poultry & Dairy, Metals & Mining, Oil & Gas – Exploration & Production, Oil & Gas – Refining & Marketing, Oil & Gas – Services"
+carbon footprint,carbon footprint,E,GHG Emissions,"Airlines, Chemicals, Commercial Banks, Construction Materials, Electric Utilities & Power Generators, Food Retailers & Distributors, Iron & Steel Producers, Marine Transportation, Meat, Poultry & Dairy, Metals & Mining, Oil & Gas – Exploration & Production, Oil & Gas – Refining & Marketing, Oil & Gas – Services"
+circular economy,circular economy,E,Materials Sourcing & Efficiency,"Meat, Poultry & Dairy, Processed Foods"
+climate change,climate change,E,GHG Emissions (Physical Impacts of Climate Change),"Airlines, Chemicals, Commercial Banks, Construction Materials, Electric Utilities & Power Generators, Food Retailers & Distributors, Health Care Delivery, Home Builders, Hotels & Lodging, Iron & Steel Producers, Marine Transportation, Meat, Poultry & Dairy, Metals & Mining, Oil & Gas – Exploration & Production, Oil & Gas – Refining & Marketing, Oil & Gas – Services, Real Estate"
+climate policy,climate policy,E,GHG Emissions,"Airlines, Chemicals, Commercial Banks, Construction Materials, Electric Utilities & Power Generators, Food Retailers & Distributors, Iron & Steel Producers, Marine Transportation, Meat, Poultry & Dairy, Metals & Mining, Oil & Gas – Exploration & Production, Oil & Gas – Refining & Marketing, Oil & Gas – Services"
+climate risk,climate risk,E,Physical Impacts of Climate Change (Business Model Resilience),"Electric Utilities & Power Generators, Health Care Delivery, Home Builders, Hotels & Lodging, Oil & Gas – Exploration & Production, Oil & Gas – Refining & Marketing, Real Estate"
+e-waste,e-waste,E,Product Design & Lifecycle Management,"Asset Management & Custody Activities, Chemicals, Commercial Banks, Construction Materials, Home Builders, Processed Foods, Real Estate, Telecommunication Services"
+energy efficiency,energy efficiency,E,Energy Management,"Chemicals, Construction Materials, Food Retailers & Distributors, Health Care Delivery, Hotels & Lodging, Iron & Steel Producers, Meat, Poultry & Dairy, Metals & Mining, Multiline and Specialty Retailers & Distributors, Processed Foods, Real Estate, Restaurants, Telecommunication Services"
+environmental risk,environmental risk,E,,
+flaring,flaring,E,Air Quality,"Chemicals, Construction Materials, Electric Utilities & Power Generators, Iron & Steel Producers, Marine Transportation, Metals & Mining, Oil & Gas – Exploration & Production, Oil & Gas – Refining & Marketing"
+green bond,green bond,E,,
+greenhouse gas,greenhouse gas,E,GHG Emissions,"Airlines, Chemicals, Commercial Banks, Construction Materials, Electric Utilities & Power Generators, Food Retailers & Distributors, Iron & Steel Producers, Marine Transportation, Meat, Poultry & Dairy, Metals & Mining, Oil & Gas – Exploration & Production, Oil & Gas – Refining & Marketing, Oil & Gas – Services"
+LEED,LEED,E,Product Design & Lifecycle Management,"Asset Management & Custody Activities, Chemicals, Commercial Banks, Construction Materials, Home Builders, Processed Foods, Real Estate, Telecommunication Services"
+nature-positive,nature-positive,E,Ecological Impacts,"Construction Materials, Home Builders, Hotels & Lodging, Marine Transportation, Meat, Poultry & Dairy, Metals & Mining, Oil & Gas – Exploration & Production, Oil & Gas – Services"
+nature-related,nature-related,E,Ecological Impacts,"Construction Materials, Home Builders, Hotels & Lodging, Marine Transportation, Meat, Poultry & Dairy, Metals & Mining, Oil & Gas – Exploration & Production, Oil & Gas – Services"
+net zero,net zero,E,GHG Emissions,"Airlines, Chemicals, Commercial Banks, Construction Materials, Electric Utilities & Power Generators, Food Retailers & Distributors, Iron & Steel Producers, Marine Transportation, Meat, Poultry & Dairy, Metals & Mining, Oil & Gas – Exploration & Production, Oil & Gas – Refining & Marketing, Oil & Gas – Services"
+NOx,NOx,E,Air Quality,"Chemicals, Construction Materials, Electric Utilities & Power Generators, Iron & Steel Producers, Marine Transportation, Metals & Mining, Oil & Gas – Exploration & Production, Oil & Gas – Refining & Marketing"
+pollution,pollution,E,Ecological Impacts,"Construction Materials, Home Builders, Hotels & Lodging, Marine Transportation, Meat, Poultry & Dairy, Metals & Mining, Oil & Gas – Exploration & Production, Oil & Gas – Services"
+renewable energy,renewable energy,E,Energy Management,"Chemicals, Construction Materials, Food Retailers & Distributors, Health Care Delivery, Hotels & Lodging, Iron & Steel Producers, Meat, Poultry & Dairy, Metals & Mining, Multiline and Specialty Retailers & Distributors, Processed Foods, Real Estate, Restaurants, Telecommunication Services"
+resource use,resource use,E,Materials Sourcing & Efficiency,"Meat, Poultry & Dairy, Processed Foods"
+waste management,waste management,E,Waste & Hazardous Materials Management,"Chemicals, Construction Materials, Electric Utilities & Power Generators, Food Retailers & Distributors, Health Care Delivery, Iron & Steel Producers, Metals & Mining, Oil & Gas – Refining & Marketing, Oil & Gas – Services, Restaurants"
+water management,water management,E,Water & Wastewater Management,"Chemicals, Construction Materials, Electric Utilities & Power Generators, Hotels & Lodging, Iron & Steel Producers, Meat, Poultry & Dairy, Metals & Mining, Oil & Gas – Exploration & Production, Oil & Gas – Refining & Marketing, Oil & Gas – Services, Processed Foods, Real Estate, Restaurants"
+accessibility,accessibility,S,Access & Affordability,"Commercial Banks, Electric Utilities & Power Generators, Health Care Delivery"
+client needs,client needs,S,Customer Welfare,"Food Retailers & Distributors, Health Care Delivery, Processed Foods, Restaurants"
+clients' needs,clients' needs,S,Customer Welfare,"Food Retailers & Distributors, Health Care Delivery, Processed Foods, Restaurants"
+community development,community development,S,Human Rights & Community Relations (Access & Affordability),"Chemicals, Commercial Banks, Electric Utilities & Power Generators, Health Care Delivery, Home Builders, Metals & Mining, Oil & Gas – Exploration & Production"
+community investment,community investment,S,Human Rights & Community Relations,"Chemicals, Home Builders, Metals & Mining, Oil & Gas – Exploration & Production"
+customer needs,customer needs,S,Customer Welfare,"Food Retailers & Distributors, Health Care Delivery, Processed Foods, Restaurants"
+customer privacy,customer privacy,S,Customer Privacy,"Health Care Delivery, Telecommunication Services"
+customer satisfaction,customer satisfaction,S,,
+customers' needs,customers' needs,S,Customer Welfare,"Food Retailers & Distributors, Health Care Delivery, Processed Foods, Restaurants"
+diversity and inclusion,diversity and inclusion,S,"Employee Engagement, Diversity & Inclusion","Asset Management & Custody Activities, Health Care Delivery, Multiline and Specialty Retailers & Distributors"
+employee engagement,employee engagement,S,"Employee Engagement, Diversity & Inclusion","Asset Management & Custody Activities, Health Care Delivery, Multiline and Specialty Retailers & Distributors"
+employee ownership,employee ownership,S,"Employee Engagement, Diversity & Inclusion","Asset Management & Custody Activities, Health Care Delivery, Multiline and Specialty Retailers & Distributors"
+employee share ownership,employee share ownership,S,"Employee Engagement, Diversity & Inclusion","Asset Management & Custody Activities, Health Care Delivery, Multiline and Specialty Retailers & Distributors"
+employee training,employee training,S,"Employee Engagement, Diversity & Inclusion","Asset Management & Custody Activities, Health Care Delivery, Multiline and Specialty Retailers & Distributors"
+employee wellbeing,employee wellbeing,S,Employee Health & Safety (Labor Practices),"Airlines, Chemicals, Construction Materials, Electric Utilities & Power Generators, Food Retailers & Distributors, Home Builders, Hotels & Lodging, Iron & Steel Producers, Marine Transportation, Meat, Poultry & Dairy, Metals & Mining, Multiline and Specialty Retailers & Distributors, Oil & Gas – Exploration & Production, Oil & Gas – Refining & Marketing, Oil & Gas – Services, Restaurants"
+end of service,end of service,S,Labor Practices,"Airlines, Food Retailers & Distributors, Hotels & Lodging, Metals & Mining, Multiline and Specialty Retailers & Distributors, Restaurants"
+end-of-service,end-of-service,S,Labor Practices,"Airlines, Food Retailers & Distributors, Hotels & Lodging, Metals & Mining, Multiline and Specialty Retailers & Distributors, Restaurants"
+food safety,food safety,S,Product Quality & Safety,"Chemicals, Food Retailers & Distributors, Health Care Delivery, Meat, Poultry & Dairy, Processed Foods, Restaurants"
+gender diversity,gender diversity,S,"Employee Engagement, Diversity & Inclusion","Asset Management & Custody Activities, Health Care Delivery, Multiline and Specialty Retailers & Distributors"
+health and safety,health and safety,S,Employee Health & Safety (Product Quality & Safety),"Chemicals, Construction Materials, Electric Utilities & Power Generators, Food Retailers & Distributors, Health Care Delivery, Home Builders, Iron & Steel Producers, Marine Transportation, Meat, Poultry & Dairy, Metals & Mining, Oil & Gas – Exploration & Production, Oil & Gas – Refining & Marketing, Oil & Gas – Services, Processed Foods, Restaurants"
+human rights,human rights,S,Human Rights & Community Relations,"Chemicals, Home Builders, Metals & Mining, Oil & Gas – Exploration & Production"
+pension benefits,pension benefits,S,Labor Practices,"Airlines, Food Retailers & Distributors, Hotels & Lodging, Metals & Mining, Multiline and Specialty Retailers & Distributors, Restaurants"
+poverty,poverty,S,Human Rights & Community Relations,"Chemicals, Home Builders, Metals & Mining, Oil & Gas – Exploration & Production"
+product safety,product safety,S,Product Quality & Safety,"Chemicals, Food Retailers & Distributors, Health Care Delivery, Meat, Poultry & Dairy, Processed Foods, Restaurants"
+responsible sourcing,responsible sourcing,S,Materials Sourcing & Efficiency,"Meat, Poultry & Dairy, Processed Foods"
+supply chain,supply chain,S,Supply Chain Management,"Food Retailers & Distributors, Iron & Steel Producers, Meat, Poultry & Dairy, Multiline and Specialty Retailers & Distributors, Processed Foods, Restaurants"
+zakat,zakat,S,,
+anti-corruption,anti-corruption,G,Business Ethics,"Asset Management & Custody Activities, Commercial Banks, Health Care Delivery, Marine Transportation, Metals & Mining, Oil & Gas – Exploration & Production, Oil & Gas – Services"
+asset integrity,asset integrity,G,Critical Incident Risk Management,"Airlines, Chemicals, Electric Utilities & Power Generators, Marine Transportation, Metals & Mining, Oil & Gas – Exploration & Production, Oil & Gas – Refining & Marketing, Oil & Gas – Services"
+audit committee,audit committee,G,,
+board independence,board independence,G,,
+board meeting,board meeting,G,,
+board of directors,board of directors,G,,
+business continuity,business continuity,G,Systemic Risk Management,"Asset Management & Custody Activities, Commercial Banks, Telecommunication Services"
+business ethics,business ethics,G,Business Ethics,"Asset Management & Custody Activities, Commercial Banks, Health Care Delivery, Marine Transportation, Metals & Mining, Oil & Gas – Exploration & Production, Oil & Gas – Services"
+code of conduct,code of conduct,G,Business Ethics,"Asset Management & Custody Activities, Commercial Banks, Health Care Delivery, Marine Transportation, Metals & Mining, Oil & Gas – Exploration & Production, Oil & Gas – Services"
+corporate governance,corporate governance,G,,
+cybersecurity,cybersecurity,G,Data Security,"Commercial Banks, Food Retailers & Distributors, Multiline and Specialty Retailers & Distributors, Telecommunication Services"
+data protection,data protection,G,Customer Privacy (Data Security),"Commercial Banks, Food Retailers & Distributors, Health Care Delivery, Multiline and Specialty Retailers & Distributors, Telecommunication Services"
+dividend policy,dividend policy,G,,
+emergency preparedness,emergency preparedness,G,Critical Incident Risk Management,"Airlines, Chemicals, Electric Utilities & Power Generators, Marine Transportation, Metals & Mining, Oil & Gas – Exploration & Production, Oil & Gas – Refining & Marketing, Oil & Gas – Services"
+ESG committee,ESG committee,G,,
+executive compensation,executive compensation,G,,
+fraud,fraud,G,Business Ethics,"Asset Management & Custody Activities, Commercial Banks, Health Care Delivery, Marine Transportation, Metals & Mining, Oil & Gas – Exploration & Production, Oil & Gas – Services"
+governance,governance,G,,
+ICOFR,ICOFR,G,,
+incentive plan,incentive plan,G,,
+information security,information security,G,Data Security,"Commercial Banks, Food Retailers & Distributors, Multiline and Specialty Retailers & Distributors, Telecommunication Services"
+internal control,internal control,G,,
+internal control over financial reporting,internal control over financial reporting,G,,
+IT general control,IT general control,G,,
+IT governance,IT governance,G,Data Security,"Commercial Banks, Food Retailers & Distributors, Multiline and Specialty Retailers & Distributors, Telecommunication Services"
+ITGC,ITGC,G,,
+material weakness,material weakness,G,,
+meetings of directors,meetings of directors,G,,
+meetings of the board,meetings of the board,G,,
+process safety,process safety,G,Critical Incident Risk Management,"Airlines, Chemicals, Electric Utilities & Power Generators, Marine Transportation, Metals & Mining, Oil & Gas – Exploration & Production, Oil & Gas – Refining & Marketing, Oil & Gas – Services"
+remuneration committee,remuneration committee,G,,
+risk committee,risk committee,G,,
+risk management,risk management,G,,
+shareholder rights,shareholder rights,G,,
+stakeholder engagement,stakeholder engagement,G,,
+whistleblower,whistleblower,G,Business Ethics,"Asset Management & Custody Activities, Commercial Banks, Health Care Delivery, Marine Transportation, Metals & Mining, Oil & Gas – Exploration & Production, Oil & Gas – Services"
+anti-money laundering,anti-money laundering,Banking,Business Ethics,"Asset Management & Custody Activities, Commercial Banks, Health Care Delivery, Marine Transportation, Metals & Mining, Oil & Gas – Exploration & Production, Oil & Gas – Services"
+fair lending,fair lending,Banking,Access & Affordability (Selling Practices & Product Labeling),"Asset Management & Custody Activities, Commercial Banks, Electric Utilities & Power Generators, Food Retailers & Distributors, Health Care Delivery, Processed Foods"
+financial inclusion,financial inclusion,Banking,Access & Affordability,"Commercial Banks, Electric Utilities & Power Generators, Health Care Delivery"
+financial literacy,financial literacy,Banking,Access & Affordability,"Commercial Banks, Electric Utilities & Power Generators, Health Care Delivery"
+green financing,green financing,Banking,Product Design & Lifecycle Management,"Asset Management & Custody Activities, Chemicals, Commercial Banks, Construction Materials, Home Builders, Processed Foods, Real Estate, Telecommunication Services"
+responsible lending,responsible lending,Banking,Selling Practices & Product Labeling,"Asset Management & Custody Activities, Food Retailers & Distributors, Health Care Delivery, Processed Foods"
+stress testing,stress testing,Banking,Systemic Risk Management,"Asset Management & Custody Activities, Commercial Banks, Telecommunication Services"
+sustainable finance,sustainable finance,Banking,Product Design & Lifecycle Management,"Asset Management & Custody Activities, Chemicals, Commercial Banks, Construction Materials, Home Builders, Processed Foods, Real Estate, Telecommunication Services"
+sustainable financing,sustainable financing,Banking,Product Design & Lifecycle Management,"Asset Management & Custody Activities, Chemicals, Commercial Banks, Construction Materials, Home Builders, Processed Foods, Real Estate, Telecommunication Services"
+CSR,CSR,General,,
+digital services,digital services,General,Access & Affordability,"Commercial Banks, Electric Utilities & Power Generators, Health Care Delivery"
+ESG,ESG,General,,
+feedback,feedback,General,,
+GRI,GRI,General,,
+innovation,innovation,General,,
+sustainability,sustainability,General,,
+sustainable development,sustainable development,General,,
