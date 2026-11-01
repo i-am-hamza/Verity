@@ -38,6 +38,8 @@ CLAUDE.md
 # Frontend build
 frontend/node_modules/
 frontend/dist/
+frontend/tsconfig.tsbuildinfo
+frontend/vite_dev.log
 
 # Playwright verification screenshots — large binary artefacts, regenerated
 # by `node frontend/scripts/screenshots.mjs` whenever needed. The script
@@ -59,3 +61,10 @@ coverage/
 # R2 PDFs for the researcher-review loop; neither is source-of-truth.
 data/board_pages/
 data/board_pages_out/
+
+# Researcher dropbox and derived analysis outputs. Inputs are copied into
+# analysis/data/ (committed) when they land; the raw dropbox and the
+# regeneratable results stay untracked.
+incoming/
+analysis/results/
+
